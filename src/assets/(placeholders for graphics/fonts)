@@ -1,0 +1,12 @@
+# This directory is intended for storing graphics and font files used in the game. 
+# Placeholders for these assets can be added here as needed. 
+
+# Example placeholders:
+# graphics/
+# ├── background.png
+# ├── character.png
+# └── enemy.png
+#
+# fonts/
+# ├── retro_font.ttf
+# └── pixel_font.ttf
