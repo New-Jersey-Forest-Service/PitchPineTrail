@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import messagebox
 from game_logic import Game
+from PIL import Image, ImageTk  # <-- Add this import
 
 def main():
     game = Game()
@@ -10,25 +11,28 @@ def main():
     FONT = ("Courier New", 12, "bold")
 
     root = tk.Tk()
-    root.title("PitchPineTrail")
+    root.title("Pitch Pine Trail")
     root.configure(bg=BG_COLOR)
 
-    # Top: Graphics/ASCII Art area
-    canvas = tk.Canvas(root, width=600, height=120, bg=BG_COLOR, highlightthickness=0)
+    # Top: Graphics/Image area
+    #canvas = tk.Canvas(root, width=600, height=120, bg=BG_COLOR, highlightthickness=0)
+    canvas = tk.Canvas(root, width=600, height=300, bg=BG_COLOR, highlightthickness=0)
     canvas.pack(pady=(10,0))
-    ascii_art = [
-        "   /\\        /\\        /\\        /\\        /\\   ",
-        "  /  \\      /  \\      /  \\      /  \\      /  \\  ",
-        " /    \\    /    \\    /    \\    /    \\    /    \\ ",
-        "/      \\__/      \\__/      \\__/      \\__/      \\",
-        "    PITCH PINE TRAIL - NJFS Edition            "
-    ]
-    for i, line in enumerate(ascii_art):
-        canvas.create_text(300, 15 + i*20, text=line, fill=FG_COLOR, font=FONT)
+
+    # Load and display JPG image from assets folder
+    try:
+        img_path = "assets/banner.jpg"  # Update with your actual image filename
+        image = Image.open(img_path)
+        image = image.resize((600, 300), Image.LANCZOS)
+        photo = ImageTk.PhotoImage(image)
+        canvas.create_image(0, 0, anchor="nw", image=photo)
+        canvas.image = photo  # Keep a reference to avoid garbage collection
+    except Exception as e:
+        canvas.create_text(300, 60, text="Image not found", fill=FG_COLOR, font=FONT)
 
     # Middle: Status/Narration area
     status = tk.StringVar()
-    status.set("Welcome to PitchPineTrail! Click an action to begin.")
+    status.set("Welcome to Pitch Pine Trail! Click an action to begin.")
 
     status_label = tk.Label(root, textvariable=status, wraplength=600, justify="left",
                         padx=10, pady=10, bg=BG_COLOR, fg=FG_COLOR, font=FONT)
