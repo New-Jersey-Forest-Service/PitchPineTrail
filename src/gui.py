@@ -162,10 +162,20 @@ def main():
                 wraplength=600, justify="left", pady=20
             ).pack()
             tk.Button(
+                closing_frame, text="Try Again", font=FONT, width=16,
+                bg="#444466", fg=FG_COLOR, activebackground="#333355",
+                command=lambda: restart_game(closing_frame)
+            ).pack(pady=10)
+            tk.Button(
                 closing_frame, text="Exit", font=FONT, width=16,
                 bg="#444466", fg=FG_COLOR, activebackground="#333355",
                 command=root.destroy
-            ).pack(pady=20)
+            ).pack(pady=10)
+
+        def restart_game(closing_frame):
+            game.reset_game()
+            closing_frame.destroy()
+            show_game_screen()
 
         def next_turn(action):
             game.update_stand(action)
