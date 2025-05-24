@@ -110,7 +110,14 @@ class Game:
         self.stand['CI'] = max(15, min(self.stand['CI'], 60))
         self.stand['carbon'] = max(0, min(self.stand['carbon'], 40))
 
-        self.stand['fire_risk'] = 'High' if self.stand['CI'] < 25 else 'Moderate' if self.stand['CI'] < 35 else 'Low'
+        # Update fire_risk based on new CI rules
+        if self.stand['CI'] <= 20:
+            self.stand['fire_risk'] = 'High'
+        elif 20 < self.stand['CI'] < 25:
+            self.stand['fire_risk'] = 'Moderate'
+        else:
+            self.stand['fire_risk'] = 'Low'
+
         self.stand['SPB_risk'] = 'High' if self.stand['BA'] > 100 else 'Moderate' if self.stand['BA'] > 60 else 'Low'
 
     def simulate_event(self):
