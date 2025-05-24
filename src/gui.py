@@ -124,6 +124,9 @@ def main():
                 fg=get_risk_color(status['SPB_risk'])
             )
 
+        # Show starting stand stats in year 0
+        update_status_labels()
+
         def show_closing_screen():
             # Hide all widgets in the root window
             for widget in root.winfo_children():
