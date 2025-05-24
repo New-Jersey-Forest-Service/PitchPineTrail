@@ -100,7 +100,15 @@ class Game:
         }
 
     def get_summary(self):
-        summary = f"Final Stand: QMD: {self.stand['QMD']:.1f}, TPA: {self.stand['TPA']}, Carbon: {self.stand['carbon']:.1f} MT/ac, CI: {self.stand['CI']}, Fire Risk: {self.stand['fire_risk']}, SPB Risk: {self.stand['SPB_risk']}\n\n"
+        summary = (
+            f"Final Stand: QMD: {self.stand['QMD']:.1f}, "
+            f"TPA: {self.stand['TPA']}, "
+            f"BA: {self.stand['BA']:.1f}, "
+            f"Carbon: {self.stand['carbon']:.1f} MT/ac, "
+            f"CI: {self.stand['CI']}, "
+            f"Fire Risk: {self.stand['fire_risk']}, "
+            f"SPB Risk: {self.stand['SPB_risk']}\n\n"
+        )
         for yr, evt in self.stand['events']:
             summary += f"Year {yr}: {evt}\n"
         return summary
