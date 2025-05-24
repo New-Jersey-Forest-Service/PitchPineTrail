@@ -87,6 +87,18 @@ class Game:
             f"Fire Risk: {self.stand['fire_risk']} | SPB Risk: {self.stand['SPB_risk']}"
         )
 
+    def get_status_dict(self):
+        return {
+            'year': self.stand['year'],
+            'QMD': self.stand['QMD'],
+            'TPA': self.stand['TPA'],
+            'BA': self.stand['BA'],
+            'carbon': self.stand['carbon'],
+            'CI': self.stand['CI'],
+            'fire_risk': self.stand['fire_risk'],
+            'SPB_risk': self.stand['SPB_risk']
+        }
+
     def get_summary(self):
         summary = f"Final Stand: QMD: {self.stand['QMD']:.1f}, TPA: {self.stand['TPA']}, Carbon: {self.stand['carbon']:.1f} MT/ac, CI: {self.stand['CI']}, Fire Risk: {self.stand['fire_risk']}, SPB Risk: {self.stand['SPB_risk']}\n\n"
         for yr, evt in self.stand['events']:

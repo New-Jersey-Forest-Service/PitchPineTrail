@@ -14,6 +14,14 @@ def main():
     root.title("Pitch Pine Trail")
     root.configure(bg=BG_COLOR)
 
+    def get_risk_color(risk):
+        if risk == "Low":
+            return "#228B22"  # green
+        elif risk == "Moderate":
+            return "#FFD700"  # yellow
+        else:
+            return "#B22222"  # red
+
     # --- Intro Screen ---
     intro_frame = tk.Frame(root, bg=BG_COLOR)
     intro_frame.pack(fill="both", expand=True)
@@ -78,9 +86,12 @@ def main():
         status = tk.StringVar()
         status.set("Welcome to Pitch Pine Trail! Click an action to begin.")
 
-        status_label = tk.Label(root, textvariable=status, wraplength=600, justify="left",
-                            padx=10, pady=10, bg=BG_COLOR, fg=FG_COLOR, font=FONT)
+        status_label = tk.Label(root, wraplength=600, justify="left", padx=10, pady=10, bg=BG_COLOR, fg=FG_COLOR, font=FONT)
         status_label.pack()
+        fire_risk_label = tk.Label(root, wraplength=600, justify="left", padx=10, pady=0, bg=BG_COLOR, font=FONT)
+        fire_risk_label.pack()
+        spb_risk_label = tk.Label(root, wraplength=600, justify="left", padx=10, pady=0, bg=BG_COLOR, font=FONT)
+        spb_risk_label.pack()
 
         narration = tk.StringVar()
         narration.set("What will you do next?")
@@ -98,6 +109,20 @@ def main():
             '3': 'Thin heavily',
             '4': 'Prescribed burn'
         }
+
+        def update_status_labels():
+            status = game.get_status_dict()
+            status_label.config(
+                text=f"Year: {status['year']} | QMD: {status['QMD']:.1f} | TPA: {status['TPA']} | BA: {status['BA']:.1f} | Carbon: {status['carbon']:.1f} MT/ac | CI: {status['CI']:.1f}"
+            )
+            fire_risk_label.config(
+                text=f"Fire Risk: {status['fire_risk']}",
+                fg=get_risk_color(status['fire_risk'])
+            )
+            spb_risk_label.config(
+                text=f"SPB Risk: {status['SPB_risk']}",
+                fg=get_risk_color(status['SPB_risk'])
+            )
 
         def show_closing_screen():
             # Hide all widgets in the root window
@@ -150,6 +175,7 @@ def main():
                 narration.set("What will you do next?")
             if game.stand['year'] >= 100:
                 show_closing_screen()
+            update_status_labels()
 
         for k, v in ACTIONS.items():
             tk.Button(
