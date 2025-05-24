@@ -175,3 +175,5 @@ cython_debug/
 
 BillKey.py
 BillExpKey.py
+
+/src/assets/PlaceholdersForGraphics/

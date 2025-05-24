@@ -99,6 +99,46 @@ def main():
             '4': 'Prescribed burn'
         }
 
+        def show_closing_screen():
+            # Hide all widgets in the root window
+            for widget in root.winfo_children():
+                widget.pack_forget()
+            closing_frame = tk.Frame(root, bg=BG_COLOR)
+            closing_frame.pack(fill="both", expand=True)
+
+            # Load and display closing banner image
+            try:
+                closing_img_path = "assets/ClosingScreen1.png"
+                closing_image = Image.open(closing_img_path)
+                closing_image = closing_image.resize((600, 300), Image.LANCZOS)
+                closing_photo = ImageTk.PhotoImage(closing_image)
+                closing_canvas = tk.Canvas(closing_frame, width=600, height=300, bg=BG_COLOR, highlightthickness=0)
+                closing_canvas.create_image(0, 0, anchor="nw", image=closing_photo)
+                closing_canvas.image = closing_photo
+                closing_canvas.pack(pady=(10,0))
+            except Exception as e:
+                closing_canvas = tk.Canvas(closing_frame, width=600, height=300, bg=BG_COLOR, highlightthickness=0)
+                closing_canvas.create_text(300, 150, text="Closing image not found", fill=FG_COLOR, font=FONT)
+                closing_canvas.pack(pady=(10,0))
+
+            tk.Label(
+                closing_frame,
+                text="Thank you for playing Pitch Pine Trail!",
+                bg=BG_COLOR, fg=FG_COLOR, font=("Courier New", 16, "bold"),
+                pady=40
+            ).pack()
+            tk.Label(
+                closing_frame,
+                text=game.get_summary(),
+                bg=BG_COLOR, fg=FG_COLOR, font=FONT,
+                wraplength=600, justify="left", pady=20
+            ).pack()
+            tk.Button(
+                closing_frame, text="Exit", font=FONT, width=16,
+                bg="#444466", fg=FG_COLOR, activebackground="#333355",
+                command=root.destroy
+            ).pack(pady=20)
+
         def next_turn(action):
             game.update_stand(action)
             event = game.simulate_event()
@@ -109,8 +149,7 @@ def main():
             else:
                 narration.set("What will you do next?")
             if game.stand['year'] >= 100:
-                messagebox.showinfo("Simulation Complete", game.get_summary())
-                root.destroy()
+                show_closing_screen()
 
         for k, v in ACTIONS.items():
             tk.Button(
