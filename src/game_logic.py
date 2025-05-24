@@ -4,36 +4,6 @@ import random
 
 class Game:
     def __init__(self):
-        self.state = {
-            'current_room': 'start',
-            'inventory': [],
-            'score': 0,
-            'game_over': False
-        }
-        self.rooms = {
-            'start': {
-                'description': 'You are at the starting point of the Pitch Pine Trail. Choose your path.',
-                'options': {
-                    '1': 'Go to the forest',
-                    '2': 'Visit the village',
-                }
-            },
-            'forest': {
-                'description': 'You are in a dense forest. It feels mysterious here.',
-                'options': {
-                    '1': 'Search for resources',
-                    '2': 'Return to start',
-                }
-            },
-            'village': {
-                'description': 'You are in a small village. The locals greet you warmly.',
-                'options': {
-                    '1': 'Trade with locals',
-                    '2': 'Return to start',
-                }
-            }
-        }
-
         self.stand = {
             'year': 0,
             'QMD': 6.1,
@@ -46,34 +16,7 @@ class Game:
             'events': []
         }
 
-    def get_current_room(self):
-        return self.rooms[self.state['current_room']]
-
-    def move_to_room(self, room_name):
-        if room_name in self.rooms:
-            self.state['current_room'] = room_name
-        else:
-            raise ValueError("Room does not exist.")
-
-    def update_inventory(self, item):
-        self.state['inventory'].append(item)
-
-    def change_score(self, points):
-        self.state['score'] += points
-
-    def check_game_over(self):
-        return self.state['game_over']
-
-    def set_game_over(self, status):
-        self.state['game_over'] = status
-
     def reset_game(self):
-        self.state = {
-            'current_room': 'start',
-            'inventory': [],
-            'score': 0,
-            'game_over': False
-        }
         self.stand = {
             'year': 0,
             'QMD': 6.1,
@@ -110,7 +53,14 @@ class Game:
         self.stand['CI'] = max(15, min(self.stand['CI'], 60))
         self.stand['carbon'] = max(0, min(self.stand['carbon'], 40))
 
-        self.stand['fire_risk'] = 'High' if self.stand['CI'] < 25 else 'Moderate' if self.stand['CI'] < 35 else 'Low'
+        # Update fire_risk based on CI
+        if self.stand['CI'] <= 20:
+            self.stand['fire_risk'] = 'High'
+        elif 20 < self.stand['CI'] < 25:
+            self.stand['fire_risk'] = 'Moderate'
+        else:
+            self.stand['fire_risk'] = 'Low'
+
         self.stand['SPB_risk'] = 'High' if self.stand['BA'] > 100 else 'Moderate' if self.stand['BA'] > 60 else 'Low'
 
     def simulate_event(self):
