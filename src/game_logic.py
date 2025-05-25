@@ -38,20 +38,20 @@ class Game:
             self.stand['TPA'] = int(self.stand['TPA'] * 0.75)
             self.stand['QMD'] += 0.6
             self.stand['carbon'] *= 0.95
-            self.stand['BA'] *= 0.75
         elif action == '3':
             self.stand['TPA'] = int(self.stand['TPA'] * 0.5)
             self.stand['QMD'] += 0.8
             self.stand['carbon'] *= 0.85
-            self.stand['BA'] *= 0.55
         elif action == '4':
             self.stand['TPA'] = int(self.stand['TPA'] * 0.65)
             self.stand['carbon'] *= 0.9
             self.stand['CI'] += 10
-            self.stand['BA'] *= 0.7
 
         self.stand['CI'] = max(15, min(self.stand['CI'], 60))
         self.stand['carbon'] = max(0, min(self.stand['carbon'], 40))
+
+        # Correct BA calculation
+        self.stand['BA'] = ((self.stand['QMD'] ** 2) * 0.005454) * self.stand['TPA']
 
         # Update fire_risk based on CI
         if self.stand['CI'] <= 20:
@@ -82,12 +82,33 @@ class Game:
     def get_status(self):
         return (
             f"Year: {self.stand['year']} | QMD: {self.stand['QMD']:.1f} | TPA: {self.stand['TPA']} | "
+            f"BA: {self.stand['BA']:.1f} | "
             f"Carbon: {self.stand['carbon']:.1f} MT/ac | CI: {self.stand['CI']:.1f} | "
             f"Fire Risk: {self.stand['fire_risk']} | SPB Risk: {self.stand['SPB_risk']}"
         )
 
+    def get_status_dict(self):
+        return {
+            'year': self.stand['year'],
+            'QMD': self.stand['QMD'],
+            'TPA': self.stand['TPA'],
+            'BA': self.stand['BA'],
+            'carbon': self.stand['carbon'],
+            'CI': self.stand['CI'],
+            'fire_risk': self.stand['fire_risk'],
+            'SPB_risk': self.stand['SPB_risk']
+        }
+
     def get_summary(self):
-        summary = f"Final Stand: QMD: {self.stand['QMD']:.1f}, TPA: {self.stand['TPA']}, Carbon: {self.stand['carbon']:.1f} MT/ac, CI: {self.stand['CI']}, Fire Risk: {self.stand['fire_risk']}, SPB Risk: {self.stand['SPB_risk']}\n\n"
+        summary = (
+            f"Final Stand: QMD: {self.stand['QMD']:.1f}, "
+            f"TPA: {self.stand['TPA']}, "
+            f"BA: {self.stand['BA']:.1f}, "
+            f"Carbon: {self.stand['carbon']:.1f} MT/ac, "
+            f"CI: {self.stand['CI']}, "
+            f"Fire Risk: {self.stand['fire_risk']}, "
+            f"SPB Risk: {self.stand['SPB_risk']}\n\n"
+        )
         for yr, evt in self.stand['events']:
             summary += f"Year {yr}: {evt}\n"
         return summary
