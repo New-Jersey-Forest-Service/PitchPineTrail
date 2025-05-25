@@ -177,6 +177,45 @@ def main():
             closing_frame.destroy()
             show_game_screen()
 
+        def show_low_ba_screen():
+            # Hide all widgets in the root window
+            for widget in root.winfo_children():
+                widget.pack_forget()
+            low_ba_frame = tk.Frame(root, bg=BG_COLOR)
+            low_ba_frame.pack(fill="both", expand=True)
+
+            # Load and display LowStocking.png
+            try:
+                img_path = "assets/LowStocking.png"
+                image = Image.open(img_path)
+                image = image.resize((600, 300), Image.LANCZOS)
+                photo = ImageTk.PhotoImage(image)
+                canvas = tk.Canvas(low_ba_frame, width=600, height=300, bg=BG_COLOR, highlightthickness=0)
+                canvas.create_image(0, 0, anchor="nw", image=photo)
+                canvas.image = photo
+                canvas.pack(pady=(10,0))
+            except Exception as e:
+                canvas = tk.Canvas(low_ba_frame, width=600, height=300, bg=BG_COLOR, highlightthickness=0)
+                canvas.create_text(300, 150, text="LowStocking image not found", fill=FG_COLOR, font=FONT)
+                canvas.pack(pady=(10,0))
+
+            tk.Label(
+                low_ba_frame,
+                text="The forest's growing stock trees have been depleated!\nWe're supposed to be growing a forest!",
+                bg=BG_COLOR, fg=FG_COLOR, font=("Courier New", 16, "bold"),
+                pady=40, wraplength=600, justify="center"
+            ).pack()
+            tk.Button(
+                low_ba_frame, text="Try Again", font=FONT, width=16,
+                bg="#444466", fg=FG_COLOR, activebackground="#333355",
+                command=lambda: restart_game(low_ba_frame)
+            ).pack(pady=10)
+            tk.Button(
+                low_ba_frame, text="Exit", font=FONT, width=16,
+                bg="#444466", fg=FG_COLOR, activebackground="#333355",
+                command=root.destroy
+            ).pack(pady=10)
+
         def next_turn(action):
             game.update_stand(action)
             event = game.simulate_event()
@@ -186,6 +225,9 @@ def main():
                 narration.set(event)
             else:
                 narration.set("What will you do next?")
+            if game.is_low_ba_game_over():
+                show_low_ba_screen()
+                return
             if game.stand['year'] >= 100:
                 show_closing_screen()
             update_status_labels()
