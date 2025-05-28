@@ -15,6 +15,7 @@ class Game:
             'SPB_risk': 'Moderate',
             'events': []
         }
+        self.low_ba_count = 0  # Track consecutive low BA cycles
 
     def reset_game(self):
         self.stand = {
@@ -28,6 +29,7 @@ class Game:
             'SPB_risk': 'Moderate',
             'events': []
         }
+        self.low_ba_count = 0
 
     def update_stand(self, action):
         if action == '1':
@@ -62,6 +64,15 @@ class Game:
             self.stand['fire_risk'] = 'Low'
 
         self.stand['SPB_risk'] = 'High' if self.stand['BA'] > 100 else 'Moderate' if self.stand['BA'] > 60 else 'Low'
+
+        # Track consecutive low BA cycles
+        if self.stand['BA'] < 35:
+            self.low_ba_count += 1
+        else:
+            self.low_ba_count = 0
+
+    def is_low_ba_game_over(self):
+        return self.low_ba_count >= 2
 
     def simulate_event(self):
         event_log = None
