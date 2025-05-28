@@ -88,6 +88,13 @@ def main():
 
         status_label = tk.Label(root, wraplength=600, justify="left", padx=10, pady=10, bg=BG_COLOR, fg=FG_COLOR, font=FONT)
         status_label.pack()
+
+        # Add BA and QMD labels
+        ba_label = tk.Label(root, bg=BG_COLOR, fg=FG_COLOR, font=FONT)
+        ba_label.pack()
+        qmd_label = tk.Label(root, bg=BG_COLOR, fg=FG_COLOR, font=FONT)
+        qmd_label.pack()
+
         fire_risk_label = tk.Label(root, wraplength=600, justify="left", padx=10, pady=0, bg=BG_COLOR, font=FONT)
         fire_risk_label.pack()
         spb_risk_label = tk.Label(root, wraplength=600, justify="left", padx=10, pady=0, bg=BG_COLOR, font=FONT)
@@ -113,7 +120,13 @@ def main():
         def update_status_labels():
             status = game.get_status_dict()
             status_label.config(
-                text=f"Year: {status['year']} | QMD: {status['QMD']:.1f} | TPA: {status['TPA']} | BA: {status['BA']:.1f} | Carbon: {status['carbon']:.1f} MT/ac | CI: {status['CI']:.1f}"
+                text=f"Year: {status['year']} | TPA: {status['TPA']} | Carbon: {status['carbon']:.1f} MT/ac | CI: {status['CI']:.1f}"
+            )
+            ba_label.config(
+                text=f"Basal Area (BA): {status['BA']:.1f} sqft/acre"
+            )
+            qmd_label.config(
+                text=f"Quadratic Mean Diameter (QMD): {status['QMD']:.1f} inches"
             )
             fire_risk_label.config(
                 text=f"Fire Risk: {status['fire_risk']}",
