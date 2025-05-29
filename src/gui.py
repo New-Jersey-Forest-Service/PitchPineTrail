@@ -168,9 +168,21 @@ def main():
                 bg=BG_COLOR, fg=FG_COLOR, font=("Courier New", 16, "bold"),
                 pady=40
             ).pack()
+
+            # Add a summary with explicit units for BA and QMD
+            summary = game.get_status_dict()
             tk.Label(
                 closing_frame,
-                text=game.get_summary(),
+                text=(
+                    f"Final Stand:\n"
+                    f"QMD: {summary['QMD']:.1f} inches\n"
+                    f"TPA: {summary['TPA']}\n"
+                    f"BA: {summary['BA']:.1f} sqft/acre\n"
+                    f"Carbon: {summary['carbon']:.1f} MT/ac\n"
+                    f"CI: {summary['CI']:.1f}\n"
+                    f"Fire Risk: {summary['fire_risk']}\n"
+                    f"SPB Risk: {summary['SPB_risk']}\n"
+                ),
                 bg=BG_COLOR, fg=FG_COLOR, font=FONT,
                 wraplength=600, justify="left", pady=20
             ).pack()
