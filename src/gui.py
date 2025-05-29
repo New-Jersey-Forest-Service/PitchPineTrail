@@ -13,6 +13,7 @@ def main():
     root = tk.Tk()
     root.title("Pitch Pine Trail")
     root.configure(bg=BG_COLOR)
+    root.geometry("800x600")  # Set the initial window size to 800x600 pixels
     
     # Helper function to make any frame scrollable
     def create_scrollable_frame(parent):
@@ -201,17 +202,17 @@ def main():
                 closing_canvas = tk.Canvas(closing_content, width=600, height=300, bg=BG_COLOR, highlightthickness=0)
                 closing_canvas.create_image(0, 0, anchor="nw", image=closing_photo)
                 closing_canvas.image = closing_photo
-                closing_canvas.pack(pady=(10,0))
+                closing_canvas.pack(pady=(5, 0))  # Reduced padding
             except Exception as e:
                 closing_canvas = tk.Canvas(closing_content, width=600, height=300, bg=BG_COLOR, highlightthickness=0)
                 closing_canvas.create_text(300, 150, text="Closing image not found", fill=FG_COLOR, font=FONT)
-                closing_canvas.pack(pady=(10,0))
+                closing_canvas.pack(pady=(5, 0))  # Reduced padding
 
             tk.Label(
                 closing_content,
                 text="Thank you for playing Pitch Pine Trail!",
                 bg=BG_COLOR, fg=FG_COLOR, font=("Courier New", 16, "bold"),
-                pady=40
+                pady=20  # Reduced padding
             ).pack()
 
             # Add a summary with explicit units for BA and QMD
@@ -229,18 +230,18 @@ def main():
                     f"SPB Risk: {summary['SPB_risk']}\n"
                 ),
                 bg=BG_COLOR, fg=FG_COLOR, font=FONT,
-                wraplength=600, justify="left", pady=20
+                wraplength=600, justify="left", pady=10  # Reduced padding
             ).pack()
             tk.Button(
                 closing_content, text="Try Again", font=FONT, width=16,
                 bg="#444466", fg=FG_COLOR, activebackground="#333355",
                 command=lambda: restart_game(closing_frame)
-            ).pack(pady=10)
+            ).pack(pady=5)  # Reduced padding
             tk.Button(
                 closing_content, text="Exit", font=FONT, width=16,
                 bg="#444466", fg=FG_COLOR, activebackground="#333355",
                 command=root.destroy
-            ).pack(pady=10)
+            ).pack(pady=5)  # Reduced padding
 
         def restart_game(frame_to_remove):
             game.reset_game()
