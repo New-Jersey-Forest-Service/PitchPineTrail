@@ -120,6 +120,10 @@ class Game:
             f"Fire Risk: {self.stand['fire_risk']}, "
             f"SPB Risk: {self.stand['SPB_risk']}\n\n"
         )
-        for yr, evt in self.stand['events']:
-            summary += f"Year {yr}: {evt}\n"
+        if self.stand['events']:
+            summary += "Events during your management:\n"
+            for yr, evt in self.stand['events']:
+                summary += f"  Year {yr}: {evt}\n"
+        else:
+            summary += "No major events occurred during your management.\n"
         return summary

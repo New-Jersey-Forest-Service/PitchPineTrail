@@ -215,6 +215,13 @@ def main():
                 pady=20  # Reduced padding
             ).pack()
 
+            tk.Label(
+                closing_content,
+                text=game.get_summary(),  # This includes the events!
+                bg=BG_COLOR, fg=FG_COLOR, font=FONT,
+                wraplength=600, justify="left", pady=10
+            ).pack()
+
             # Add a summary with explicit units for BA and QMD
             summary = game.get_status_dict()
             tk.Label(
