@@ -1,22 +1,43 @@
+"""
+Pitch Pine Trail - Forest Management Simulation Game
+
+William Zipse
+Cara Escalona
+Justin Gimmillaro
+NJ Forest Service
+---------------------------------------------------
+Graphical user interface for the Pitch Pine Trail forest management simulation.
+Provides interactive screens for gameplay, status display, and decision making.
+"""
+
 import tkinter as tk
 from tkinter import messagebox
 from game_logic import Game
 from PIL import Image, ImageTk
 
 def main():
+    """Initialize and run the main game application."""
+    # Initialize game and UI constants
     game = Game()
-
-    BG_COLOR = "#222244"
-    FG_COLOR = "#33FF33"
+    BG_COLOR = "#222244"    # Dark blue background
+    FG_COLOR = "#33FF33"    # Green text
     FONT = ("Courier New", 12, "bold")
 
+    # Set up the main window
     root = tk.Tk()
     root.title("Pitch Pine Trail")
     root.configure(bg=BG_COLOR)
-    root.geometry("800x600")  # Set the initial window size to 800x600 pixels
+    root.geometry("800x600")  # Initial window size
     
-    # Helper function to make any frame scrollable
     def create_scrollable_frame(parent):
+        """Create a scrollable frame with both vertical and horizontal scrollbars.
+        
+        Args:
+            parent: Parent widget to contain the scrollable frame
+            
+        Returns:
+            tk.Frame: Frame to contain content that will be scrollable
+        """
         # Create a canvas with scrollbars
         canvas = tk.Canvas(parent, bg=BG_COLOR)
         v_scrollbar = tk.Scrollbar(parent, orient="vertical", command=canvas.yview)
@@ -54,12 +75,55 @@ def main():
         return content_frame
 
     def get_risk_color(risk):
+        """Return color code based on risk level.
+        
+        Args:
+            risk (str): Risk level ('Low', 'Moderate', or 'High')
+            
+        Returns:
+            str: Hex color code
+        """
         if risk == "Low":
-            return "#228B22"  # green
+            return "#228B22"  # Green
         elif risk == "Moderate":
-            return "#FFD700"  # yellow
+            return "#FFD700"  # Yellow
         else:
-            return "#B22222"  # red
+            return "#B22222"  # Red
+
+    def load_image(canvas, img_path, width=600, height=300, fallback_text="Image not found"):
+        """Load and display an image on a canvas.
+        
+        Args:
+            canvas (tk.Canvas): Canvas to display image on
+            img_path (str): Path to image file
+            width (int): Width to resize image to
+            height (int): Height to resize image to
+            fallback_text (str): Text to display if image can't be loaded
+            
+        Returns:
+            bool: True if image loaded successfully, False otherwise
+        """
+        try:
+            image = Image.open(img_path)
+            image = image.resize((width, height), Image.LANCZOS)
+            photo = ImageTk.PhotoImage(image)
+            canvas.create_image(0, 0, anchor="nw", image=photo)
+            canvas.image = photo  # Keep a reference to prevent garbage collection
+            return True
+        except Exception:
+            canvas.create_text(width//2, height//2, text=fallback_text, fill=FG_COLOR, font=FONT)
+            return False
+
+    def restart_game(frame_to_remove):
+        """Reset the game and display the main game screen.
+        
+        Args:
+            frame_to_remove (tk.Frame): Current frame to remove
+        """
+        game.reset_game()
+        for widget in root.winfo_children():
+            widget.pack_forget()
+        show_game_screen()
 
     # --- Intro Screen ---
     intro_frame = tk.Frame(root, bg=BG_COLOR)
@@ -67,19 +131,9 @@ def main():
     intro_content = create_scrollable_frame(intro_frame)
 
     # Load and display intro image
-    try:
-        intro_img_path = "assets/introscreen.jpeg"
-        intro_image = Image.open(intro_img_path)
-        intro_image = intro_image.resize((600, 300), Image.LANCZOS)
-        intro_photo = ImageTk.PhotoImage(intro_image)
-        intro_canvas = tk.Canvas(intro_content, width=600, height=300, bg=BG_COLOR, highlightthickness=0)
-        intro_canvas.create_image(0, 0, anchor="nw", image=intro_photo)
-        intro_canvas.image = intro_photo
-        intro_canvas.pack(pady=(10,0))
-    except Exception as e:
-        intro_canvas = tk.Canvas(intro_content, width=600, height=300, bg=BG_COLOR, highlightthickness=0)
-        intro_canvas.create_text(300, 150, text="Intro image not found", fill=FG_COLOR, font=FONT)
-        intro_canvas.pack(pady=(10,0))
+    intro_canvas = tk.Canvas(intro_content, width=600, height=300, bg=BG_COLOR, highlightthickness=0)
+    intro_canvas.pack(pady=(10, 0))
+    load_image(intro_canvas, "assets/introscreen.jpeg", fallback_text="Intro image not found")
 
     intro_label = tk.Label(
         intro_content,
@@ -90,6 +144,7 @@ def main():
     intro_label.pack()
 
     def start_game():
+        """Hide intro screen and show the main game screen."""
         intro_frame.pack_forget()
         show_game_screen()
 
@@ -105,49 +160,156 @@ def main():
         command=root.destroy
     ).pack(pady=5)
 
-    # --- Main Game Screen (hidden until Begin is pressed) ---
+    # --- Main Game Screen Functions ---
+    def show_closing_screen():
+        """Display the game's ending screen with final statistics."""
+        for widget in root.winfo_children():
+            widget.pack_forget()
+            
+        closing_frame = tk.Frame(root, bg=BG_COLOR)
+        closing_frame.pack(fill="both", expand=True)
+        closing_content = create_scrollable_frame(closing_frame)
+
+        # Display closing banner
+        closing_canvas = tk.Canvas(closing_content, width=600, height=300, bg=BG_COLOR, highlightthickness=0)
+        closing_canvas.pack(pady=(5, 0))
+        load_image(closing_canvas, "assets/ClosingScreen1.png", fallback_text="Closing image not found")
+
+        tk.Label(
+            closing_content,
+            text="Thank you for playing Pitch Pine Trail!",
+            bg=BG_COLOR, fg=FG_COLOR, font=("Courier New", 16, "bold"),
+            pady=20
+        ).pack()
+
+        # Display game summary (includes events)
+        tk.Label(
+            closing_content,
+            text=game.get_summary(),
+            bg=BG_COLOR, fg=FG_COLOR, font=FONT,
+            wraplength=600, justify="left", pady=10
+        ).pack()
+
+        # Add a summary with explicit units for BA and QMD
+        summary = game.get_status_dict()
+        tk.Label(
+            closing_content,
+            text=(
+                f"Final Stand:\n"
+                f"QMD: {summary['QMD']:.1f} inches\n"
+                f"TPA: {summary['TPA']}\n"
+                f"BA: {summary['BA']:.1f} sqft/acre\n"
+                f"Carbon: {summary['carbon']:.1f} MT/ac\n"
+                f"CI: {summary['CI']:.1f}\n"
+                f"Fire Risk: {summary['fire_risk']}\n"
+                f"SPB Risk: {summary['SPB_risk']}\n"
+            ),
+            bg=BG_COLOR, fg=FG_COLOR, font=FONT,
+            wraplength=600, justify="left", pady=10  # Reduced padding
+        ).pack()
+        tk.Button(
+            closing_content, text="Try Again", font=FONT, width=16,
+            bg="#444466", fg=FG_COLOR, activebackground="#333355",
+            command=lambda: restart_game(closing_frame)
+        ).pack(pady=5)  # Reduced padding
+        tk.Button(
+            closing_content, text="Exit", font=FONT, width=16,
+            bg="#444466", fg=FG_COLOR, activebackground="#333355",
+            command=root.destroy
+        ).pack(pady=5)  # Reduced padding
+
+    def show_low_ba_screen():
+        """Display the game over screen for low basal area condition."""
+        for widget in root.winfo_children():
+            widget.pack_forget()
+            
+        low_ba_frame = tk.Frame(root, bg=BG_COLOR)
+        low_ba_frame.pack(fill="both", expand=True)
+        low_ba_content = create_scrollable_frame(low_ba_frame)
+
+        # Load and display LowStocking image
+        low_ba_canvas = tk.Canvas(low_ba_content, width=600, height=300, bg=BG_COLOR, highlightthickness=0)
+        low_ba_canvas.pack(pady=(10, 0))
+        load_image(low_ba_canvas, "assets/LowStocking.png", fallback_text="LowStocking image not found")
+
+        tk.Label(
+            low_ba_content,
+            text="The forest's growing stock trees have been depleted!\nWe're supposed to be growing a forest!",
+            bg=BG_COLOR, fg=FG_COLOR, font=("Courier New", 16, "bold"),
+            pady=40, wraplength=600, justify="center"
+        ).pack()
+        
+        tk.Button(
+            low_ba_content, text="Try Again", font=FONT, width=16,
+            bg="#444466", fg=FG_COLOR, activebackground="#333355",
+            command=lambda: restart_game(low_ba_frame)
+        ).pack(pady=10)
+        
+        tk.Button(
+            low_ba_content, text="Exit", font=FONT, width=16,
+            bg="#444466", fg=FG_COLOR, activebackground="#333355",
+            command=root.destroy
+        ).pack(pady=10)
+
+    # --- Main Game Screen ---
     def show_game_screen():
+        """Display the main gameplay screen with forest management options."""
         game_frame = tk.Frame(root, bg=BG_COLOR)
         game_frame.pack(fill="both", expand=True)
         game_content = create_scrollable_frame(game_frame)
         
         # Top: Graphics/Image area
         canvas = tk.Canvas(game_content, width=600, height=300, bg=BG_COLOR, highlightthickness=0)
-        canvas.pack(pady=(10,0))
+        canvas.pack(pady=(10, 0))
+        load_image(canvas, "assets/banner.jpg", fallback_text="Image not found")
 
-        # Load and display JPG image from assets folder
-        try:
-            img_path = "assets/banner.jpg"
-            image = Image.open(img_path)
-            image = image.resize((600, 300), Image.LANCZOS)
-            photo = ImageTk.PhotoImage(image)
-            canvas.create_image(0, 0, anchor="nw", image=photo)
-            canvas.image = photo
-        except Exception as e:
-            canvas.create_text(300, 60, text="Image not found", fill=FG_COLOR, font=FONT)
-
-        # Middle: Status/Narration area
+        # Middle: Status display area
         status = tk.StringVar()
         status.set("Welcome to Pitch Pine Trail! Click an action to begin.")
 
-        status_label = tk.Label(game_content, wraplength=600, justify="left", padx=10, pady=10, bg=BG_COLOR, fg=FG_COLOR, font=FONT)
+        status_label = tk.Label(
+            game_content, 
+            wraplength=600, justify="left", 
+            padx=10, pady=10, 
+            bg=BG_COLOR, fg=FG_COLOR, 
+            font=FONT
+        )
         status_label.pack()
 
-        # Add BA and QMD labels
+        # Stand metrics display
         ba_label = tk.Label(game_content, bg=BG_COLOR, fg=FG_COLOR, font=FONT)
         ba_label.pack()
+        
         qmd_label = tk.Label(game_content, bg=BG_COLOR, fg=FG_COLOR, font=FONT)
         qmd_label.pack()
 
-        fire_risk_label = tk.Label(game_content, wraplength=600, justify="left", padx=10, pady=0, bg=BG_COLOR, font=FONT)
+        fire_risk_label = tk.Label(
+            game_content, 
+            wraplength=600, justify="left", 
+            padx=10, pady=0, 
+            bg=BG_COLOR, font=FONT
+        )
         fire_risk_label.pack()
-        spb_risk_label = tk.Label(game_content, wraplength=600, justify="left", padx=10, pady=0, bg=BG_COLOR, font=FONT)
+        
+        spb_risk_label = tk.Label(
+            game_content, 
+            wraplength=600, justify="left", 
+            padx=10, pady=0, 
+            bg=BG_COLOR, font=FONT
+        )
         spb_risk_label.pack()
 
+        # Narration area
         narration = tk.StringVar()
         narration.set("What will you do next?")
-        narration_label = tk.Label(game_content, textvariable=narration, wraplength=600, justify="left",
-                                padx=10, pady=5, bg=BG_COLOR, fg=FG_COLOR, font=FONT)
+        narration_label = tk.Label(
+            game_content, 
+            textvariable=narration, 
+            wraplength=600, justify="left",
+            padx=10, pady=5, 
+            bg=BG_COLOR, fg=FG_COLOR, 
+            font=FONT
+        )
         narration_label.pack()
 
         # Bottom: User interaction (buttons)
@@ -162,6 +324,7 @@ def main():
         }
 
         def update_status_labels():
+            """Update all status labels with current forest stand information."""
             status = game.get_status_dict()
             status_label.config(
                 text=f"Year: {status['year']} | TPA: {status['TPA']} | Carbon: {status['carbon']:.1f} MT/ac | CI: {status['CI']:.1f}"
@@ -181,145 +344,47 @@ def main():
                 fg=get_risk_color(status['SPB_risk'])
             )
 
-        # Show starting stand stats in year 0
-        update_status_labels()
-
-        def show_closing_screen():
-            # Hide all widgets in the root window
-            for widget in root.winfo_children():
-                widget.pack_forget()
-                
-            closing_frame = tk.Frame(root, bg=BG_COLOR)
-            closing_frame.pack(fill="both", expand=True)
-            closing_content = create_scrollable_frame(closing_frame)
-
-            # Load and display closing banner image
-            try:
-                closing_img_path = "assets/ClosingScreen1.png"
-                closing_image = Image.open(closing_img_path)
-                closing_image = closing_image.resize((600, 300), Image.LANCZOS)
-                closing_photo = ImageTk.PhotoImage(closing_image)
-                closing_canvas = tk.Canvas(closing_content, width=600, height=300, bg=BG_COLOR, highlightthickness=0)
-                closing_canvas.create_image(0, 0, anchor="nw", image=closing_photo)
-                closing_canvas.image = closing_photo
-                closing_canvas.pack(pady=(5, 0))  # Reduced padding
-            except Exception as e:
-                closing_canvas = tk.Canvas(closing_content, width=600, height=300, bg=BG_COLOR, highlightthickness=0)
-                closing_canvas.create_text(300, 150, text="Closing image not found", fill=FG_COLOR, font=FONT)
-                closing_canvas.pack(pady=(5, 0))  # Reduced padding
-
-            tk.Label(
-                closing_content,
-                text="Thank you for playing Pitch Pine Trail!",
-                bg=BG_COLOR, fg=FG_COLOR, font=("Courier New", 16, "bold"),
-                pady=20  # Reduced padding
-            ).pack()
-
-            tk.Label(
-                closing_content,
-                text=game.get_summary(),  # This includes the events!
-                bg=BG_COLOR, fg=FG_COLOR, font=FONT,
-                wraplength=600, justify="left", pady=10
-            ).pack()
-
-            # Add a summary with explicit units for BA and QMD
-            summary = game.get_status_dict()
-            tk.Label(
-                closing_content,
-                text=(
-                    f"Final Stand:\n"
-                    f"QMD: {summary['QMD']:.1f} inches\n"
-                    f"TPA: {summary['TPA']}\n"
-                    f"BA: {summary['BA']:.1f} sqft/acre\n"
-                    f"Carbon: {summary['carbon']:.1f} MT/ac\n"
-                    f"CI: {summary['CI']:.1f}\n"
-                    f"Fire Risk: {summary['fire_risk']}\n"
-                    f"SPB Risk: {summary['SPB_risk']}\n"
-                ),
-                bg=BG_COLOR, fg=FG_COLOR, font=FONT,
-                wraplength=600, justify="left", pady=10  # Reduced padding
-            ).pack()
-            tk.Button(
-                closing_content, text="Try Again", font=FONT, width=16,
-                bg="#444466", fg=FG_COLOR, activebackground="#333355",
-                command=lambda: restart_game(closing_frame)
-            ).pack(pady=5)  # Reduced padding
-            tk.Button(
-                closing_content, text="Exit", font=FONT, width=16,
-                bg="#444466", fg=FG_COLOR, activebackground="#333355",
-                command=root.destroy
-            ).pack(pady=5)  # Reduced padding
-
-        def restart_game(frame_to_remove):
-            game.reset_game()
-            for widget in root.winfo_children():
-                widget.pack_forget()
-            show_game_screen()
-
-        def show_low_ba_screen():
-            # Hide all widgets in the root window
-            for widget in root.winfo_children():
-                widget.pack_forget()
-                
-            low_ba_frame = tk.Frame(root, bg=BG_COLOR)
-            low_ba_frame.pack(fill="both", expand=True)
-            low_ba_content = create_scrollable_frame(low_ba_frame)
-
-            # Load and display LowStocking.png
-            try:
-                img_path = "assets/LowStocking.png"
-                image = Image.open(img_path)
-                image = image.resize((600, 300), Image.LANCZOS)
-                photo = ImageTk.PhotoImage(image)
-                canvas = tk.Canvas(low_ba_content, width=600, height=300, bg=BG_COLOR, highlightthickness=0)
-                canvas.create_image(0, 0, anchor="nw", image=photo)
-                canvas.image = photo
-                canvas.pack(pady=(10,0))
-            except Exception as e:
-                canvas = tk.Canvas(low_ba_content, width=600, height=300, bg=BG_COLOR, highlightthickness=0)
-                canvas.create_text(300, 150, text="LowStocking image not found", fill=FG_COLOR, font=FONT)
-                canvas.pack(pady=(10,0))
-
-            tk.Label(
-                low_ba_content,
-                text="The forest's growing stock trees have been depleated!\nWe're supposed to be growing a forest!",
-                bg=BG_COLOR, fg=FG_COLOR, font=("Courier New", 16, "bold"),
-                pady=40, wraplength=600, justify="center"
-            ).pack()
-            tk.Button(
-                low_ba_content, text="Try Again", font=FONT, width=16,
-                bg="#444466", fg=FG_COLOR, activebackground="#333355",
-                command=lambda: restart_game(low_ba_frame)
-            ).pack(pady=10)
-            tk.Button(
-                low_ba_content, text="Exit", font=FONT, width=16,
-                bg="#444466", fg=FG_COLOR, activebackground="#333355",
-                command=root.destroy
-            ).pack(pady=10)
-
         def next_turn(action):
+            """Process a player's action choice and advance the game.
+            
+            Args:
+                action (str): The action code selected ('1'-'4')
+            """
             game.update_stand(action)
             event = game.simulate_event()
             game.stand['year'] += 10
             status.set(game.get_status())
+            
             if event:
                 narration.set(event)
             else:
                 narration.set("What will you do next?")
+                
+            # Check for game ending conditions
             if game.is_low_ba_game_over():
                 show_low_ba_screen()
                 return
             if game.stand['year'] >= 100:
                 show_closing_screen()
+                return
+                
             update_status_labels()
 
+        # Show starting stand stats in year 0
+        update_status_labels()
+
+        # Create action buttons
         for k, v in ACTIONS.items():
             tk.Button(
-                button_frame, text=f"{k}. {v}", width=22, font=FONT,
-                bg="#444466", fg=FG_COLOR, activebackground="#333355",
+                button_frame, 
+                text=f"{k}. {v}", 
+                width=22, font=FONT,
+                bg="#444466", fg=FG_COLOR, 
+                activebackground="#333355",
                 command=lambda k=k: next_turn(k)
             ).pack(pady=3)
 
+    # Start the main event loop
     root.mainloop()
 
 if __name__ == "__main__":
