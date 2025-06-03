@@ -251,6 +251,36 @@ def main():
             command=root.destroy
         ).pack(pady=10)
 
+    def show_fire_loss_screen():
+        """Display the catastrophic wildfire end screen."""
+        for widget in root.winfo_children():
+            widget.pack_forget()
+        fire_frame = tk.Frame(root, bg=BG_COLOR)
+        fire_frame.pack(fill="both", expand=True)
+        fire_content = create_scrollable_frame(fire_frame)
+
+        # Display LossByFire.png
+        fire_canvas = tk.Canvas(fire_content, width=600, height=300, bg=BG_COLOR, highlightthickness=0)
+        fire_canvas.pack(pady=(5, 0))
+        load_image(fire_canvas, "assets/LossByFire.png", fallback_text="LossByFire image not found")
+
+        tk.Label(
+            fire_content,
+            text="A catastrophic wildfire has occurred!\nWe might get a new stand of pitch pine, but we're trying to grow a mature stand!",
+            bg=BG_COLOR, fg=FG_COLOR, font=("Courier New", 16, "bold"),
+            pady=20, wraplength=600, justify="center"
+        ).pack()
+        tk.Button(
+            fire_content, text="Try Again", font=FONT, width=16,
+            bg="#444466", fg=FG_COLOR, activebackground="#333355",
+            command=lambda: restart_game(fire_frame)
+        ).pack(pady=5)
+        tk.Button(
+            fire_content, text="Exit", font=FONT, width=16,
+            bg="#444466", fg=FG_COLOR, activebackground="#333355",
+            command=root.destroy
+        ).pack(pady=5)
+
     # --- Main Game Screen ---
     def show_game_screen():
         """Display the main gameplay screen with forest management options."""
@@ -354,20 +384,23 @@ def main():
             event = game.simulate_event()
             game.stand['year'] += 10
             status.set(game.get_status())
-            
+
+            if getattr(game.stand, 'catastrophic_wildfire', False) or game.stand.get('catastrophic_wildfire', False):
+                show_fire_loss_screen()
+                return
+
             if event:
                 narration.set(event)
             else:
                 narration.set("What will you do next?")
-                
-            # Check for game ending conditions
+
             if game.is_low_ba_game_over():
                 show_low_ba_screen()
                 return
             if game.stand['year'] >= 100:
                 show_closing_screen()
                 return
-                
+
             update_status_labels()
 
         # Show starting stand stats in year 0

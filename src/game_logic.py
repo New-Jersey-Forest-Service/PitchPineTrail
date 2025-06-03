@@ -33,7 +33,8 @@ class Game:
             'BA': 113,          # Basal Area (sq ft/acre)
             'fire_risk': 'High',
             'SPB_risk': 'Moderate',  # Southern Pine Beetle risk
-            'events': []        # List of (year, event) tuples
+            'events': [],
+            'catastrophic_wildfire': False
         }
         self.low_ba_count = 0   # Track consecutive low BA cycles
 
@@ -48,7 +49,8 @@ class Game:
             'BA': 113,
             'fire_risk': 'High',
             'SPB_risk': 'Moderate',
-            'events': []
+            'events': [],
+            'catastrophic_wildfire': False
         }
         self.low_ba_count = 0
 
@@ -112,24 +114,29 @@ class Game:
     def simulate_event(self):
         """
         Simulate random forest events based on current risk factors.
-        
+
         Returns:
             str or None: Description of event that occurred, or None if no event
         """
         event_log = None
-        
+
         # Wildfire chance increases with high fire risk
         if random.random() < 0.15 and self.stand['fire_risk'] == 'High':
             self.stand['carbon'] *= 0.6
             self.stand['TPA'] = int(self.stand['TPA'] * 0.4)
             self.stand['CI'] += 15
             event_log = 'Wildfire occurred!'
+            # Signal catastrophic wildfire for GUI
+            self.stand['catastrophic_wildfire'] = True
+        else:
+            self.stand['catastrophic_wildfire'] = False
+
         # SPB outbreak chance increases with high SPB risk
-        elif random.random() < 0.10 and self.stand['SPB_risk'] == 'High':
+        if not event_log and random.random() < 0.10 and self.stand['SPB_risk'] == 'High':
             self.stand['TPA'] = int(self.stand['TPA'] * 0.7)
             self.stand['BA'] *= 0.8
             event_log = 'SPB outbreak!'
-            
+
         if event_log:
             self.stand['events'].append((self.stand['year'], event_log))
             return event_log
