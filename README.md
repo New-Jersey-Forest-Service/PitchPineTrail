@@ -10,8 +10,7 @@ PitchPineTrail
 │   ├── main.py          # Entry point of the application
 │   ├── gui.py           # GUI class for retro-style interface
 │   ├── game_logic.py    # Core game logic and mechanics
-│   ├── assets           # Directory for graphics and font files
-│   └── utils.py         # Utility functions for various tasks
+│   └── assets           # Directory for graphics and font files
 ├── requirements.txt     # Project dependencies
 └── README.md            # Project documentation
 ```
