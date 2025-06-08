@@ -1,11 +1,10 @@
 """
 Pitch Pine Trail - Forest Management Simulation Game
 
-NJ Forest Service
 William Zipse
 Cara Escalona
 Justin Gimmillaro
-
+NJ Forest Service
 ---------------------------------------------------
 Core game logic for simulating a pitch pine forest stand over time
 with different management strategies and random events.
