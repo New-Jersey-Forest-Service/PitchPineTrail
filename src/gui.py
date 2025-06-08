@@ -1,10 +1,11 @@
 """
 Pitch Pine Trail - Forest Management Simulation Game
 
+NJ Forest Service
 William Zipse
 Cara Escalona
 Justin Gimmillaro
-NJ Forest Service
+
 ---------------------------------------------------
 Graphical user interface for the Pitch Pine Trail forest management simulation.
 Provides interactive screens for gameplay, status display, and decision making.
