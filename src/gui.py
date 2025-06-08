@@ -281,6 +281,36 @@ def main():
             command=root.destroy
         ).pack(pady=5)
 
+    def show_spb_loss_screen():
+        """Display the SPB outbreak end screen."""
+        for widget in root.winfo_children():
+            widget.pack_forget()
+        spb_frame = tk.Frame(root, bg=BG_COLOR)
+        spb_frame.pack(fill="both", expand=True)
+        spb_content = create_scrollable_frame(spb_frame)
+
+        # Display LossBySPB.png
+        spb_canvas = tk.Canvas(spb_content, width=600, height=300, bg=BG_COLOR, highlightthickness=0)
+        spb_canvas.pack(pady=(5, 0))
+        load_image(spb_canvas, "assets/LossBySPB.png", fallback_text="LossBySPB image not found")
+
+        tk.Label(
+            spb_content,
+            text="A Southern Pine Beetle outbreak has devastated your stand!\nWe're trying to grow a healthy forest!",
+            bg=BG_COLOR, fg=FG_COLOR, font=("Courier New", 16, "bold"),
+            pady=20, wraplength=600, justify="center"
+        ).pack()
+        tk.Button(
+            spb_content, text="Try Again", font=FONT, width=16,
+            bg="#444466", fg=FG_COLOR, activebackground="#333355",
+            command=lambda: restart_game(spb_frame)
+        ).pack(pady=5)
+        tk.Button(
+            spb_content, text="Exit", font=FONT, width=16,
+            bg="#444466", fg=FG_COLOR, activebackground="#333355",
+            command=root.destroy
+        ).pack(pady=5)
+
     # --- Main Game Screen ---
     def show_game_screen():
         """Display the main gameplay screen with forest management options."""
@@ -385,8 +415,14 @@ def main():
             game.stand['year'] += 10
             status.set(game.get_status())
 
+            # Catastrophic wildfire ending
             if getattr(game.stand, 'catastrophic_wildfire', False) or game.stand.get('catastrophic_wildfire', False):
                 show_fire_loss_screen()
+                return
+
+            # SPB outbreak at high risk ending
+            if event == 'SPB outbreak!' and game.stand['SPB_risk'] == 'High':
+                show_spb_loss_screen()
                 return
 
             if event:
