@@ -322,7 +322,7 @@ def main():
         # Top: Graphics/Image area
         canvas = tk.Canvas(game_content, width=600, height=300, bg=BG_COLOR, highlightthickness=0)
         canvas.pack(pady=(10, 0))
-        load_image(canvas, "assets/banner.jpg", fallback_text="Image not found")
+        load_image(canvas, "assets/Evenagestand.png", fallback_text="Image not found")
 
         # Middle: Status display area
         status = tk.StringVar()
