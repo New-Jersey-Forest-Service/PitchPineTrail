@@ -15,6 +15,8 @@ import tkinter as tk
 from tkinter import messagebox
 from game_logic import Game
 from PIL import Image, ImageTk
+import json
+import os
 
 def main():
     """Initialize and run the main game application."""
@@ -125,6 +127,17 @@ def main():
         for widget in root.winfo_children():
             widget.pack_forget()
         show_game_screen()
+
+    def save_game_state():
+        """Save the current game state to a file."""
+        with open("pine_snake_save.json", "w") as f:
+            json.dump(game.stand, f)
+
+    def load_game_state():
+        """Load the game state from a file, if it exists."""
+        if os.path.exists("pine_snake_save.json"):
+            with open("pine_snake_save.json", "r") as f:
+                game.stand = json.load(f)
 
     # --- Intro Screen ---
     intro_frame = tk.Frame(root, bg=BG_COLOR)
@@ -311,6 +324,39 @@ def main():
             bg="#444466", fg=FG_COLOR, activebackground="#333355",
             command=root.destroy
         ).pack(pady=5)
+    
+    # Display Pine snake habitat screen
+    def show_pine_snake_screen():
+        """Display the Pine snake habitat screen."""
+        for widget in root.winfo_children():
+            widget.pack_forget()
+        snake_frame = tk.Frame(root, bg=BG_COLOR)
+        snake_frame.pack(fill="both", expand=True)
+        snake_content = create_scrollable_frame(snake_frame)
+
+        # Display PineSnakeHabitat.png
+        snake_canvas = tk.Canvas(snake_content, width=600, height=300, bg=BG_COLOR, highlightthickness=0)
+        snake_canvas.pack(pady=(5, 0))
+        load_image(snake_canvas, "assets/PineSnakeHabitat.png", fallback_text="PineSnakeHabitat image not found")
+
+        tk.Label(
+            snake_content,
+            text="Pine snake habitat established!\nThis is a positive event for your stand!",
+            bg=BG_COLOR, fg=FG_COLOR, font=("Courier New", 16, "bold"),
+            pady=20, wraplength=600, justify="center"
+        ).pack()
+        # Save game state when this screen is shown
+        save_game_state()
+        def continue_from_snake():
+            load_game_state()
+            for widget in root.winfo_children():
+                widget.pack_forget()
+            show_game_screen()
+        tk.Button(
+            snake_content, text="Continue", font=FONT, width=16,
+            bg="#444466", fg=FG_COLOR, activebackground="#333355",
+            command=continue_from_snake
+        ).pack(pady=5)
 
     # --- Main Game Screen ---
     def show_game_screen():
@@ -424,6 +470,11 @@ def main():
             # SPB outbreak at high risk ending
             if event == 'SPB outbreak!' and game.stand['SPB_risk'] == 'High':
                 show_spb_loss_screen()
+                return
+
+            # Pine snake habitat event
+            if event == 'Pine snake habitat established!':
+                show_pine_snake_screen()
                 return
 
             if event:
