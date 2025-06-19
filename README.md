@@ -33,9 +33,10 @@ PitchPineTrail
    ```
 
 ## Gameplay
-- Players navigate through various rooms and interact with objects in a retro-themed environment.
-- The game includes puzzles and challenges that require strategic thinking and problem-solving skills.
-- Collect items and uncover secrets as you progress through the game.
+- Players navigate growing their stand of pitch pine trees for 100 years in this retro-themed environment.
+- The game includes making choices to make their forests more resilient in the face of random disturbances.
+- Collect achievements as you progress through the game.
+- Can your pitch pine stand survive for 100 years?
 
 ## Assets
 The `src/assets` directory is designated for storing graphics and font files. Placeholders for these assets will be provided, and users can replace them with their own graphics to enhance the game experience.
