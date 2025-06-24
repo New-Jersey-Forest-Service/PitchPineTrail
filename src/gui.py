@@ -312,6 +312,31 @@ def main():
             command=root.destroy
         ).pack(pady=5)
 
+    def show_pine_snake_screen():
+        """Display the pine snake colonization event screen."""
+        for widget in root.winfo_children():
+            widget.pack_forget()
+        snake_frame = tk.Frame(root, bg=BG_COLOR)
+        snake_frame.pack(fill="both", expand=True)
+        snake_content = create_scrollable_frame(snake_frame)
+
+        # Display PinesnakePlaceHolder.png
+        snake_canvas = tk.Canvas(snake_content, width=600, height=300, bg=BG_COLOR, highlightthickness=0)
+        snake_canvas.pack(pady=(10, 0))
+        load_image(snake_canvas, "assets/PinesnakePlaceHolder.png", fallback_text="Pine snake image not found")
+
+        tk.Label(
+            snake_content,
+            text="Congratulations! This forest is excellent northern pine snake habitat.\nPine snakes are utilizing the stand!",
+            bg=BG_COLOR, fg=FG_COLOR, font=("Courier New", 16, "bold"),
+            pady=40, wraplength=600, justify="center"
+        ).pack()
+        tk.Button(
+            snake_content, text="Continue", font=FONT, width=16,
+            bg="#444466", fg=FG_COLOR, activebackground="#333355",
+            command=lambda: [snake_frame.pack_forget(), show_game_screen()]
+        ).pack(pady=10)
+
     # --- Main Game Screen ---
     def show_game_screen():
         """Display the main gameplay screen with forest management options."""
@@ -411,6 +436,7 @@ def main():
             Args:
                 action (str): The action code selected ('1'-'4')
             """
+            pine_snakes_before = game.pine_snakes_colonized
             game.update_stand(action)
             event = game.simulate_event()
             game.stand['year'] += 10
@@ -424,6 +450,11 @@ def main():
             # SPB outbreak at high risk ending
             if event == 'SPB outbreak!' and game.stand['SPB_risk'] == 'High':
                 show_spb_loss_screen()
+                return
+
+            # Pine snake colonization event
+            if not pine_snakes_before and game.pine_snakes_colonized:
+                show_pine_snake_screen()
                 return
 
             if event:
