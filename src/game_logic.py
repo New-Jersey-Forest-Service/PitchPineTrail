@@ -138,13 +138,6 @@ class Game:
             self.stand['BA'] *= 0.8
             event_log = 'SPB outbreak!'
 
-        # Pine snake habitat occurs only once per game
-        if not event_log and random.random() < 0.05 and not self.stand.get('pine_snake_habitat', False):
-            self.stand['TPA'] += 1.0
-            self.stand['QMD'] += 0.1
-            event_log = 'Pine snake habitat established!'
-            self.stand['pine_snake_habitat'] = True
-
         if event_log:
             self.stand['events'].append((self.stand['year'], event_log))
             return event_log
@@ -190,5 +183,4 @@ class Game:
                 summary += f"  Year {yr}: {evt}\n"
         else:
             summary += "No major events occurred during your management.\n"
-
         return summary
