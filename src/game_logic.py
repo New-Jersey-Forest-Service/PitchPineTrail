@@ -12,6 +12,7 @@ with different management strategies and random events.
 """
 
 import random
+import math
 
 class Game:
     """
@@ -38,6 +39,7 @@ class Game:
             'catastrophic_wildfire': False
         }
         self.low_ba_count = 0   # Track consecutive low BA cycles
+        self.pine_snakes_colonized = False  # Track pine snake colonization
 
     def reset_game(self):
         """Reset the game to initial conditions."""
@@ -54,6 +56,7 @@ class Game:
             'catastrophic_wildfire': False
         }
         self.low_ba_count = 0
+        self.pine_snakes_colonized = False
 
     def update_stand(self, action):
         """
@@ -107,6 +110,11 @@ class Game:
             self.low_ba_count += 1
         else:
             self.low_ba_count = 0
+
+        # Pine snake colonization logic
+        if (45 <= self.stand['BA'] <= 70) and not self.pine_snakes_colonized:
+            if random.random() < 0.5:
+                self.pine_snakes_colonized = True
 
     def is_low_ba_game_over(self):
         """Check if game should end due to consecutive low BA conditions."""
@@ -183,4 +191,8 @@ class Game:
                 summary += f"  Year {yr}: {evt}\n"
         else:
             summary += "No major events occurred during your management.\n"
+
+        if self.pine_snakes_colonized:
+            summary += "\nPine snakes are utilizing this stand!\n"
+            
         return summary
