@@ -320,10 +320,10 @@ def main():
         snake_frame.pack(fill="both", expand=True)
         snake_content = create_scrollable_frame(snake_frame)
 
-        # Display PinesnakePlaceHolder.png
+        # Display Pinesnake.jpg
         snake_canvas = tk.Canvas(snake_content, width=600, height=300, bg=BG_COLOR, highlightthickness=0)
         snake_canvas.pack(pady=(10, 0))
-        load_image(snake_canvas, "assets/PinesnakePlaceHolder.png", fallback_text="Pine snake image not found")
+        load_image(snake_canvas, "assets/Pinesnake.jpg", fallback_text="Pine snake image not found")
 
         tk.Label(
             snake_content,
