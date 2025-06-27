@@ -15,8 +15,11 @@ import tkinter as tk
 from tkinter import messagebox
 from game_logic import Game
 from PIL import Image, ImageTk
+import pygame
 
 def main():
+    pygame.mixer.init()  # <-- Move this here, at the very start of main()
+
     """Initialize and run the main game application."""
     # Initialize game and UI constants
     game = Game()
@@ -178,6 +181,7 @@ def main():
     intro_frame.pack(fill="both", expand=True)
 
     def intro_overlay_builder(overlay):
+        play_forest_sound()
         tk.Label(
             overlay,
             text="Welcome to Pitch Pine Trail by the New Jersey Forest Service!\nGrow your Pitch Pines for 100 years!",
@@ -199,7 +203,8 @@ def main():
 
     # --- Main Game Screen Functions ---
     def show_closing_screen():
-        """Display the game's ending screen with final statistics."""
+        stop_forest_sound()
+        play_trumpet_win_sound()
         for widget in root.winfo_children():
             widget.pack_forget()
             
@@ -277,6 +282,8 @@ def main():
 
     def show_low_ba_screen():
         """Display the game over screen for low basal area condition."""
+        stop_forest_sound()
+        play_losing_trombone_sound()
         for widget in root.winfo_children():
             widget.pack_forget()
         low_ba_frame = tk.Frame(root, bg=BG_COLOR)
@@ -292,7 +299,7 @@ def main():
             tk.Button(
                 overlay, text="Try Again", font=FONT, width=16,
                 bg="#444466", fg=FG_COLOR, activebackground="#333355",
-                command=lambda: restart_game(low_ba_frame)
+                command=lambda: [stop_losing_trombone_sound(), restart_game(low_ba_frame)]
             ).pack(pady=10)
             tk.Button(
                 overlay, text="Exit", font=FONT, width=16,
@@ -304,6 +311,8 @@ def main():
 
     def show_fire_loss_screen():
         """Display the catastrophic wildfire end screen."""
+        stop_forest_sound()
+        play_fire_sound()
         for widget in root.winfo_children():
             widget.pack_forget()
         fire_frame = tk.Frame(root, bg=BG_COLOR)
@@ -319,7 +328,7 @@ def main():
             tk.Button(
                 overlay, text="Try Again", font=FONT, width=16,
                 bg="#444466", fg=FG_COLOR, activebackground="#333355",
-                command=lambda: restart_game(fire_frame)
+                command=lambda: [stop_fire_sound(), restart_game(fire_frame)]
             ).pack(pady=5)
             tk.Button(
                 overlay, text="Exit", font=FONT, width=16,
@@ -357,7 +366,8 @@ def main():
         create_fullscreen_image_screen(spb_frame, "assets/LossBySPB.png", overlay_builder)
 
     def show_pine_snake_screen():
-        """Display the pine snake colonization event screen."""
+        """Display the screen for successful pine snake habitat."""
+        play_pine_snake_sound()  # <-- Play over forest sound
         for widget in root.winfo_children():
             widget.pack_forget()
         snake_frame = tk.Frame(root, bg=BG_COLOR)
@@ -380,7 +390,9 @@ def main():
 
     # --- Main Game Screen ---
     def show_game_screen():
-        """Display the main gameplay screen with forest management options."""
+        stop_forest_sound()
+        play_forest_sound()
+
         game_frame = tk.Frame(root, bg=BG_COLOR)
         game_frame.pack(fill="both", expand=True)
 
@@ -546,6 +558,53 @@ def main():
 
     # Start the main event loop
     root.mainloop()
+
+def play_forest_sound():
+    try:
+        pygame.mixer.music.load("assets/forest_sound.wav")
+        pygame.mixer.music.play(-1)  # -1 means loop forever
+    except Exception as e:
+        print("Error playing sound:", e)
+
+def stop_forest_sound():
+    pygame.mixer.music.stop()
+
+def play_fire_sound():
+    try:
+        pygame.mixer.music.load("assets/fire.wav")
+        pygame.mixer.music.play()
+    except Exception as e:
+        print("Error playing fire sound:", e)
+
+def stop_fire_sound():
+    pygame.mixer.music.stop()
+
+def play_trumpet_win_sound():
+    try:
+        pygame.mixer.music.load("assets/trumpet_win.wav")
+        pygame.mixer.music.play()
+    except Exception as e:
+        print("Error playing win sound:", e)
+
+def stop_trumprt_win_sound():
+    pygame.mixer.music.stop()
+
+def play_losing_trombone_sound():
+    try:
+        pygame.mixer.music.load("assets/losing_trombone.wav")
+        pygame.mixer.music.play()
+    except Exception as e:
+        print("Error playing trombone sound:", e)
+
+def stop_losing_trombone_sound():
+    pygame.mixer.music.stop()
+
+def play_pine_snake_sound():
+    try:
+        sound = pygame.mixer.Sound("assets/pine_snake.wav")
+        sound.play()
+    except Exception as e:
+        print("Error playing pine snake sound:", e)
 
 if __name__ == "__main__":
     main()
