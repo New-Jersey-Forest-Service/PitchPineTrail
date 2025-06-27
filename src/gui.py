@@ -5,6 +5,7 @@ NJ Forest Service
 William Zipse
 Cara Escalona
 Justin Gimmillaro
+Andrea Pfaff
 
 ---------------------------------------------------
 Graphical user interface for the Pitch Pine Trail forest management simulation.
@@ -250,7 +251,7 @@ def main():
             overlay,
             text=game.get_summary(),
             bg=BG_COLOR, fg=FG_COLOR, font=FONT,
-            wraplength=600, justify="left", pady=10
+            wraplength=400, justify="left", pady=10
         ).pack()
 
         summary = game.get_status_dict()
@@ -267,7 +268,7 @@ def main():
                 f"SPB Risk: {summary['SPB_risk']}\n"
             ),
             bg=BG_COLOR, fg=FG_COLOR, font=FONT,
-            wraplength=600, justify="left", pady=10
+            wraplength=400, justify="left", pady=10
         ).pack()
         tk.Button(
             overlay, text="Try Again", font=FONT, width=16,
@@ -294,7 +295,7 @@ def main():
                 overlay,
                 text="The forest's growing stock trees have been depleted!\nWe're supposed to be growing a forest!",
                 bg=BG_COLOR, fg=FG_COLOR, font=("Courier New", 16, "bold"),
-                pady=40, wraplength=600, justify="center"
+                pady=40, wraplength=400, justify="center"
             ).pack()
             tk.Button(
                 overlay, text="Try Again", font=FONT, width=16,
@@ -323,7 +324,7 @@ def main():
                 overlay,
                 text="A catastrophic wildfire has occurred!\nWe might get a new stand of pitch pine, but we're trying to grow a mature stand!",
                 bg=BG_COLOR, fg=FG_COLOR, font=("Courier New", 16, "bold"),
-                pady=20, wraplength=600, justify="center"
+                pady=20, wraplength=400, justify="center"
             ).pack()
             tk.Button(
                 overlay, text="Try Again", font=FONT, width=16,
@@ -350,7 +351,7 @@ def main():
                 overlay,
                 text="A Southern Pine Beetle outbreak has devastated your stand!\nWe're trying to grow a healthy forest!",
                 bg=BG_COLOR, fg=FG_COLOR, font=("Courier New", 16, "bold"),
-                pady=20, wraplength=600, justify="center"
+                pady=20, wraplength=400, justify="center"
             ).pack()
             tk.Button(
                 overlay, text="Try Again", font=FONT, width=16,
@@ -378,7 +379,7 @@ def main():
                 overlay,
                 text="Congratulations! This forest is excellent northern pine snake habitat.\nPine snakes are utilizing the stand!",
                 bg=BG_COLOR, fg=FG_COLOR, font=("Courier New", 16, "bold"),
-                pady=40, wraplength=600, justify="center"
+                pady=40, wraplength=400, justify="center"
             ).pack()
             tk.Button(
                 overlay, text="Continue", font=FONT, width=16,
@@ -428,10 +429,10 @@ def main():
 
         # Status display area
         status = tk.StringVar()
-        status.set("Welcome to Pitch Pine Trail! Click an action to begin.")
+        status.set("Welcome to Pitch Pine Trail! \nClick an action to begin.")
 
         status_label = tk.Label(
-            overlay, textvariable=status, wraplength=600, justify="left",
+            overlay, textvariable=status, wraplength=400, justify="center",
             padx=10, pady=10, bg=BG_COLOR, fg=FG_COLOR, font=FONT
         )
         status_label.pack()
@@ -440,15 +441,15 @@ def main():
         ba_label.pack()
         qmd_label = tk.Label(overlay, bg=BG_COLOR, fg=FG_COLOR, font=FONT)
         qmd_label.pack()
-        fire_risk_label = tk.Label(overlay, wraplength=600, justify="left", padx=10, pady=0, bg=BG_COLOR, font=FONT)
+        fire_risk_label = tk.Label(overlay, wraplength=400, justify="left", padx=10, pady=0, bg=BG_COLOR, font=FONT)
         fire_risk_label.pack()
-        spb_risk_label = tk.Label(overlay, wraplength=600, justify="left", padx=10, pady=0, bg=BG_COLOR, font=FONT)
+        spb_risk_label = tk.Label(overlay, wraplength=400, justify="left", padx=10, pady=0, bg=BG_COLOR, font=FONT)
         spb_risk_label.pack()
 
         narration = tk.StringVar()
         narration.set("What will you do next?")
         narration_label = tk.Label(
-            overlay, textvariable=narration, wraplength=600, justify="left",
+            overlay, textvariable=narration, wraplength=400, justify="left",
             padx=10, pady=5, bg=BG_COLOR, fg=FG_COLOR, font=FONT
         )
         narration_label.pack()
