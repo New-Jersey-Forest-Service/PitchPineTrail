@@ -437,10 +437,13 @@ def main():
         )
         status_label.pack()
 
+        # Show BA, QMD, and TPA only at the start
         ba_label = tk.Label(overlay, bg=BG_COLOR, fg=FG_COLOR, font=FONT)
         ba_label.pack()
         qmd_label = tk.Label(overlay, bg=BG_COLOR, fg=FG_COLOR, font=FONT)
         qmd_label.pack()
+        tpa_label = tk.Label(overlay, bg=BG_COLOR, fg=FG_COLOR, font=FONT)
+        tpa_label.pack()
         fire_risk_label = tk.Label(overlay, wraplength=400, justify="left", padx=10, pady=0, bg=BG_COLOR, font=FONT)
         fire_risk_label.pack()
         spb_risk_label = tk.Label(overlay, wraplength=400, justify="left", padx=10, pady=0, bg=BG_COLOR, font=FONT)
@@ -467,10 +470,17 @@ def main():
         def update_status_labels():
             status_dict = game.get_status_dict()
             status_label.config(
-                text=f"Year: {status_dict['year']} | TPA: {status_dict['TPA']} | Carbon: {status_dict['carbon']:.1f} MT/ac | CI: {status_dict['CI']:.1f}"
+                text=f"Year: {status_dict['year']} | Carbon: {status_dict['carbon']:.1f} MT/ac | CI: {status_dict['CI']:.1f}"
             )
-            ba_label.config(text=f"Basal Area (BA): {status_dict['BA']:.1f} sqft/acre")
-            qmd_label.config(text=f"Quadratic Mean Diameter (QMD): {status_dict['QMD']:.1f} inches")
+            # Only show BA, QMD, TPA at the start (year 0)
+            if status_dict['year'] == 0:
+                ba_label.config(text=f"Basal Area (BA): {status_dict['BA']:.1f} sqft/acre")
+                qmd_label.config(text=f"Quadratic Mean Diameter (QMD): {status_dict['QMD']:.1f} inches")
+                tpa_label.config(text=f"Trees Per Acre (TPA): {status_dict['TPA']}")
+            else:
+                ba_label.config(text="")
+                qmd_label.config(text="")
+                tpa_label.config(text="")
             fire_risk_label.config(
                 text=f"Fire Risk: {status_dict['fire_risk']}",
                 fg=get_risk_color(status_dict['fire_risk'])
