@@ -31,52 +31,10 @@ def main():
     root = tk.Tk()
     root.title("Pitch Pine Trail")
     root.configure(bg=BG_COLOR)
-    root.geometry("1500x1080")  # Updated window size
+    root.geometry("1920x1080")  # fall back for full screen
+    root.attributes('-fullscreen', True)  #true fullscreen
+    root.bind("<Escape>", lambda e: root.attributes("-fullscreen", False)) #exit fullscreen on Escape key
 
-    def create_scrollable_frame(parent):
-        """Create a scrollable frame with both vertical and horizontal scrollbars.
-        
-        Args:
-            parent: Parent widget to contain the scrollable frame
-            
-        Returns:
-            tk.Frame: Frame to contain content that will be scrollable
-        """
-        # Create a canvas with scrollbars
-        canvas = tk.Canvas(parent, bg=BG_COLOR)
-        v_scrollbar = tk.Scrollbar(parent, orient="vertical", command=canvas.yview)
-        h_scrollbar = tk.Scrollbar(parent, orient="horizontal", command=canvas.xview)
-        
-        # Configure canvas
-        canvas.configure(yscrollcommand=v_scrollbar.set, xscrollcommand=h_scrollbar.set)
-        
-        # Grid layout for scrollbars and canvas
-        canvas.grid(row=0, column=0, sticky="nsew")
-        v_scrollbar.grid(row=0, column=1, sticky="ns")
-        h_scrollbar.grid(row=1, column=0, sticky="ew")
-        
-        # Configure parent grid
-        parent.grid_rowconfigure(0, weight=1)
-        parent.grid_columnconfigure(0, weight=1)
-        
-        # Create frame inside canvas to hold content
-        content_frame = tk.Frame(canvas, bg=BG_COLOR)
-        
-        # Create window in canvas to display the frame
-        window_id = canvas.create_window((0, 0), window=content_frame, anchor="nw")
-        
-        # Update scrollregion when frame size changes
-        def update_scrollregion(event):
-            canvas.configure(scrollregion=canvas.bbox("all"))
-        
-        # Update canvas width when window is resized
-        def configure_canvas(event):
-            canvas.itemconfig(window_id, width=event.width)
-            
-        content_frame.bind("<Configure>", update_scrollregion)
-        canvas.bind("<Configure>", configure_canvas)
-        
-        return content_frame
 
     def get_risk_color(risk):
         """Return color code based on risk level.
@@ -94,24 +52,6 @@ def main():
         else:
             return "#B22222"  # Red
 
-    def load_image(canvas, img_path, width=1400, height=550, fallback_text="Image not found"):
-        """Load and display an image centered on a canvas, preserving aspect ratio."""
-        try:
-            image = Image.open(img_path)
-            img_w, img_h = image.size
-            # Calculate the scaling factor to fit the image inside the canvas
-            scale = min(width / img_w, height / img_h)
-            new_w = int(img_w * scale)
-            new_h = int(img_h * scale)
-            image = image.resize((new_w, new_h), Image.LANCZOS)
-            photo = ImageTk.PhotoImage(image)
-            # Center the image in the canvas
-            canvas.create_image(width // 2, height // 2, anchor="center", image=photo)
-            canvas.image = photo  # Keep a reference to prevent garbage collection
-            return True
-        except Exception:
-            canvas.create_text(width // 2, height // 2, text=fallback_text, fill=FG_COLOR, font=FONT)
-            return False
 
     def restart_game(frame_to_remove):
         """Reset the game and display the main game screen.
@@ -189,46 +129,36 @@ def main():
 
     def intro_overlay_builder(overlay):
         play_forest_sound()
-        tk.Label(
-            overlay,
-            text="New Jersey Forest Service presents...",
-            bg= "#663e1d", fg="#FFFFFF", font=("Courier New", 14, "bold italic"),
-            pady=0
-        ).pack()
       
-    canvas = create_fullscreen_image_screen(intro_frame, "assets/introscreen.png", intro_overlay_builder, x=155, y=580)
+    canvas = create_fullscreen_image_screen(intro_frame, "assets/introscreen.png", intro_overlay_builder, x=1390, y=590)
 
-    # Second section of tect
-    second_overlay = tk.Frame(canvas, bg="#663e1d", bd=0)  # Set brown background
-    canvas.create_window(103, 737, anchor="nw", window=second_overlay)
-    tk.Label(
-        second_overlay,
-        text="PITCH PINE TRAIL",
-        bg="#663e1d", fg="#FFFFFF", font=("Courier New", 40, "bold")
-    ).pack(pady=(0, 10))
+    # create overlay for buttons and place buttons side by side
+    second_overlay = tk.Frame(canvas, bg="#663e1d", bd=0)
+    canvas.create_window(1355, 915, anchor="nw", window=second_overlay)
+    button_row = tk.Frame(second_overlay, bg="#663e1d")
+    button_row.pack(pady=5)
 
-    # Add Begin and Exit buttons to the second overlay
     tk.Button(
-        second_overlay,
+        button_row,
         text="Begin",
-        font=("Courier New", 12, "bold"),
+        font=("Courier", 14, "bold"),
         width=14,
-        bg="#663e1d",  # Brown background
-        fg="#FFFFFF",
-        activebackground="#333355",
+        bg="#f7d79e",  
+        fg="#663e1d",
+        activebackground="#13471C",
         command=lambda: [intro_frame.pack_forget(), show_game_screen()]
-    ).pack(pady=5)
+    ).pack(side="left", padx=5)
 
     tk.Button(
-        second_overlay,
+        button_row,
         text="Exit",
-        font=("Courier New", 12, "bold"),
+        font=("Courier", 14, "bold"),
         width=14,
-        bg="#663e1d",  # Brown background
-        fg="#FFFFFF",
-        activebackground="#333355",
+        bg="#f7d79e",  
+        fg="#663e1d",
+        activebackground="#531717",
         command=root.destroy
-    ).pack(pady=5)
+    ).pack(side="left", padx=5)
 
     # --- Main Game Screen Functions ---
     def show_closing_screen():
