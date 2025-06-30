@@ -32,8 +32,8 @@ def main():
     root.title("Pitch Pine Trail")
     root.configure(bg=BG_COLOR)
     root.geometry("1920x1080")  # fall back for full screen
-    #root.attributes('-fullscreen', True)  #true fullscreen
-    #root.bind("<Escape>", lambda e: root.attributes("-fullscreen", False)) #exit fullscreen on Escape key
+    root.attributes('-fullscreen', True)  #true fullscreen
+    root.bind("<Escape>", lambda e: root.attributes("-fullscreen", False)) #exit fullscreen on Escape key
 
 
     def get_risk_color(risk):
@@ -135,9 +135,12 @@ def main():
     bg_label.image = bg_photo  # Prevent garbage collection
     bg_label.place(relx=0, rely=0, relwidth=1, relheight=1)
 
+    # Play forest sound on intro screen
+    play_forest_sound()
+
     # Create a frame for the buttons, centered near the bottom
-    button_row = tk.Frame(intro_frame, bg="#663e1d")
-    button_row.place(relx=0.798, rely=0.86, anchor="center")  # Adjust rely for vertical position
+    button_row = tk.Frame(intro_frame, bg="#854a2d")
+    button_row.place(relx=0.795, rely=0.825, anchor="center")  # Adjust rely for vertical position
 
     tk.Button(
         button_row,
