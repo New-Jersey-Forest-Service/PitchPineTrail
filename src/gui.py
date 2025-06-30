@@ -409,6 +409,7 @@ def main():
         spb_risk_label.pack()
 
         # Narration area
+        # Narration area
         narration = tk.StringVar()
         narration.set("What will you do next?")
         narration_label = tk.Label(
@@ -457,6 +458,7 @@ def main():
             game.stand['year'] += 10
             status.set(game.get_status())
 
+            # Catastrophic wildfire ending
             # Catastrophic wildfire ending
             if getattr(game.stand, 'catastrophic_wildfire', False) or game.stand.get('catastrophic_wildfire', False):
                 show_fire_loss_screen()
