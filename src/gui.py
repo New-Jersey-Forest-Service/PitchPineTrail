@@ -32,8 +32,8 @@ def main():
     root.title("Pitch Pine Trail")
     root.configure(bg=BG_COLOR)
     root.geometry("1920x1080")  # fall back for full screen
-    root.attributes('-fullscreen', True)  #true fullscreen
-    root.bind("<Escape>", lambda e: root.attributes("-fullscreen", False)) #exit fullscreen on Escape key
+    #root.attributes('-fullscreen', True)  #true fullscreen
+    #root.bind("<Escape>", lambda e: root.attributes("-fullscreen", False)) #exit fullscreen on Escape key
 
 
     def get_risk_color(risk):
@@ -127,23 +127,24 @@ def main():
     intro_frame = tk.Frame(root, bg=BG_COLOR)
     intro_frame.pack(fill="both", expand=True)
 
-    def intro_overlay_builder(overlay):
-        play_forest_sound()
-      
-    canvas = create_fullscreen_image_screen(intro_frame, "assets/introscreen.png", intro_overlay_builder, x=1390, y=590)
+    # Load and display the background image in a label
+    bg_img = Image.open("assets/introscreen.png")
+    bg_img = bg_img.resize((1920, 1080))  # Or use root.winfo_screenwidth(), etc.
+    bg_photo = ImageTk.PhotoImage(bg_img)
+    bg_label = tk.Label(intro_frame, image=bg_photo)
+    bg_label.image = bg_photo  # Prevent garbage collection
+    bg_label.place(relx=0, rely=0, relwidth=1, relheight=1)
 
-    # create overlay for buttons and place buttons side by side
-    second_overlay = tk.Frame(canvas, bg="#663e1d", bd=0)
-    canvas.create_window(1355, 915, anchor="nw", window=second_overlay)
-    button_row = tk.Frame(second_overlay, bg="#663e1d")
-    button_row.pack(pady=5)
+    # Create a frame for the buttons, centered near the bottom
+    button_row = tk.Frame(intro_frame, bg="#663e1d")
+    button_row.place(relx=0.798, rely=0.86, anchor="center")  # Adjust rely for vertical position
 
     tk.Button(
         button_row,
         text="Begin",
         font=("Courier", 14, "bold"),
         width=14,
-        bg="#f7d79e",  
+        bg="#f7d79e",
         fg="#663e1d",
         activebackground="#13471C",
         command=lambda: [intro_frame.pack_forget(), show_game_screen()]
@@ -154,7 +155,7 @@ def main():
         text="Exit",
         font=("Courier", 14, "bold"),
         width=14,
-        bg="#f7d79e",  
+        bg="#f7d79e",
         fg="#663e1d",
         activebackground="#531717",
         command=root.destroy
