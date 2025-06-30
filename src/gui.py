@@ -21,11 +21,10 @@ import pygame
 def main():
     pygame.mixer.init()  # <-- Move this here, at the very start of main()
 
-    """Initialize and run the main game application."""
     # Initialize game and UI constants
     game = Game()
-    BG_COLOR = "#222244"    # Dark blue background
-    FG_COLOR = "#33FF33"    # Green text
+    BG_COLOR = "#FFFFFF"    # White background
+    FG_COLOR = "#000000"    # Black text
     FONT = ("Courier New", 12, "bold")
 
     # Set up the main window
@@ -33,7 +32,7 @@ def main():
     root.title("Pitch Pine Trail")
     root.configure(bg=BG_COLOR)
     root.geometry("1500x1080")  # Updated window size
-    
+
     def create_scrollable_frame(parent):
         """Create a scrollable frame with both vertical and horizontal scrollbars.
         
@@ -125,13 +124,14 @@ def main():
             widget.pack_forget()
         show_game_screen()
 
-    def create_fullscreen_image_screen(parent, image_path, overlay_builder):
+    def create_fullscreen_image_screen(parent, image_path, overlay_builder, x=30, y=30):
         """
         Helper to create a fullscreen, resizable image background with overlay widgets.
         Args:
             parent: tk.Frame or tk.Tk to pack the canvas into.
             image_path: Path to the background image.
             overlay_builder: Function that takes the overlay frame and populates it with widgets.
+            x, y: Position of the overlay frame (default 30, 30)
         """
         # Remove all children from parent
         for widget in parent.winfo_children():
@@ -162,17 +162,23 @@ def main():
         canvas.bind("<Configure>", update_bg_image)
 
         # Overlay frame for stats and buttons
-        overlay = tk.Frame(canvas, bg="#222244", bd=0)
-        overlay_id = canvas.create_window(30, 30, anchor="nw", window=overlay)
+        overlay = tk.Frame(canvas, bg="", bd=0)  # Transparent background
+        overlay_id = canvas.create_window(x, y, anchor="nw", window=overlay)
 
         # Let the caller populate the overlay
         overlay_builder(overlay)
+        return canvas  
 
     def add_definitions_button(overlay):
         """Add a definitions button to the bottom right of the overlay."""
         btn = tk.Button(
-            overlay, text="Definitions", font=FONT, width=14,
-            bg="#444466", fg=FG_COLOR, activebackground="#333355",
+            overlay,
+            text="Definitions",
+            font=FONT,
+            width=14,
+            bg="#444466",
+            fg=FG_COLOR,
+            activebackground="#333355",
             command=show_definitions_screen
         )
         btn.place(relx=1.0, rely=1.0, anchor="se", x=-20, y=-20)  # 20px from bottom right
@@ -185,22 +191,44 @@ def main():
         play_forest_sound()
         tk.Label(
             overlay,
-            text="Welcome to Pitch Pine Trail by the New Jersey Forest Service!\nGrow your Pitch Pines for 100 years!",
-            bg=BG_COLOR, fg=FG_COLOR, font=("Courier New", 14, "bold"),
-            pady=20
+            text="New Jersey Forest Service presents...",
+            bg= "#663e1d", fg="#FFFFFF", font=("Courier New", 14, "bold italic"),
+            pady=0
         ).pack()
-        tk.Button(
-            overlay, text="Begin", font=FONT, width=16,
-            bg="#444466", fg=FG_COLOR, activebackground="#333355",
-            command=lambda: [intro_frame.pack_forget(), show_game_screen()]
-        ).pack(pady=5)
-        tk.Button(
-            overlay, text="Exit", font=FONT, width=16,
-            bg="#444466", fg=FG_COLOR, activebackground="#333355",
-            command=root.destroy
-        ).pack(pady=5)
+      
+    canvas = create_fullscreen_image_screen(intro_frame, "assets/introscreen.png", intro_overlay_builder, x=155, y=580)
 
-    create_fullscreen_image_screen(intro_frame, "assets/introscreen.jpeg", intro_overlay_builder)
+    # Second section of tect
+    second_overlay = tk.Frame(canvas, bg="#663e1d", bd=0)  # Set brown background
+    canvas.create_window(103, 737, anchor="nw", window=second_overlay)
+    tk.Label(
+        second_overlay,
+        text="PITCH PINE TRAIL",
+        bg="#663e1d", fg="#FFFFFF", font=("Courier New", 40, "bold")
+    ).pack(pady=(0, 10))
+
+    # Add Begin and Exit buttons to the second overlay
+    tk.Button(
+        second_overlay,
+        text="Begin",
+        font=("Courier New", 12, "bold"),
+        width=14,
+        bg="#663e1d",  # Brown background
+        fg="#FFFFFF",
+        activebackground="#333355",
+        command=lambda: [intro_frame.pack_forget(), show_game_screen()]
+    ).pack(pady=5)
+
+    tk.Button(
+        second_overlay,
+        text="Exit",
+        font=("Courier New", 12, "bold"),
+        width=14,
+        bg="#663e1d",  # Brown background
+        fg="#FFFFFF",
+        activebackground="#333355",
+        command=root.destroy
+    ).pack(pady=5)
 
     # --- Main Game Screen Functions ---
     def show_closing_screen():
@@ -237,8 +265,8 @@ def main():
         canvas.bind("<Configure>", update_bg_image)
 
         # Overlay frame for stats and buttons
-        overlay = tk.Frame(canvas, bg="#222244", bd=0)
-        overlay_id = canvas.create_window(30, 30, anchor="nw", window=overlay)
+        overlay = tk.Frame(canvas, bg="#FFFFFF", bd=0)
+        overlay_id = canvas.create_window(50, 185, anchor="nw", window=overlay)
 
         tk.Label(
             overlay,
@@ -341,6 +369,8 @@ def main():
 
     def show_spb_loss_screen():
         """Display the SPB outbreak end screen."""
+        stop_forest_sound()           # Stop the forest sound first
+        play_spb_eating_sound()       # Play only the SPB eating sound (looped)
         for widget in root.winfo_children():
             widget.pack_forget()
         spb_frame = tk.Frame(root, bg=BG_COLOR)
@@ -356,7 +386,7 @@ def main():
             tk.Button(
                 overlay, text="Try Again", font=FONT, width=16,
                 bg="#444466", fg=FG_COLOR, activebackground="#333355",
-                command=lambda: restart_game(spb_frame)
+                command=lambda: [stop_spb_eating_sound(), restart_game(spb_frame)]
             ).pack(pady=5)
             tk.Button(
                 overlay, text="Exit", font=FONT, width=16,
@@ -383,11 +413,11 @@ def main():
             ).pack()
             tk.Button(
                 overlay, text="Continue", font=FONT, width=16,
-                bg="#444466", fg=FG_COLOR, activebackground="#333355",
+                bg="#546644", fg="#FFFFFF", activebackground="#203B15",
                 command=lambda: [snake_frame.pack_forget(), show_game_screen()]
             ).pack(pady=10)
 
-        create_fullscreen_image_screen(snake_frame, "assets/Pinesnake.jpg", overlay_builder)
+        create_fullscreen_image_screen(snake_frame, "assets/Pinesnake.jpg", overlay_builder, x=70, y=185)
 
     # --- Main Game Screen ---
     def show_game_screen():
@@ -423,9 +453,8 @@ def main():
         canvas.bind("<Configure>", update_bg_image)
 
         # Overlay frame for stats and buttons
-        overlay = tk.Frame(canvas, bg="#222244", bd=0)
-        # Place overlay frame at the top with some padding
-        overlay_id = canvas.create_window(30, 30, anchor="nw", window=overlay)
+        overlay = tk.Frame(canvas, bg="#FFFFFF", bd=0)  # White background
+        overlay_id = canvas.create_window(50, 185, anchor="nw", window=overlay)
 
         # Status display area
         status = tk.StringVar()
@@ -433,31 +462,31 @@ def main():
 
         status_label = tk.Label(
             overlay, textvariable=status, wraplength=400, justify="center",
-            padx=10, pady=10, bg=BG_COLOR, fg=FG_COLOR, font=FONT
+            padx=10, pady=10, bg="#FFFFFF", fg=FG_COLOR, font=FONT
         )
         status_label.pack()
 
-        # Show BA, QMD, and TPA only at the start
-        ba_label = tk.Label(overlay, bg=BG_COLOR, fg=FG_COLOR, font=FONT)
+
+        ba_label = tk.Label(overlay, bg="#FFFFFF", fg=FG_COLOR, font=FONT)
         ba_label.pack()
-        qmd_label = tk.Label(overlay, bg=BG_COLOR, fg=FG_COLOR, font=FONT)
+        qmd_label = tk.Label(overlay, bg="#FFFFFF", fg=FG_COLOR, font=FONT)
         qmd_label.pack()
+        fire_risk_label = tk.Label(overlay, wraplength=400, justify="left", padx=10, pady=0, bg="#FFFFFF", font=FONT)
         tpa_label = tk.Label(overlay, bg=BG_COLOR, fg=FG_COLOR, font=FONT)
         tpa_label.pack()
-        fire_risk_label = tk.Label(overlay, wraplength=400, justify="left", padx=10, pady=0, bg=BG_COLOR, font=FONT)
         fire_risk_label.pack()
-        spb_risk_label = tk.Label(overlay, wraplength=400, justify="left", padx=10, pady=0, bg=BG_COLOR, font=FONT)
+        spb_risk_label = tk.Label(overlay, wraplength=400, justify="left", padx=10, pady=0, bg="#FFFFFF", font=FONT)
         spb_risk_label.pack()
 
         narration = tk.StringVar()
         narration.set("What will you do next?")
         narration_label = tk.Label(
             overlay, textvariable=narration, wraplength=400, justify="left",
-            padx=10, pady=5, bg=BG_COLOR, fg=FG_COLOR, font=FONT
+            padx=10, pady=5, bg="#FFFFFF", fg=FG_COLOR, font=FONT
         )
         narration_label.pack()
 
-        button_frame = tk.Frame(overlay, bg=BG_COLOR)
+        button_frame = tk.Frame(overlay, bg="#FFFFFF")
         button_frame.pack(pady=10)
 
         ACTIONS = {
@@ -525,8 +554,8 @@ def main():
                 button_frame,
                 text=f"{k}. {v}",
                 width=22, font=FONT,
-                bg="#444466", fg=FG_COLOR,
-                activebackground="#333355",
+                bg="#FFFFFF", fg=FG_COLOR,
+                activebackground="#DDDDDD",
                 command=lambda k=k: next_turn(k)
             ).pack(pady=3)
 
@@ -583,7 +612,7 @@ def stop_forest_sound():
 def play_fire_sound():
     try:
         pygame.mixer.music.load("assets/fire.wav")
-        pygame.mixer.music.play()
+        pygame.mixer.music.play(-1)  # Loop forever
     except Exception as e:
         print("Error playing fire sound:", e)
 
@@ -616,6 +645,21 @@ def play_pine_snake_sound():
         sound.play()
     except Exception as e:
         print("Error playing pine snake sound:", e)
+
+def play_spb_eating_sound():
+    try:
+        # Store the sound and channel so we can stop it later
+        play_spb_eating_sound.sound = pygame.mixer.Sound("assets/SPB_eating.wav")
+        play_spb_eating_sound.channel = play_spb_eating_sound.sound.play(loops=-1)  # Loop forever
+    except Exception as e:
+        print("Error playing SPB eating sound:", e)
+
+def stop_spb_eating_sound():
+    try:
+        if hasattr(play_spb_eating_sound, "channel") and play_spb_eating_sound.channel is not None:
+            play_spb_eating_sound.channel.stop()
+    except Exception as e:
+        print("Error stopping SPB eating sound:", e)
 
 if __name__ == "__main__":
     main()
