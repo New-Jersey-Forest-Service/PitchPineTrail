@@ -417,7 +417,7 @@ def main():
                 command=lambda: [snake_frame.pack_forget(), show_game_screen()]
             ).pack(pady=10)
 
-        create_fullscreen_image_screen(snake_frame, "assets/Pinesnake.jpg", overlay_builder, x=70, y=185)
+        create_fullscreen_image_screen(snake_frame, "assets/snake.png", overlay_builder, x=70, y=185)
 
     # --- Main Game Screen ---
     def show_game_screen():
