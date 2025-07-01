@@ -31,7 +31,7 @@ def main():
     root = tk.Tk()
     root.title("Pitch Pine Trail")
     root.configure(bg=BG_COLOR)
-    root.geometry("1920x1080")  # fall back for full screen
+    #root.geometry("1920x1080")  # fall back for full screen
     root.attributes('-fullscreen', True)  #true fullscreen
     root.bind("<Escape>", lambda e: root.attributes("-fullscreen", False)) #exit fullscreen on Escape key
 
