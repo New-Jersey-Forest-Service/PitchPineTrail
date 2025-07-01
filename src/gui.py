@@ -48,7 +48,7 @@ def main():
         if risk == "Low":
             return "#228B22"  # Green
         elif risk == "Moderate":
-            return "#FFD700"  # Yellow
+            return "#FFA600"  # Yellow
         else:
             return "#B22222"  # Red
 
@@ -140,7 +140,7 @@ def main():
 
     # Create a frame for the buttons, centered near the bottom
     button_row = tk.Frame(intro_frame, bg="#854a2d")
-    button_row.place(relx=0.795, rely=0.825, anchor="center")  # Adjust rely for vertical position
+    button_row.place(relx=0.795, rely=0.825, anchor="center")  
 
     tk.Button(
         button_row,
@@ -361,69 +361,59 @@ def main():
         game_frame = tk.Frame(root, bg=BG_COLOR)
         game_frame.pack(fill="both", expand=True)
 
-        # Create a canvas that fills the window
-        canvas = tk.Canvas(game_frame, bg=BG_COLOR, highlightthickness=0)
-        canvas.pack(fill="both", expand=True)
+        # Load and display the background image in a label
+        bg_img = Image.open("assets/Evenagestand.png")
+        bg_img = bg_img.resize((1920, 1080))
+        bg_photo = ImageTk.PhotoImage(bg_img)
+        bg_label = tk.Label(game_frame, image=bg_photo)
+        bg_label.image = bg_photo
+        bg_label.place(relx=0, rely=0, relwidth=1, relheight=1)
 
-        # Load and display the background image, resizing it to fit the window
-        def update_bg_image(event=None):
-            try:
-                image = Image.open("assets/Evenagestand.png")
-                # Resize image to fit the canvas
-                w = canvas.winfo_width()
-                h = canvas.winfo_height()
-                if w < 10 or h < 10:
-                    return  # Avoid errors on initial small size
-                img = image.resize((w, h), Image.LANCZOS)
-                photo = ImageTk.PhotoImage(img)
-                canvas.photo = photo  # Prevent garbage collection
-                if hasattr(canvas, "bg_img_id"):
-                    canvas.itemconfig(canvas.bg_img_id, image=photo)
-                else:
-                    canvas.bg_img_id = canvas.create_image(0, 0, anchor="nw", image=photo)
-            except Exception:
-                pass
-
-        canvas.bind("<Configure>", update_bg_image)
-
-        # Overlay frame for stats and buttons
-        overlay = tk.Frame(canvas, bg="#FFFFFF", bd=0)  # White background
-        overlay_id = canvas.create_window(50, 185, anchor="nw", window=overlay)
-
-        # Status display area
-        status = tk.StringVar()
-        status.set("Welcome to Pitch Pine Trail! \nClick an action to begin.")
+        # --- Welcome Frame ---
+        welcome_frame = tk.Frame(game_frame, bg="#FFFFFF", bd=0)
+        welcome_frame.place(relx=0.88, rely=0.13, anchor="center")
 
         status_label = tk.Label(
-            overlay, textvariable=status, wraplength=400, justify="center",
-            padx=10, pady=10, bg="#FFFFFF", fg=FG_COLOR, font=FONT
+            welcome_frame,
+            text="Welcome to Pitch Pine Trail! \nClick an action to begin →",
+            wraplength=600, justify="center",
+            padx=10, pady=10, bg="#1b2336", fg="#05dd4c", font=FONT
         )
         status_label.pack()
 
+        # --- Metrics Frame ---
+        metrics_frame = tk.Frame(game_frame, bg="#FFFFFF", bd=0)
+        metrics_frame.place(relx=0.845, rely=0.73, anchor="center")
 
-        ba_label = tk.Label(overlay, bg="#FFFFFF", fg=FG_COLOR, font=FONT)
-        ba_label.pack()
-        qmd_label = tk.Label(overlay, bg="#FFFFFF", fg=FG_COLOR, font=FONT)
-        qmd_label.pack()
-        fire_risk_label = tk.Label(overlay, wraplength=400, justify="left", padx=10, pady=0, bg="#FFFFFF", font=FONT)
-        tpa_label = tk.Label(overlay, bg=BG_COLOR, fg=FG_COLOR, font=FONT)
-        tpa_label.pack()
+        # This label will be updated with game status
+        game_status = tk.StringVar()
+        game_status_message = tk.Message(
+            metrics_frame,
+            textvariable=game_status,
+            width=450,  # width in pixels, similar to wraplength
+            justify="center",
+            bg="#FFFFFF",
+            fg=FG_COLOR,
+            font=("Courier",13, "bold")
+        )
+        game_status_message.pack()
+
+        fire_risk_label = tk.Label(metrics_frame, wraplength=400, justify="left", padx=10, pady=0, bg="#FFFFFF", font=FONT)
         fire_risk_label.pack()
-        spb_risk_label = tk.Label(overlay, wraplength=400, justify="left", padx=10, pady=0, bg="#FFFFFF", font=FONT)
+        spb_risk_label = tk.Label(metrics_frame, wraplength=400, justify="left", padx=10, pady=0, bg="#FFFFFF", font=FONT)
         spb_risk_label.pack()
 
-        # Narration area
-        # Narration area
         narration = tk.StringVar()
         narration.set("What will you do next?")
         narration_label = tk.Label(
-            overlay, textvariable=narration, wraplength=400, justify="left",
+            metrics_frame, textvariable=narration, wraplength=400, justify="left",
             padx=10, pady=5, bg="#FFFFFF", fg=FG_COLOR, font=FONT
         )
         narration_label.pack()
 
-        button_frame = tk.Frame(overlay, bg="#FFFFFF")
-        button_frame.pack(pady=10)
+        # --- Button frame ---
+        button_frame = tk.Frame(game_frame, bg="#1b2336")
+        button_frame.place(relx=0.88, rely=0.26, anchor="center")
 
         ACTIONS = {
             '1': 'Do nothing',
@@ -434,20 +424,16 @@ def main():
 
         def update_status_labels():
             status_dict = game.get_status_dict()
-            status_label.config(
-                text=f"Year: {status_dict['year']} | Carbon: {status_dict['carbon']:.1f} MT/ac | CI: {status_dict['CI']:.1f}"
+            game_status.set(
+                f"Year: {status_dict['year']}\n"
+                f"\nBasal Area (BA): {status_dict['BA']:.1f} sqft/acre\n"
+                f"\nTrees Per Acre (TPA): {status_dict['TPA']}\n"
+                f"\nQuadratic Mean Diameter (QMD): {status_dict['QMD']:.1f} inches\n"
+                f"\nCarbon per Acre: {status_dict['carbon']:.1f} Metric Tons/acre\n"
+                f"\nCompetition Index: {status_dict['CI']:.1f}"
             )
-            # Only show BA, QMD, TPA at the start (year 0)
-            if status_dict['year'] == 0:
-                ba_label.config(text=f"Basal Area (BA): {status_dict['BA']:.1f} sqft/acre")
-                qmd_label.config(text=f"Quadratic Mean Diameter (QMD): {status_dict['QMD']:.1f} inches")
-                tpa_label.config(text=f"Trees Per Acre (TPA): {status_dict['TPA']}")
-            else:
-                ba_label.config(text="")
-                qmd_label.config(text="")
-                tpa_label.config(text="")
             fire_risk_label.config(
-                text=f"Fire Risk: {status_dict['fire_risk']}",
+                text=f"\n\n\nFire Risk: {status_dict['fire_risk']}",
                 fg=get_risk_color(status_dict['fire_risk'])
             )
             spb_risk_label.config(
@@ -460,10 +446,13 @@ def main():
             game.update_stand(action)
             event = game.simulate_event()
             game.stand['year'] += 10
-            status.set(game.get_status())
 
-            # Catastrophic wildfire ending
-            # Catastrophic wildfire ending
+            # Hide welcome message after first action
+            welcome_frame.place_forget()
+
+            # Update metrics/status
+            update_status_labels()
+
             if getattr(game.stand, 'catastrophic_wildfire', False) or game.stand.get('catastrophic_wildfire', False):
                 show_fire_loss_screen()
                 return
@@ -483,7 +472,6 @@ def main():
             if game.stand['year'] >= 100:
                 show_closing_screen()
                 return
-            update_status_labels()
 
         update_status_labels()
 
@@ -491,11 +479,12 @@ def main():
             tk.Button(
                 button_frame,
                 text=f"{k}. {v}",
-                width=22, font=FONT,
-                bg="#FFFFFF", fg=FG_COLOR,
-                activebackground="#DDDDDD",
+                width=22, font=("Courier", 14, "bold"),
+                bg="#404d6d",
+                fg="#05dd4c",
+                activebackground="#05dd4c",
                 command=lambda k=k: next_turn(k)
-            ).pack(pady=3)
+            ).pack(pady=5)
 
     def show_definitions_screen():
         """Display a screen with definitions for different terms."""
