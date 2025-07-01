@@ -332,26 +332,40 @@ def main():
 
     def show_pine_snake_screen():
         """Display the screen for successful pine snake habitat."""
-        play_pine_snake_sound()  # <-- Play over forest sound
+        play_pine_snake_sound()  # Play over forest sound
         for widget in root.winfo_children():
             widget.pack_forget()
         snake_frame = tk.Frame(root, bg=BG_COLOR)
         snake_frame.pack(fill="both", expand=True)
 
-        def overlay_builder(overlay):
-            tk.Label(
-                overlay,
-                text="Congratulations! This forest is excellent northern pine snake habitat.\nPine snakes are utilizing the stand!",
-                bg=BG_COLOR, fg=FG_COLOR, font=("Courier New", 16, "bold"),
-                pady=40, wraplength=400, justify="center"
-            ).pack()
-            tk.Button(
-                overlay, text="Continue", font=FONT, width=16,
-                bg="#546644", fg="#FFFFFF", activebackground="#203B15",
-                command=lambda: [snake_frame.pack_forget(), show_game_screen()]
-            ).pack(pady=10)
+        # Load and display the background image in a label
+        bg_img = Image.open("assets/Pinesnake.jpg")
+        bg_img = bg_img.resize((1920, 1080))
+        bg_photo = ImageTk.PhotoImage(bg_img)
+        bg_label = tk.Label(snake_frame, image=bg_photo)
+        bg_label.image = bg_photo  # Prevent garbage collection
+        bg_label.place(relx=0, rely=0, relwidth=1, relheight=1)
 
-        create_fullscreen_image_screen(snake_frame, "assets/Pinesnake.jpg", overlay_builder, x=70, y=185)
+        # --- Text Frame ---
+        text_frame = tk.Frame(snake_frame, bg="#1b2336", bd=0)
+        text_frame.place(relx=0.88, rely=0.2, anchor="center")  # Adjust relx/rely as needed
+
+        tk.Label(
+            text_frame,
+            text="Congratulations! This forest is excellent northern pine snake habitat.\n\nPine snakes are utilizing the stand!",
+            bg="#1b2336", fg="#05dd4c", font=("Courier New", 18, "bold"),
+            pady=10, wraplength=370, justify="center"
+        ).pack()
+
+        # --- Button Frame ---
+        button_frame = tk.Frame(snake_frame, bg="#000000", bd=0)
+        button_frame.place(relx=0.88, rely=0.34, anchor="center")  # Adjust relx/rely as needed
+
+        tk.Button(
+            button_frame, text="Continue", font=("Courier", 16, "bold"), width=16,
+            bg="#05dd4c", fg="#1b2336", activebackground="#069134",
+            command=lambda: [snake_frame.pack_forget(), show_game_screen()]
+        ).pack(pady=0)
 
     # --- Main Game Screen ---
     def show_game_screen():
