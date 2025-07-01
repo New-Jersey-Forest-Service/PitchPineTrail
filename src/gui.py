@@ -346,6 +346,49 @@ def main():
         bg_label.image = bg_photo  # Prevent garbage collection
         bg_label.place(relx=0, rely=0, relwidth=1, relheight=1)
 
+        # --- Metrics Frame (copied from main game screen) ---
+        metrics_frame = tk.Frame(snake_frame, bg="#FFFFFF", bd=0)
+        metrics_frame.place(relx=0.845, rely=0.73, anchor="center")
+        game_status = tk.StringVar()
+        status_dict = game.get_status_dict()
+        game_status.set(
+            f"Year: {status_dict['year']}\n"
+            f"\nBasal Area (BA): {status_dict['BA']:.1f} sqft/acre\n"
+            f"\nTrees Per Acre (TPA): {status_dict['TPA']}\n"
+            f"\nQuadratic Mean Diameter (QMD): {status_dict['QMD']:.1f} inches\n"
+            f"\nCarbon per Acre: {status_dict['carbon']:.1f} Metric Tons/acre\n"
+            f"\nCrowning Index: {status_dict['CI']:.1f}"
+        )
+        game_status_message = tk.Message(
+            metrics_frame,
+            textvariable=game_status,
+            width=450,
+            justify="center",
+            bg="#FFFFFF",
+            fg=FG_COLOR,
+            font=("Courier",13, "bold")
+        )
+        game_status_message.pack()
+        fire_risk_label = tk.Label(metrics_frame, wraplength=400, justify="left", padx=10, pady=0, bg="#FFFFFF", font=FONT)
+        fire_risk_label.pack()
+        spb_risk_label = tk.Label(metrics_frame, wraplength=400, justify="left", padx=10, pady=0, bg="#FFFFFF", font=FONT)
+        spb_risk_label.pack()
+        fire_risk_label.config(
+            text=f"\n\n\nFire Risk: {status_dict['fire_risk']}",
+            fg=get_risk_color(status_dict['fire_risk'])
+        )
+        spb_risk_label.config(
+            text=f"Southern Pine Beetle Risk: {status_dict['SPB_risk']}",
+            fg=get_risk_color(status_dict['SPB_risk'])
+        )
+        narration = tk.StringVar()
+        narration.set("What will you do next?")
+        narration_label = tk.Label(
+            metrics_frame, textvariable=narration, wraplength=400, justify="left",
+            padx=10, pady=5, bg="#FFFFFF", fg=FG_COLOR, font=FONT
+        )
+        narration_label.pack()
+
         # --- Text Frame ---
         text_frame = tk.Frame(snake_frame, bg="#1b2336", bd=0)
         text_frame.place(relx=0.88, rely=0.2, anchor="center")  # Adjust relx/rely as needed
@@ -439,7 +482,7 @@ def main():
                 f"\nTrees Per Acre (TPA): {status_dict['TPA']}\n"
                 f"\nQuadratic Mean Diameter (QMD): {status_dict['QMD']:.1f} inches\n"
                 f"\nCarbon per Acre: {status_dict['carbon']:.1f} Metric Tons/acre\n"
-                f"\nCompetition Index: {status_dict['CI']:.1f}"
+                f"\nCrowning Index: {status_dict['CI']:.1f}"
             )
             fire_risk_label.config(
                 text=f"\n\n\nFire Risk: {status_dict['fire_risk']}",
@@ -526,7 +569,7 @@ def main():
             f"\nTrees Per Acre (TPA): {status_dict['TPA']}\n"
             f"\nQuadratic Mean Diameter (QMD): {status_dict['QMD']:.1f} inches\n"
             f"\nCarbon per Acre: {status_dict['carbon']:.1f} Metric Tons/acre\n"
-            f"\nCompetition Index: {status_dict['CI']:.1f}"
+            f"\nCrowning Index: {status_dict['CI']:.1f}"
         )
         game_status_message = tk.Message(
             metrics_frame,
