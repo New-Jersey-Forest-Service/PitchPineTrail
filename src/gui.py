@@ -204,7 +204,7 @@ def main():
 
     # Create a frame for the buttons, centered near the bottom
     button_row = tk.Frame(intro_frame, bg="#854a2d")
-    button_row.place(relx=0.795, rely=0.825, anchor="center")  
+    button_row.place(relx=0.795, rely=0.828, anchor="center")  
 
     tk.Button(
         button_row,
@@ -310,6 +310,7 @@ def main():
         """Display the game over screen for low basal area condition."""
         stop_forest_sound()
         play_losing_trombone_sound()
+        play_wind_sound()  # <-- Play wind sound at the same time
         for widget in root.winfo_children():
             widget.pack_forget()
         low_ba_frame = tk.Frame(root, bg=BG_COLOR)
@@ -636,7 +637,7 @@ def main():
 
         # --- Button Frame ---
         button_frame = tk.Frame(snake_frame, bg="#000000", bd=0)
-        button_frame.place(relx=0.88, rely=0.34, anchor="center")  # Adjust relx/rely as needed
+        button_frame.place(relx=0.88, rely=0.33, anchor="center")  # Adjust relx/rely as needed
 
         tk.Button(
             button_frame, text="Continue", font=("Courier", 16, "bold"), width=16,
@@ -862,6 +863,7 @@ def main():
     #show_spb_loss_screen()  # <-- TEMP: Jump directly to screen for testing
     root.mainloop()
 
+#defining sound functions
 def play_forest_sound():
     try:
         pygame.mixer.music.load("assets/forest_sound.wav")
@@ -937,6 +939,13 @@ def play_zoom_sound():
         sound.play()
     except Exception as e:
         print("Error playing zoom sound:", e)
+
+def play_wind_sound():
+    try:
+        sound = pygame.mixer.Sound("assets/wind.wav")
+        sound.play()
+    except Exception as e:
+        print("Error playing wind sound:", e)
 
 if __name__ == "__main__":
     main()
