@@ -134,6 +134,7 @@ def main():
         img_label.pack(fill="both", expand=True)
 
         zoom_images = [
+            "assets/zoom_0.png",
             "assets/zoom_1.png",
             "assets/zoom_2.png",
             "assets/zoom_3.png",
