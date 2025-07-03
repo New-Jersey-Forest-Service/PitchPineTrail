@@ -73,6 +73,7 @@ class Game:
             'catastrophic_wildfire': False
         }
 
+        self.action_history = []  # Clear the action history
         self.low_ba_count = 0
         self.pine_snakes_colonized = False
 
