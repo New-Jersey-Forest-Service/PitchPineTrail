@@ -14,6 +14,13 @@ with different management strategies and random events.
 import random
 import math
 
+ACTIONS = {
+    '1': 'Do nothing',
+    '2': 'Thin lightly',
+    '3': 'Thin heavily',
+    '4': 'Prescribed burn'
+}
+
 class Game:
     """
     Manages the forest stand simulation, including tree growth, management actions,
@@ -45,6 +52,7 @@ class Game:
 
         self.low_ba_count = 0   # Track consecutive low BA cycles
         self.pine_snakes_colonized = False  # Track pine snake colonization
+        self.action_history = []  # Add this line
 
     def reset_game(self):
         """Reset the game to initial conditions."""
@@ -167,6 +175,9 @@ class Game:
             if random.random() < 0.5:
                 self.pine_snakes_colonized = True
 
+        # After updating the stand/year, record the action:
+        self.action_history.append((self.stand['year'], action))
+
     def is_low_ba_game_over(self):
         """Check if game should end due to consecutive low BA conditions."""
         return self.low_ba_count >= 2
@@ -247,3 +258,10 @@ class Game:
             summary += "\nPine snakes are utilizing this stand!\n"
             
         return summary
+
+    def get_action_summary(self):
+        lines = []
+        for year, action in self.action_history:
+            action_name = ACTIONS.get(str(action), str(action))
+            lines.append(f"Year {year}: {action_name}")
+        return "\n".join(lines) if lines else "No actions taken."

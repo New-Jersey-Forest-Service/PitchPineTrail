@@ -14,7 +14,7 @@ Provides interactive screens for gameplay, status display, and decision making.
 
 import tkinter as tk
 from tkinter import messagebox
-from game_logic import Game
+from game_logic import Game, ACTIONS
 from PIL import Image, ImageTk
 import pygame
 
@@ -31,7 +31,7 @@ def main():
     root = tk.Tk()
     root.title("Pitch Pine Trail")
     root.configure(bg=BG_COLOR)
-    root.geometry("1920x1080")  # fall back for full screen
+    #root.geometry("1920x1080")  # fall back for full screen
     root.attributes('-fullscreen', True)  #true fullscreen
     root.bind("<Escape>", lambda e: root.attributes("-fullscreen", False)) #exit fullscreen on Escape key
 
@@ -48,7 +48,7 @@ def main():
         if risk == "Low":
             return "#228B22"  # Green
         elif risk == "Moderate":
-            return "#FFD700"  # Yellow
+            return "#FFA600"  # Yellow
         else:
             return "#B22222"  # Red
 
@@ -123,30 +123,98 @@ def main():
         )
         btn.place(relx=1.0, rely=1.0, anchor="se", x=-20, y=-20)  # 20px from bottom right
 
+    #define zoom sequence images
+    def start_zoom_sequence():
+        play_zoom_sound()  # Play zoom sound over forest sound
+        for widget in root.winfo_children():
+            widget.pack_forget()
+        zoom_frame = tk.Frame(root, bg=BG_COLOR)
+        zoom_frame.pack(fill="both", expand=True)
+        img_label = tk.Label(zoom_frame)
+        img_label.pack(fill="both", expand=True)
+
+        zoom_images = [
+            "assets/zoom_0.png",
+            "assets/zoom_1.png",
+            "assets/zoom_2.png",
+            "assets/zoom_3.png",
+            "assets/zoom_4.png",
+            "assets/zoom_5.png"
+        ]
+
+        def show_next_zoom(index=0):
+            if index < len(zoom_images):
+                img = Image.open(zoom_images[index]).resize((1920, 1080))
+                photo = ImageTk.PhotoImage(img)
+                img_label.config(image=photo)
+                img_label.image = photo  # Prevent garbage collection
+                root.after(400, lambda: show_next_zoom(index + 1))
+            else:
+                # Show zoom_6.png and overlay the button
+                img = Image.open("assets/zoom_6.png").resize((1920, 1080))
+                photo = ImageTk.PhotoImage(img)
+                img_label.config(image=photo)
+                img_label.image = photo
+
+                # Overlay frame for the "Let's Play" button
+                overlay = tk.Frame(zoom_frame, bg="", bd=0)
+                overlay.place(relx=0.55, rely=0.71, anchor="center")
+                tk.Button(
+                    overlay,
+                    text="Let's Play!",
+                    font=("Courier", 18, "bold"),
+                    width=16,
+                    bg="#f7d79e",
+                    fg="#663e1d",
+                    activebackground="#069134",
+                    command=lambda: [zoom_frame.pack_forget(), show_game_screen()]
+                ).pack(pady=10)
+
+                # --- Definitions Button Frame (same placement as main screen) ---
+                definitions_frame = tk.Frame(zoom_frame, bg="#FFFFFF")
+                definitions_frame.place(relx=0.05, rely=0.96, anchor="sw")
+                definitions_button = tk.Button(
+                    definitions_frame,
+                    text="Click for Definitions",
+                    font=FONT,
+                    width=23,
+                    bg="#000000",
+                    fg="#ffffff",
+                    activebackground="#FFE208",
+                    command=show_definitions_screen
+                )
+                definitions_button.pack()
+
+        show_next_zoom()
+    
     # --- Intro Screen ---
     intro_frame = tk.Frame(root, bg=BG_COLOR)
     intro_frame.pack(fill="both", expand=True)
 
-    def intro_overlay_builder(overlay):
-        play_forest_sound()
-      
-    canvas = create_fullscreen_image_screen(intro_frame, "assets/introscreen.png", intro_overlay_builder, x=1390, y=590)
+    # Load and display the background image in a label
+    bg_img = Image.open("assets/introscreen.png")
+    bg_img = bg_img.resize((1920, 1080))  # Or use root.winfo_screenwidth(), etc.
+    bg_photo = ImageTk.PhotoImage(bg_img)
+    bg_label = tk.Label(intro_frame, image=bg_photo)
+    bg_label.image = bg_photo  # Prevent garbage collection
+    bg_label.place(relx=0, rely=0, relwidth=1, relheight=1)
 
-    # create overlay for buttons and place buttons side by side
-    second_overlay = tk.Frame(canvas, bg="#663e1d", bd=0)
-    canvas.create_window(1355, 915, anchor="nw", window=second_overlay)
-    button_row = tk.Frame(second_overlay, bg="#663e1d")
-    button_row.pack(pady=5)
+    # Play forest sound on intro screen
+    play_forest_sound()
+
+    # Create a frame for the buttons, centered near the bottom
+    button_row = tk.Frame(intro_frame, bg="#854a2d")
+    button_row.place(relx=0.795, rely=0.828, anchor="center")  
 
     tk.Button(
         button_row,
         text="Begin",
         font=("Courier", 14, "bold"),
         width=14,
-        bg="#f7d79e",  
+        bg="#f7d79e",
         fg="#663e1d",
         activebackground="#13471C",
-        command=lambda: [intro_frame.pack_forget(), show_game_screen()]
+        command=start_zoom_sequence  # <-- Use this instead of show_game_screen
     ).pack(side="left", padx=5)
 
     tk.Button(
@@ -154,7 +222,7 @@ def main():
         text="Exit",
         font=("Courier", 14, "bold"),
         width=14,
-        bg="#f7d79e",  
+        bg="#f7d79e",
         fg="#663e1d",
         activebackground="#531717",
         command=root.destroy
@@ -162,7 +230,6 @@ def main():
 
     # --- Main Game Screen Functions ---
     def show_closing_screen():
-        stop_forest_sound()
         play_trumpet_win_sound()
         for widget in root.winfo_children():
             widget.pack_forget()
@@ -170,103 +237,167 @@ def main():
         closing_frame = tk.Frame(root, bg=BG_COLOR)
         closing_frame.pack(fill="both", expand=True)
 
-        # Full-window canvas
-        canvas = tk.Canvas(closing_frame, bg=BG_COLOR, highlightthickness=0)
-        canvas.pack(fill="both", expand=True)
+        # Load and display the background image in a label
+        bg_img = Image.open("assets/ClosingScreen1.png")
+        bg_img = bg_img.resize((1920, 1080))
+        bg_photo = ImageTk.PhotoImage(bg_img)
+        bg_label = tk.Label(closing_frame, image=bg_photo)
+        bg_label.image = bg_photo  # Prevent garbage collection
+        bg_label.place(relx=0, rely=0, relwidth=1, relheight=1)
 
-        # Dynamically resize and display background image
-        def update_bg_image(event=None):
-            try:
-                image = Image.open("assets/ClosingScreen1.png")
-                w = canvas.winfo_width()
-                h = canvas.winfo_height()
-                if w < 10 or h < 10:
-                    return
-                img = image.resize((w, h), Image.LANCZOS)
-                photo = ImageTk.PhotoImage(img)
-                canvas.photo = photo
-                if hasattr(canvas, "bg_img_id"):
-                    canvas.itemconfig(canvas.bg_img_id, image=photo)
-                else:
-                    canvas.bg_img_id = canvas.create_image(0, 0, anchor="nw", image=photo)
-            except Exception:
-                pass
-
-        canvas.bind("<Configure>", update_bg_image)
-
-        # Overlay frame for stats and buttons
-        overlay = tk.Frame(canvas, bg="#FFFFFF", bd=0)
-        overlay_id = canvas.create_window(50, 185, anchor="nw", window=overlay)
-
-        tk.Label(
-            overlay,
-            text="Thank you for playing Pitch Pine Trail!",
-            bg=BG_COLOR, fg=FG_COLOR, font=("Courier New", 16, "bold"),
-            pady=20
-        ).pack()
-
-        tk.Label(
-            overlay,
-            text=game.get_summary(),
-            bg=BG_COLOR, fg=FG_COLOR, font=FONT,
-            wraplength=400, justify="left", pady=10
-        ).pack()
-
+        # --- Metrics Frame (same as main game screen) ---
+        metrics_frame = tk.Frame(closing_frame, bg="#FFFFFF", bd=0)
+        metrics_frame.place(relx=0.845, rely=0.73, anchor="center")
+        game_status = tk.StringVar()
         summary = game.get_status_dict()
+        game_status.set(
+            f"Year: {summary['year']}\n"
+            f"\nBasal Area (BA): {summary['BA']:.1f} sqft/acre\n"
+            f"\nTrees Per Acre (TPA): {summary['TPA']}\n"
+            f"\nQuadratic Mean Diameter (QMD): {summary['QMD']:.1f} inches\n"
+            f"\nCarbon per Acre: {summary['carbon']:.1f} Metric Tons/acre\n"
+            f"\nCrowning Index: {summary['CI']:.1f}"
+        )
+        game_status_message = tk.Message(
+            metrics_frame,
+            textvariable=game_status,
+            width=450,
+            justify="center",
+            bg="#FFFFFF",
+            fg=FG_COLOR,
+            font=("Courier",13, "bold")
+        )
+        game_status_message.pack()
+        fire_risk_label = tk.Label(metrics_frame, wraplength=400, justify="left", padx=10, pady=0, bg="#FFFFFF", font=FONT)
+        fire_risk_label.pack()
+        spb_risk_label = tk.Label(metrics_frame, wraplength=400, justify="left", padx=10, pady=0, bg="#FFFFFF", font=FONT)
+        spb_risk_label.pack()
+        fire_risk_label.config(
+            text=f"\nFire Risk: {summary['fire_risk']}",
+            fg=get_risk_color(summary['fire_risk'])
+        )
+        spb_risk_label.config(
+            text=f"Southern Pine Beetle Risk: {summary['SPB_risk']}",
+            fg=get_risk_color(summary['SPB_risk'])
+        )
+        narration = tk.StringVar()
+        narration.set("Thank you for playing Pitch Pine Trail!")
+        narration_label = tk.Label(
+            metrics_frame, textvariable=narration, wraplength=400, justify="left",
+            padx=10, pady=5, bg="#FFFFFF", fg=FG_COLOR, font=FONT
+        )
+        narration_label.pack()
+
+        # --- Text Frame ---
+        text_frame = tk.Frame(closing_frame, bg="#1b2336", bd=0)
+        text_frame.place(relx=0.88, rely=0.23, anchor="center")
         tk.Label(
-            overlay,
-            text=(
-                f"Final Stand:\n"
-                f"QMD: {summary['QMD']:.1f} inches\n"
-                f"TPA: {summary['TPA']}\n"
-                f"BA: {summary['BA']:.1f} sqft/acre\n"
-                f"Carbon: {summary['carbon']:.1f} MT/ac\n"
-                f"CI: {summary['CI']:.1f}\n"
-                f"Fire Risk: {summary['fire_risk']}\n"
-                f"SPB Risk: {summary['SPB_risk']}\n"
-            ),
-            bg=BG_COLOR, fg=FG_COLOR, font=FONT,
-            wraplength=400, justify="left", pady=10
+            text_frame,
+            text=game.get_action_summary(),
+            bg="#1b2336", fg="#05dd4c", font=("Courier New", 17, "bold"),
+            wraplength=400, justify="left"
         ).pack()
+
+        # --- Button Frame ---
+        button_frame = tk.Frame(closing_frame, bg="#FFFFFF", bd=0)
+        button_frame.place(relx=0.845, rely=0.91, anchor="center")
         tk.Button(
-            overlay, text="Try Again", font=FONT, width=16,
-            bg="#444466", fg=FG_COLOR, activebackground="#333355",
+            button_frame, text="Try Again", font=("Courier", 14, "bold"), width=15,
+            bg="#23ac23", fg="#023a02", activebackground="#10612B",
             command=lambda: restart_game(closing_frame)
-        ).pack(pady=5)
+        ).pack(side="left", padx=10, pady=0)
         tk.Button(
-            overlay, text="Exit", font=FONT, width=16,
-            bg="#444466", fg=FG_COLOR, activebackground="#333355",
+            button_frame, text="Exit", font=("Courier", 14, "bold"), width=15,
+            bg="#9c3432", fg="#2c0505", activebackground="#611010",
             command=root.destroy
-        ).pack(pady=5)
+        ).pack(side="left", padx=10, pady=0)
 
     def show_low_ba_screen():
         """Display the game over screen for low basal area condition."""
         stop_forest_sound()
         play_losing_trombone_sound()
+        play_wind_sound()  # <-- Play wind sound at the same time
         for widget in root.winfo_children():
             widget.pack_forget()
         low_ba_frame = tk.Frame(root, bg=BG_COLOR)
         low_ba_frame.pack(fill="both", expand=True)
 
-        def overlay_builder(overlay):
-            tk.Label(
-                overlay,
-                text="The forest's growing stock trees have been depleted!\nWe're supposed to be growing a forest!",
-                bg=BG_COLOR, fg=FG_COLOR, font=("Courier New", 16, "bold"),
-                pady=40, wraplength=400, justify="center"
-            ).pack()
-            tk.Button(
-                overlay, text="Try Again", font=FONT, width=16,
-                bg="#444466", fg=FG_COLOR, activebackground="#333355",
-                command=lambda: [stop_losing_trombone_sound(), restart_game(low_ba_frame)]
-            ).pack(pady=10)
-            tk.Button(
-                overlay, text="Exit", font=FONT, width=16,
-                bg="#444466", fg=FG_COLOR, activebackground="#333355",
-                command=root.destroy
-            ).pack(pady=10)
+        # Load and display the background image in a label
+        bg_img = Image.open("assets/LowStocking.png")
+        bg_img = bg_img.resize((1920, 1080))
+        bg_photo = ImageTk.PhotoImage(bg_img)
+        bg_label = tk.Label(low_ba_frame, image=bg_photo)
+        bg_label.image = bg_photo  # Prevent garbage collection
+        bg_label.place(relx=0, rely=0, relwidth=1, relheight=1)
 
-        create_fullscreen_image_screen(low_ba_frame, "assets/LowStocking.png", overlay_builder)
+        # --- Metrics Frame ---
+        metrics_frame = tk.Frame(low_ba_frame, bg="#FFFFFF", bd=0)
+        metrics_frame.place(relx=0.845, rely=0.73, anchor="center")
+        game_status = tk.StringVar()
+        status_dict = game.get_status_dict()
+        game_status.set(
+            f"Year: {status_dict['year']}\n"
+            f"\nBasal Area (BA): {status_dict['BA']:.1f} sqft/acre\n"
+            f"\nTrees Per Acre (TPA): {status_dict['TPA']}\n"
+            f"\nQuadratic Mean Diameter (QMD): {status_dict['QMD']:.1f} inches\n"
+            f"\nCarbon per Acre: {status_dict['carbon']:.1f} Metric Tons/acre\n"
+            f"\nCrowning Index: {status_dict['CI']:.1f}"
+        )
+        game_status_message = tk.Message(
+            metrics_frame,
+            textvariable=game_status,
+            width=450,
+            justify="center",
+            bg="#FFFFFF",
+            fg=FG_COLOR,
+            font=("Courier",13, "bold")
+        )
+        game_status_message.pack()
+        fire_risk_label = tk.Label(metrics_frame, wraplength=400, justify="left", padx=10, pady=0, bg="#FFFFFF", font=FONT)
+        fire_risk_label.pack()
+        spb_risk_label = tk.Label(metrics_frame, wraplength=400, justify="left", padx=10, pady=0, bg="#FFFFFF", font=FONT)
+        spb_risk_label.pack()
+        fire_risk_label.config(
+            text=f"\n\n\nFire Risk: {status_dict['fire_risk']}",
+            fg=get_risk_color(status_dict['fire_risk'])
+        )
+        spb_risk_label.config(
+            text=f"Southern Pine Beetle Risk: {status_dict['SPB_risk']}",
+            fg=get_risk_color(status_dict['SPB_risk'])
+        )
+        narration = tk.StringVar()
+        narration.set("Better luck next time!")
+        narration_label = tk.Label(
+            metrics_frame, textvariable=narration, wraplength=400, justify="left",
+            padx=10, pady=5, bg="#FFFFFF", fg=FG_COLOR, font=FONT
+        )
+        narration_label.pack()
+
+        # --- Text Frame ---
+        text_frame = tk.Frame(low_ba_frame, bg="#1b2336", bd=0)
+        text_frame.place(relx=0.88, rely=0.19, anchor="center")
+
+        tk.Label(
+            text_frame,
+            text="The forest's growing stock trees have been depleted!\nWe're supposed to be growing a forest!",
+            bg="#1b2336", fg="#05dd4c", font=("Courier New", 18, "bold"),
+            pady=0, wraplength=400, justify="center"
+        ).pack()
+
+        # --- Button Frame ---
+        button_frame = tk.Frame(low_ba_frame, bg="#1b2336", bd=0)
+        button_frame.place(relx=0.88, rely=0.315, anchor="center")
+
+        tk.Button(
+            button_frame, text="Try Again", font=("Courier", 14, "bold"), width=16,
+            bg="#05dd4c", fg="#1b2336", activebackground="#10612B",
+            command=lambda: [stop_losing_trombone_sound(), stop_wind_sound(), restart_game(low_ba_frame)]
+        ).pack(side="left", padx=10, pady=5)
+        tk.Button(
+            button_frame, text="Exit", font=("Courier", 14, "bold"), width=16,
+            bg="#05dd4c", fg="#1b2336", activebackground="#611010",
+            command=root.destroy
+        ).pack(side="left", padx=10, pady=5)
 
     def show_fire_loss_screen():
         """Display the catastrophic wildfire end screen."""
@@ -277,189 +408,332 @@ def main():
         fire_frame = tk.Frame(root, bg=BG_COLOR)
         fire_frame.pack(fill="both", expand=True)
 
-        def overlay_builder(overlay):
-            tk.Label(
-                overlay,
-                text="A catastrophic wildfire has occurred!\nWe might get a new stand of pitch pine, but we're trying to grow a mature stand!",
-                bg=BG_COLOR, fg=FG_COLOR, font=("Courier New", 16, "bold"),
-                pady=20, wraplength=400, justify="center"
-            ).pack()
-            tk.Button(
-                overlay, text="Try Again", font=FONT, width=16,
-                bg="#444466", fg=FG_COLOR, activebackground="#333355",
-                command=lambda: [stop_fire_sound(), restart_game(fire_frame)]
-            ).pack(pady=5)
-            tk.Button(
-                overlay, text="Exit", font=FONT, width=16,
-                bg="#444466", fg=FG_COLOR, activebackground="#333355",
-                command=root.destroy
-            ).pack(pady=5)
+        # Load and display the background image in a label
+        bg_img = Image.open("assets/LossByFire.png")
+        bg_img = bg_img.resize((1920, 1080))
+        bg_photo = ImageTk.PhotoImage(bg_img)
+        bg_label = tk.Label(fire_frame, image=bg_photo)
+        bg_label.image = bg_photo  # Prevent garbage collection
+        bg_label.place(relx=0, rely=0, relwidth=1, relheight=1)
 
-        create_fullscreen_image_screen(fire_frame, "assets/LossByFire.png", overlay_builder)
+        # --- Metrics Frame (copied from main game screen) ---
+        metrics_frame = tk.Frame(fire_frame, bg="#FFFFFF", bd=0)
+        metrics_frame.place(relx=0.845, rely=0.73, anchor="center")
+        game_status = tk.StringVar()
+        status_dict = game.get_status_dict()
+        game_status.set(
+            f"Year: {status_dict['year']}\n"
+            f"\nBasal Area (BA): {status_dict['BA']:.1f} sqft/acre\n"
+            f"\nTrees Per Acre (TPA): {status_dict['TPA']}\n"
+            f"\nQuadratic Mean Diameter (QMD): {status_dict['QMD']:.1f} inches\n"
+            f"\nCarbon per Acre: {status_dict['carbon']:.1f} Metric Tons/acre\n"
+            f"\nCrowning Index: {status_dict['CI']:.1f}"
+        )
+        game_status_message = tk.Message(
+            metrics_frame,
+            textvariable=game_status,
+            width=450,
+            justify="center",
+            bg="#FFFFFF",
+            fg=FG_COLOR,
+            font=("Courier",13, "bold")
+        )
+        game_status_message.pack()
+        fire_risk_label = tk.Label(metrics_frame, wraplength=400, justify="left", padx=10, pady=0, bg="#FFFFFF", font=FONT)
+        fire_risk_label.pack()
+        spb_risk_label = tk.Label(metrics_frame, wraplength=400, justify="left", padx=10, pady=0, bg="#FFFFFF", font=FONT)
+        spb_risk_label.pack()
+        fire_risk_label.config(
+            text=f"\n\n\nFire Risk: {status_dict['fire_risk']}",
+            fg=get_risk_color(status_dict['fire_risk'])
+        )
+        spb_risk_label.config(
+            text=f"Southern Pine Beetle Risk: {status_dict['SPB_risk']}",
+            fg=get_risk_color(status_dict['SPB_risk'])
+        )
+        narration = tk.StringVar()
+        narration.set("Better luck next time!")
+        narration_label = tk.Label(
+            metrics_frame, textvariable=narration, wraplength=400, justify="left",
+            padx=10, pady=5, bg="#FFFFFF", fg=FG_COLOR, font=FONT
+        )
+        narration_label.pack()
+
+        # --- Text Frame ---
+        text_frame = tk.Frame(fire_frame, bg="#1b2336", bd=0)
+        text_frame.place(relx=0.88, rely=0.2, anchor="center")  # Same as SPB loss
+
+        tk.Label(
+            text_frame,
+            text="A catastrophic wildfire has occurred!\n\nWe might get a new stand of pitch pine, but we're trying to grow a mature stand!",
+            bg="#1b2336", fg="#05dd4c", font=("Courier", 18, "bold"),
+            pady=0, wraplength=400, justify="center"
+        ).pack()
+
+        # --- Button Frame ---
+        button_frame = tk.Frame(fire_frame, bg="#1b2336", bd=0)
+        button_frame.place(relx=0.88, rely=0.33, anchor="center")  # Same as SPB loss
+
+        tk.Button(
+            button_frame, text="Try Again", font=("Courier", 14, "bold"), width=16,
+            bg="#05dd4c", fg="#1b2336", activebackground="#10612B",
+            command=lambda: [stop_fire_sound(), restart_game(fire_frame)]
+        ).pack(side="left", padx=10, pady=5)
+        tk.Button(
+            button_frame, text="Exit", font=("Courier", 14, "bold"), width=16,
+            bg="#05dd4c", fg="#1b2336", activebackground="#611010",
+            command=root.destroy
+        ).pack(side="left", padx=10, pady=5)
 
     def show_spb_loss_screen():
         """Display the SPB outbreak end screen."""
-        stop_forest_sound()           # Stop the forest sound first
-        play_spb_eating_sound()       # Play only the SPB eating sound (looped)
+        stop_forest_sound()
+        play_spb_eating_sound()
         for widget in root.winfo_children():
             widget.pack_forget()
         spb_frame = tk.Frame(root, bg=BG_COLOR)
         spb_frame.pack(fill="both", expand=True)
 
-        def overlay_builder(overlay):
-            tk.Label(
-                overlay,
-                text="A Southern Pine Beetle outbreak has devastated your stand!\nWe're trying to grow a healthy forest!",
-                bg=BG_COLOR, fg=FG_COLOR, font=("Courier New", 16, "bold"),
-                pady=20, wraplength=400, justify="center"
-            ).pack()
-            tk.Button(
-                overlay, text="Try Again", font=FONT, width=16,
-                bg="#444466", fg=FG_COLOR, activebackground="#333355",
-                command=lambda: [stop_spb_eating_sound(), restart_game(spb_frame)]
-            ).pack(pady=5)
-            tk.Button(
-                overlay, text="Exit", font=FONT, width=16,
-                bg="#444466", fg=FG_COLOR, activebackground="#333355",
-                command=root.destroy
-            ).pack(pady=5)
+        # Load and display the background image in a label
+        bg_img = Image.open("assets/LossBySPB.png")
+        bg_img = bg_img.resize((1920, 1080))
+        bg_photo = ImageTk.PhotoImage(bg_img)
+        bg_label = tk.Label(spb_frame, image=bg_photo)
+        bg_label.image = bg_photo  # Prevent garbage collection
+        bg_label.place(relx=0, rely=0, relwidth=1, relheight=1)
 
-        create_fullscreen_image_screen(spb_frame, "assets/LossBySPB.png", overlay_builder)
+        # --- Metrics Frame (copied from main game screen) ---
+        metrics_frame = tk.Frame(spb_frame, bg="#FFFFFF", bd=0)
+        metrics_frame.place(relx=0.845, rely=0.73, anchor="center")
+        game_status = tk.StringVar()
+        status_dict = game.get_status_dict()
+        game_status.set(
+            f"Year: {status_dict['year']}\n"
+            f"\nBasal Area (BA): {status_dict['BA']:.1f} sqft/acre\n"
+            f"\nTrees Per Acre (TPA): {status_dict['TPA']}\n"
+            f"\nQuadratic Mean Diameter (QMD): {status_dict['QMD']:.1f} inches\n"
+            f"\nCarbon per Acre: {status_dict['carbon']:.1f} Metric Tons/acre\n"
+            f"\nCrowning Index: {status_dict['CI']:.1f}"
+        )
+        game_status_message = tk.Message(
+            metrics_frame,
+            textvariable=game_status,
+            width=450,
+            justify="center",
+            bg="#FFFFFF",
+            fg=FG_COLOR,
+            font=("Courier",13, "bold")
+        )
+        game_status_message.pack()
+        fire_risk_label = tk.Label(metrics_frame, wraplength=400, justify="left", padx=10, pady=0, bg="#FFFFFF", font=FONT)
+        fire_risk_label.pack()
+        spb_risk_label = tk.Label(metrics_frame, wraplength=400, justify="left", padx=10, pady=0, bg="#FFFFFF", font=FONT)
+        spb_risk_label.pack()
+        fire_risk_label.config(
+            text=f"\n\n\nFire Risk: {status_dict['fire_risk']}",
+            fg=get_risk_color(status_dict['fire_risk'])
+        )
+        spb_risk_label.config(
+            text=f"Southern Pine Beetle Risk: {status_dict['SPB_risk']}",
+            fg=get_risk_color(status_dict['SPB_risk'])
+        )
+        narration = tk.StringVar()
+        narration.set("Better luck next time!")
+        narration_label = tk.Label(
+            metrics_frame, textvariable=narration, wraplength=400, justify="left",
+            padx=10, pady=5, bg="#FFFFFF", fg=FG_COLOR, font=FONT
+        )
+        narration_label.pack()
+
+        # --- Text Frame ---
+        text_frame = tk.Frame(spb_frame, bg="#1b2336", bd=0)
+        text_frame.place(relx=0.88, rely=0.19, anchor="center")  # Adjust as needed
+
+        tk.Label(
+            text_frame,
+            text="A Southern Pine Beetle outbreak has devastated your stand!\n\nWe're trying to grow a healthy forest!",
+            bg="#1b2336", fg="#05dd4c", font=("Courier", 18, "bold"),
+            pady=20, wraplength=400, justify="center"
+        ).pack()
+
+        # --- Button Frame ---
+        button_frame = tk.Frame(spb_frame, bg="#1b2336", bd=0)
+        button_frame.place(relx=0.88, rely=0.325, anchor="center")  # Adjust as needed
+
+        tk.Button(
+            button_frame, text="Try Again", font=("Courier", 14, "bold"), width=16,
+            bg="#05dd4c", fg="#1b2336", activebackground="#10612B",
+            command=lambda: [stop_spb_eating_sound(), restart_game(spb_frame)]
+        ).pack(side="left", padx=10, pady=5)
+        tk.Button(
+            button_frame, text="Exit", font=("Courier", 14, "bold"), width=16,
+            bg="#05dd4c", fg="#1b2336", activebackground="#611010",
+            command=root.destroy
+        ).pack(side="left", padx=10, pady=5)
 
     def show_pine_snake_screen():
         """Display the screen for successful pine snake habitat."""
-        play_pine_snake_sound()  # <-- Play over forest sound
+        play_pine_snake_sound()  # Play over forest sound
         for widget in root.winfo_children():
             widget.pack_forget()
         snake_frame = tk.Frame(root, bg=BG_COLOR)
         snake_frame.pack(fill="both", expand=True)
 
-        def overlay_builder(overlay):
-            tk.Label(
-                overlay,
-                text="Congratulations! This forest is excellent northern pine snake habitat.\nPine snakes are utilizing the stand!",
-                bg=BG_COLOR, fg=FG_COLOR, font=("Courier New", 16, "bold"),
-                pady=40, wraplength=400, justify="center"
-            ).pack()
-            tk.Button(
-                overlay, text="Continue", font=FONT, width=16,
-                bg="#546644", fg="#FFFFFF", activebackground="#203B15",
-                command=lambda: [snake_frame.pack_forget(), show_game_screen()]
-            ).pack(pady=10)
+        # Load and display the background image in a label
+        bg_img = Image.open("assets/Pinesnake.jpg")
+        bg_img = bg_img.resize((1920, 1080))
+        bg_photo = ImageTk.PhotoImage(bg_img)
+        bg_label = tk.Label(snake_frame, image=bg_photo)
+        bg_label.image = bg_photo  # Prevent garbage collection
+        bg_label.place(relx=0, rely=0, relwidth=1, relheight=1)
 
-        create_fullscreen_image_screen(snake_frame, "assets/snake.png", overlay_builder, x=70, y=185)
+        # --- Metrics Frame (copied from main game screen) ---
+        metrics_frame = tk.Frame(snake_frame, bg="#FFFFFF", bd=0)
+        metrics_frame.place(relx=0.845, rely=0.73, anchor="center")
+        game_status = tk.StringVar()
+        status_dict = game.get_status_dict()
+        game_status.set(
+            f"Year: {status_dict['year']}\n"
+            f"\nBasal Area (BA): {status_dict['BA']:.1f} sqft/acre\n"
+            f"\nTrees Per Acre (TPA): {status_dict['TPA']}\n"
+            f"\nQuadratic Mean Diameter (QMD): {status_dict['QMD']:.1f} inches\n"
+            f"\nCarbon per Acre: {status_dict['carbon']:.1f} Metric Tons/acre\n"
+            f"\nCrowning Index: {status_dict['CI']:.1f}"
+        )
+        game_status_message = tk.Message(
+            metrics_frame,
+            textvariable=game_status,
+            width=450,
+            justify="center",
+            bg="#FFFFFF",
+            fg=FG_COLOR,
+            font=("Courier",13, "bold")
+        )
+        game_status_message.pack()
+        fire_risk_label = tk.Label(metrics_frame, wraplength=400, justify="left", padx=10, pady=0, bg="#FFFFFF", font=FONT)
+        fire_risk_label.pack()
+        spb_risk_label = tk.Label(metrics_frame, wraplength=400, justify="left", padx=10, pady=0, bg="#FFFFFF", font=FONT)
+        spb_risk_label.pack()
+        fire_risk_label.config(
+            text=f"\n\n\nFire Risk: {status_dict['fire_risk']}",
+            fg=get_risk_color(status_dict['fire_risk'])
+        )
+        spb_risk_label.config(
+            text=f"Southern Pine Beetle Risk: {status_dict['SPB_risk']}",
+            fg=get_risk_color(status_dict['SPB_risk'])
+        )
+        narration = tk.StringVar()
+        narration.set("What will you do next?")
+        narration_label = tk.Label(
+            metrics_frame, textvariable=narration, wraplength=400, justify="left",
+            padx=10, pady=5, bg="#FFFFFF", fg=FG_COLOR, font=FONT
+        )
+        narration_label.pack()
+
+        # --- Text Frame ---
+        text_frame = tk.Frame(snake_frame, bg="#1b2336", bd=0)
+        text_frame.place(relx=0.88, rely=0.2, anchor="center")  # Adjust relx/rely as needed
+
+        tk.Label(
+            text_frame,
+            text="Congratulations! This forest is excellent northern pine snake habitat.\n\nPine snakes are utilizing the stand!",
+            bg="#1b2336", fg="#05dd4c", font=("Courier New", 18, "bold"),
+            pady=10, wraplength=370, justify="center"
+        ).pack()
+
+        # --- Button Frame ---
+        button_frame = tk.Frame(snake_frame, bg="#000000", bd=0)
+        button_frame.place(relx=0.88, rely=0.33, anchor="center")  # Adjust relx/rely as needed
+
+        tk.Button(
+            button_frame, text="Continue", font=("Courier", 16, "bold"), width=16,
+            bg="#05dd4c", fg="#1b2336", activebackground="#069134",
+            command=lambda: [snake_frame.pack_forget(), show_game_screen()]
+        ).pack(pady=0)
 
     # --- Main Game Screen ---
     def show_game_screen():
         stop_forest_sound()
         play_forest_sound()
+        for widget in root.winfo_children():
+            widget.pack_forget()
 
         game_frame = tk.Frame(root, bg=BG_COLOR)
         game_frame.pack(fill="both", expand=True)
 
-        # Create a canvas that fills the window
-        canvas = tk.Canvas(game_frame, bg=BG_COLOR, highlightthickness=0)
-        canvas.pack(fill="both", expand=True)
+        # Load and display the background image in a label
+        bg_img = Image.open("assets/Evenagestand.png")
+        bg_img = bg_img.resize((1920, 1080))
+        bg_photo = ImageTk.PhotoImage(bg_img)
+        bg_label = tk.Label(game_frame, image=bg_photo)
+        bg_label.image = bg_photo
+        bg_label.place(relx=0, rely=0, relwidth=1, relheight=1)
 
-        # Load and display the background image, resizing it to fit the window
-        def update_bg_image(event=None):
-            try:
-                image = Image.open("assets/Evenagestand.png")
-                # Resize image to fit the canvas
-                w = canvas.winfo_width()
-                h = canvas.winfo_height()
-                if w < 10 or h < 10:
-                    return  # Avoid errors on initial small size
-                img = image.resize((w, h), Image.LANCZOS)
-                photo = ImageTk.PhotoImage(img)
-                canvas.photo = photo  # Prevent garbage collection
-                if hasattr(canvas, "bg_img_id"):
-                    canvas.itemconfig(canvas.bg_img_id, image=photo)
-                else:
-                    canvas.bg_img_id = canvas.create_image(0, 0, anchor="nw", image=photo)
-            except Exception:
-                pass
-
-        canvas.bind("<Configure>", update_bg_image)
-
-        # Overlay frame for stats and buttons
-        overlay = tk.Frame(canvas, bg="#FFFFFF", bd=0)  # White background
-        overlay_id = canvas.create_window(50, 185, anchor="nw", window=overlay)
-
-        # Status display area
-        status = tk.StringVar()
-        status.set("Welcome to Pitch Pine Trail! \nClick an action to begin.")
-
+        # --- Welcome Frame ---
+        welcome_frame = tk.Frame(game_frame, bg="#FFFFFF", bd=0)
+        welcome_frame.place(relx=0.88, rely=0.13, anchor="center")
         status_label = tk.Label(
-            overlay, textvariable=status, wraplength=400, justify="center",
-            padx=10, pady=10, bg="#FFFFFF", fg=FG_COLOR, font=FONT
+            welcome_frame,
+            text="Welcome to Pitch Pine Trail! \nClick an action to begin →",
+            wraplength=600, justify="center",
+            padx=10, pady=10, bg="#1b2336", fg="#05dd4c", font=FONT
         )
         status_label.pack()
 
-
-        ba_label = tk.Label(overlay, bg="#FFFFFF", fg=FG_COLOR, font=FONT)
-        ba_label.pack()
-        qmd_label = tk.Label(overlay, bg="#FFFFFF", fg=FG_COLOR, font=FONT)
-        qmd_label.pack()
-        fire_risk_label = tk.Label(overlay, wraplength=400, justify="left", padx=10, pady=0, bg="#FFFFFF", font=FONT)
-        tpa_label = tk.Label(overlay, bg=BG_COLOR, fg=FG_COLOR, font=FONT)
-        tpa_label.pack()
+        # --- Metrics Frame ---
+        metrics_frame = tk.Frame(game_frame, bg="#FFFFFF", bd=0)
+        metrics_frame.place(relx=0.845, rely=0.73, anchor="center")
+        game_status = tk.StringVar()
+        game_status_message = tk.Message(
+            metrics_frame,
+            textvariable=game_status,
+            width=450,
+            justify="center",
+            bg="#FFFFFF",
+            fg=FG_COLOR,
+            font=("Courier",13, "bold")
+        )
+        game_status_message.pack()
+        fire_risk_label = tk.Label(metrics_frame, wraplength=400, justify="left", padx=10, pady=0, bg="#FFFFFF", font=FONT)
         fire_risk_label.pack()
-        spb_risk_label = tk.Label(overlay, wraplength=400, justify="left", padx=10, pady=0, bg="#FFFFFF", font=FONT)
+        spb_risk_label = tk.Label(metrics_frame, wraplength=400, justify="left", padx=10, pady=0, bg="#FFFFFF", font=FONT)
         spb_risk_label.pack()
-
-        # Narration area
-        # Narration area
         narration = tk.StringVar()
         narration.set("What will you do next?")
         narration_label = tk.Label(
-            overlay, textvariable=narration, wraplength=400, justify="left",
+            metrics_frame, textvariable=narration, wraplength=400, justify="left",
             padx=10, pady=5, bg="#FFFFFF", fg=FG_COLOR, font=FONT
         )
         narration_label.pack()
 
-        button_frame = tk.Frame(overlay, bg="#FFFFFF")
-        button_frame.pack(pady=10)
-
-        ACTIONS = {
-            '1': 'Do nothing',
-            '2': 'Thin lightly',
-            '3': 'Thin heavily',
-            '4': 'Prescribed burn'
-        }
-
+        # --- Button frame ---
+        button_frame = tk.Frame(game_frame, bg="#1b2336")
+        button_frame.place(relx=0.88, rely=0.26, anchor="center")
         def update_status_labels():
             status_dict = game.get_status_dict()
-            status_label.config(
-                text=f"Year: {status_dict['year']} | Carbon: {status_dict['carbon']:.1f} MT/ac | CI: {status_dict['CI']:.1f}"
+            game_status.set(
+                f"Year: {status_dict['year']}\n"
+                f"\nBasal Area (BA): {status_dict['BA']:.1f} sqft/acre\n"
+                f"\nTrees Per Acre (TPA): {status_dict['TPA']}\n"
+                f"\nQuadratic Mean Diameter (QMD): {status_dict['QMD']:.1f} inches\n"
+                f"\nCarbon per Acre: {status_dict['carbon']:.1f} Metric Tons/acre\n"
+                f"\nCrowning Index: {status_dict['CI']:.1f}"
             )
-            # Only show BA, QMD, TPA at the start (year 0)
-            if status_dict['year'] == 0:
-                ba_label.config(text=f"Basal Area (BA): {status_dict['BA']:.1f} sqft/acre")
-                qmd_label.config(text=f"Quadratic Mean Diameter (QMD): {status_dict['QMD']:.1f} inches")
-                tpa_label.config(text=f"Trees Per Acre (TPA): {status_dict['TPA']}")
-            else:
-                ba_label.config(text="")
-                qmd_label.config(text="")
-                tpa_label.config(text="")
             fire_risk_label.config(
-                text=f"Fire Risk: {status_dict['fire_risk']}",
+                text=f"\n\n\nFire Risk: {status_dict['fire_risk']}",
                 fg=get_risk_color(status_dict['fire_risk'])
             )
             spb_risk_label.config(
-                text=f"SPB Risk: {status_dict['SPB_risk']}",
+                text=f"Southern Pine Beetle Risk: {status_dict['SPB_risk']}",
                 fg=get_risk_color(status_dict['SPB_risk'])
             )
-
         def next_turn(action):
             pine_snakes_before = game.pine_snakes_colonized
             game.update_stand(action)
             event = game.simulate_event()
             game.stand['year'] += 10
-            status.set(game.get_status())
-
-            # Catastrophic wildfire ending
-            # Catastrophic wildfire ending
+            welcome_frame.place_forget()
+            update_status_labels()
             if getattr(game.stand, 'catastrophic_wildfire', False) or game.stand.get('catastrophic_wildfire', False):
                 show_fire_loss_screen()
                 return
@@ -479,60 +753,117 @@ def main():
             if game.stand['year'] >= 100:
                 show_closing_screen()
                 return
-            update_status_labels()
-
         update_status_labels()
-
         for k, v in ACTIONS.items():
             tk.Button(
                 button_frame,
                 text=f"{k}. {v}",
-                width=22, font=FONT,
-                bg="#FFFFFF", fg=FG_COLOR,
-                activebackground="#DDDDDD",
+                width=22, font=("Courier", 14, "bold"),
+                bg="#404d6d",
+                fg="#05dd4c",
+                activebackground="#05dd4c",
                 command=lambda k=k: next_turn(k)
-            ).pack(pady=3)
+            ).pack(pady=5)
+        # --- Definitions Button Frame ---
+        definitions_frame = tk.Frame(game_frame, bg="#FFFFFF")
+        definitions_frame.place(relx=0.05, rely=0.96, anchor="sw")
+        definitions_button = tk.Button(
+            definitions_frame,
+            text="Click for Definitions",
+            font=FONT,
+            width=23,
+            bg="#000000",
+            fg="#ffffff",
+            activebackground="#FFE208",
+            command=show_definitions_screen
+        )
+        definitions_button.pack()
+
+        # --- Green Exit Button (top right) ---
+        exit_frame = tk.Frame(game_frame, bg="#FFFFFF")
+        exit_frame.place(relx=0.02, rely=0.02, anchor="nw")  
+
+        exit_button = tk.Button(
+            exit_frame,
+            text="Exit",
+            font=("Courier", 17, "bold"),
+            width=10,
+            bg="#9c3432",      
+            fg="#3d0606",
+            activebackground="#FFFFFF",
+            command=root.destroy
+        )
+        exit_button.pack()
 
     def show_definitions_screen():
-        """Display a screen with definitions for different terms."""
+        play_page_turn_sound()  # Play page turn sound over forest sound
         for widget in root.winfo_children():
             widget.pack_forget()
         def_frame = tk.Frame(root, bg=BG_COLOR)
         def_frame.pack(fill="both", expand=True)
+        # Load and display the definitions background image in a label
+        bg_img = Image.open("assets/definitions.png")
+        bg_img = bg_img.resize((1920, 1080))
+        bg_photo = ImageTk.PhotoImage(bg_img)
+        bg_label = tk.Label(def_frame, image=bg_photo)
+        bg_label.image = bg_photo
+        bg_label.place(relx=0, rely=0, relwidth=1, relheight=1)
 
-        def overlay_builder(overlay):
-            tk.Label(
-                overlay,
-                text="Definitions",
-                bg=BG_COLOR, fg=FG_COLOR, font=("Courier New", 18, "bold"),
-                pady=20
-            ).pack()
-            # Example definitions (add more as needed)
-            tk.Label(
-                overlay,
-                text=(
-                    "BA (Basal Area): The cross-sectional area of all trees per acre, in square feet.\n\n"
-                    "QMD (Quadratic Mean Diameter): A measure of average tree diameter.\n\n"
-                    "TPA (Trees Per Acre): The number of trees per acre.\n\n"
-                    "Carbon: Estimated metric tons of carbon stored per acre.\n\n"
-                    "CI (Competition Index): A measure of how crowded the stand is.\n\n"
-                    "Fire Risk: The likelihood of a wildfire event.\n\n"
-                    "SPB Risk: The likelihood of a Southern Pine Beetle outbreak."
-                ),
-                bg=BG_COLOR, fg=FG_COLOR, font=FONT,
-                wraplength=900, justify="left", pady=10
-            ).pack()
-            tk.Button(
-                overlay, text="Back", font=FONT, width=16,
-                bg="#444466", fg=FG_COLOR, activebackground="#333355",
-                command=lambda: [def_frame.pack_forget(), show_game_screen()]
-            ).pack(pady=20)
+        # --- Metrics Frame (copied from show_game_screen) ---
+        metrics_frame = tk.Frame(def_frame, bg="#FFFFFF", bd=0)
+        metrics_frame.place(relx=0.845, rely=0.73, anchor="center")
+        game_status = tk.StringVar()
+        status_dict = game.get_status_dict()
+        game_status.set(
+            f"Year: {status_dict['year']}\n"
+            f"\nBasal Area (BA): {status_dict['BA']:.1f} sqft/acre\n"
+            f"\nTrees Per Acre (TPA): {status_dict['TPA']}\n"
+            f"\nQuadratic Mean Diameter (QMD): {status_dict['QMD']:.1f} inches\n"
+            f"\nCarbon per Acre: {status_dict['carbon']:.1f} Metric Tons/acre\n"
+            f"\nCrowning Index: {status_dict['CI']:.1f}"
+        )
+        game_status_message = tk.Message(
+            metrics_frame,
+            textvariable=game_status,
+            width=450,
+            justify="center",
+            bg="#FFFFFF",
+            fg=FG_COLOR,
+            font=("Courier",13, "bold")
+        )
+        game_status_message.pack()
+        fire_risk_label = tk.Label(metrics_frame, wraplength=400, justify="left", padx=10, pady=0, bg="#FFFFFF", font=FONT)
+        fire_risk_label.pack()
+        spb_risk_label = tk.Label(metrics_frame, wraplength=400, justify="left", padx=10, pady=0, bg="#FFFFFF", font=FONT)
+        spb_risk_label.pack()
+        fire_risk_label.config(
+            text=f"\n\n\nFire Risk: {status_dict['fire_risk']}",
+            fg=get_risk_color(status_dict['fire_risk'])
+        )
+        spb_risk_label.config(
+            text=f"Southern Pine Beetle Risk: {status_dict['SPB_risk']}",
+            fg=get_risk_color(status_dict['SPB_risk'])
+        )
+        narration = tk.StringVar()
+        narration.set("What will you do next?")
+        narration_label = tk.Label(
+            metrics_frame, textvariable=narration, wraplength=400, justify="left",
+            padx=10, pady=5, bg="#FFFFFF", fg=FG_COLOR, font=FONT
+        )
+        narration_label.pack()
 
-        create_fullscreen_image_screen(def_frame, "assets/introscreen.jpeg", overlay_builder)
+        # Back button
+        tk.Button(
+            def_frame, text="Return to Game", font=("Courier", 18, "bold"), width=16,
+            bg="#e21fae", fg="#000000", activebackground="#FFFFFF",
+            command=lambda: [def_frame.pack_forget(), show_game_screen()]
+        ).place(relx=0.225, rely=0.90, anchor="center")
 
     # Start the main event loop
+    #show_closing_screen()  # <-- TEMP: Jump directly to screen for testing
     root.mainloop()
 
+#defining sound functions
 def play_forest_sound():
     try:
         pygame.mixer.music.load("assets/forest_sound.wav")
@@ -555,8 +886,8 @@ def stop_fire_sound():
 
 def play_trumpet_win_sound():
     try:
-        pygame.mixer.music.load("assets/trumpet_win.wav")
-        pygame.mixer.music.play()
+        sound = pygame.mixer.Sound("assets/trumpet_win.wav")
+        sound.play()
     except Exception as e:
         print("Error playing win sound:", e)
 
@@ -594,6 +925,34 @@ def stop_spb_eating_sound():
             play_spb_eating_sound.channel.stop()
     except Exception as e:
         print("Error stopping SPB eating sound:", e)
+
+def play_page_turn_sound():
+    try:
+        sound = pygame.mixer.Sound("assets/page_turn.wav")
+        sound.play()
+    except Exception as e:
+        print("Error playing page turn sound:", e)
+
+def play_zoom_sound():
+    try:
+        sound = pygame.mixer.Sound("assets/zoom.wav")
+        sound.play()
+    except Exception as e:
+        print("Error playing zoom sound:", e)
+
+def play_wind_sound():
+    try:
+        sound = pygame.mixer.Sound("assets/wind.wav")
+        play_wind_sound.channel = sound.play(loops=-1)
+    except Exception as e:
+        print("Error playing wind sound:", e)
+
+def stop_wind_sound():
+    try:
+        if hasattr(play_wind_sound, "channel") and play_wind_sound.channel is not None:
+            play_wind_sound.channel.stop()
+    except Exception as e:
+        print("Error stopping wind sound:", e)
 
 if __name__ == "__main__":
     main()
