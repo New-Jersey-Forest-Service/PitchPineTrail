@@ -391,7 +391,7 @@ def main():
         tk.Button(
             button_frame, text="Try Again", font=("Courier", 14, "bold"), width=16,
             bg="#05dd4c", fg="#1b2336", activebackground="#10612B",
-            command=lambda: [stop_losing_trombone_sound(), restart_game(low_ba_frame)]
+            command=lambda: [stop_losing_trombone_sound(), stop_wind_sound(), restart_game(low_ba_frame)]
         ).pack(side="left", padx=10, pady=5)
         tk.Button(
             button_frame, text="Exit", font=("Courier", 14, "bold"), width=16,
@@ -857,7 +857,7 @@ def main():
             def_frame, text="Return to Game", font=("Courier", 18, "bold"), width=16,
             bg="#e21fae", fg="#000000", activebackground="#FFFFFF",
             command=lambda: [def_frame.pack_forget(), show_game_screen()]
-        ).place(relx=0.2, rely=0.90, anchor="center")
+        ).place(relx=0.225, rely=0.90, anchor="center")
 
     # Start the main event loop
     #show_closing_screen()  # <-- TEMP: Jump directly to screen for testing
@@ -943,9 +943,16 @@ def play_zoom_sound():
 def play_wind_sound():
     try:
         sound = pygame.mixer.Sound("assets/wind.wav")
-        sound.play(loops=-1)
+        play_wind_sound.channel = sound.play(loops=-1)
     except Exception as e:
         print("Error playing wind sound:", e)
+
+def stop_wind_sound():
+    try:
+        if hasattr(play_wind_sound, "channel") and play_wind_sound.channel is not None:
+            play_wind_sound.channel.stop()
+    except Exception as e:
+        print("Error stopping wind sound:", e)
 
 if __name__ == "__main__":
     main()
