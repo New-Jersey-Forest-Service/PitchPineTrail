@@ -14,7 +14,7 @@ Provides interactive screens for gameplay, status display, and decision making.
 
 import tkinter as tk
 from tkinter import messagebox
-from game_logic import Game
+from game_logic import Game, ACTIONS
 from PIL import Image, ImageTk
 import pygame
 
@@ -305,6 +305,19 @@ def main():
             bg="#444466", fg=FG_COLOR, activebackground="#333355",
             command=root.destroy
         ).pack(pady=5)
+
+        tk.Label(
+            overlay,
+            text="Management Summary:",
+            bg=BG_COLOR, fg=FG_COLOR, font=("Courier New", 14, "bold"),
+            pady=10
+        ).pack()
+        tk.Label(
+            overlay,
+            text=game.get_action_summary(),
+            bg=BG_COLOR, fg=FG_COLOR, font=FONT,
+            wraplength=400, justify="right"
+        ).pack()
 
     def show_low_ba_screen():
         """Display the game over screen for low basal area condition."""
@@ -703,12 +716,6 @@ def main():
         # --- Button frame ---
         button_frame = tk.Frame(game_frame, bg="#1b2336")
         button_frame.place(relx=0.88, rely=0.26, anchor="center")
-        ACTIONS = {
-            '1': 'Do nothing',
-            '2': 'Thin lightly',
-            '3': 'Thin heavily',
-            '4': 'Prescribed burn'
-        }
         def update_status_labels():
             status_dict = game.get_status_dict()
             game_status.set(
