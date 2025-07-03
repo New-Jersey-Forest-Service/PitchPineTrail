@@ -237,8 +237,14 @@ def main():
         closing_frame = tk.Frame(root, bg=BG_COLOR)
         closing_frame.pack(fill="both", expand=True)
 
+        # Choose background image based on pine snake achievement
+        if game.pine_snakes_colonized:
+            bg_img_path = "assets/okay_medal.png"
+        else:
+            bg_img_path = "assets/okay_nomedal.png"
+
         # Load and display the background image in a label
-        bg_img = Image.open("assets/ClosingScreen1.png")
+        bg_img = Image.open(bg_img_path)
         bg_img = bg_img.resize((1920, 1080))
         bg_photo = ImageTk.PhotoImage(bg_img)
         bg_label = tk.Label(closing_frame, image=bg_photo)
@@ -580,7 +586,7 @@ def main():
         snake_frame.pack(fill="both", expand=True)
 
         # Load and display the background image in a label
-        bg_img = Image.open("assets/Pinesnake.jpg")
+        bg_img = Image.open("assets/pinesnake.png")
         bg_img = bg_img.resize((1920, 1080))
         bg_photo = ImageTk.PhotoImage(bg_img)
         bg_label = tk.Label(snake_frame, image=bg_photo)
@@ -856,8 +862,8 @@ def main():
         tk.Button(
             def_frame, text="Return to Game", font=("Courier", 18, "bold"), width=16,
             bg="#e21fae", fg="#000000", activebackground="#FFFFFF",
-            command=lambda: [def_frame.pack_forget(), show_game_screen()]
-        ).place(relx=0.225, rely=0.90, anchor="center")
+            command=lambda: [play_page_close_sound(), def_frame.pack_forget(), show_game_screen()]
+        ).place(relx=0.225, rely=0.915, anchor="center")
 
     # Start the main event loop
     #show_closing_screen()  # <-- TEMP: Jump directly to screen for testing
@@ -953,6 +959,13 @@ def stop_wind_sound():
             play_wind_sound.channel.stop()
     except Exception as e:
         print("Error stopping wind sound:", e)
+
+def play_page_close_sound():
+    try:
+        sound = pygame.mixer.Sound("assets/page_close.wav")
+        sound.play()
+    except Exception as e:
+        print("Error playing page close sound:", e)
 
 if __name__ == "__main__":
     main()
