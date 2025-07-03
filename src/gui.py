@@ -273,7 +273,7 @@ def main():
         spb_risk_label = tk.Label(metrics_frame, wraplength=400, justify="left", padx=10, pady=0, bg="#FFFFFF", font=FONT)
         spb_risk_label.pack()
         fire_risk_label.config(
-            text=f"\n\n\nFire Risk: {summary['fire_risk']}",
+            text=f"\nFire Risk: {summary['fire_risk']}",
             fg=get_risk_color(summary['fire_risk'])
         )
         spb_risk_label.config(
@@ -299,18 +299,18 @@ def main():
         ).pack()
 
         # --- Button Frame ---
-        button_frame = tk.Frame(closing_frame, bg="#000000", bd=0)
-        button_frame.place(relx=0.15, rely=0.05, anchor="center")
+        button_frame = tk.Frame(closing_frame, bg="#FFFFFF", bd=0)
+        button_frame.place(relx=0.845, rely=0.91, anchor="center")
         tk.Button(
-            button_frame, text="Try Again", font=("Courier", 18, "bold"), width=16,
-            bg="#ffd032", fg="#634c01", activebackground="#10612B",
+            button_frame, text="Try Again", font=("Courier", 14, "bold"), width=15,
+            bg="#23ac23", fg="#023a02", activebackground="#10612B",
             command=lambda: restart_game(closing_frame)
-        ).pack(side="left", padx=0, pady=0)
+        ).pack(side="left", padx=10, pady=0)
         tk.Button(
-            button_frame, text="Exit", font=("Courier", 18, "bold"), width=16,
+            button_frame, text="Exit", font=("Courier", 14, "bold"), width=15,
             bg="#9c3432", fg="#2c0505", activebackground="#611010",
             command=root.destroy
-        ).pack(side="left", padx=0, pady=0)
+        ).pack(side="left", padx=10, pady=0)
 
     def show_low_ba_screen():
         """Display the game over screen for low basal area condition."""
