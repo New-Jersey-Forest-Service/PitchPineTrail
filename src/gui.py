@@ -248,7 +248,7 @@ def main():
          # Get QMD value
         qmd = game.get_status_dict()['QMD']
 
-        # Choose background image based on achievement (QMD 20 determines bad vs okay finish)
+        # Choose background image based on achievement (QMD 21 determines bad vs okay finish)
         if qmd < 21 and not game.pine_snakes_colonized and not game.gentian_colonized:
             bg_img_path = "assets/bad_nomedal.png"
         elif qmd < 21 and game.pine_snakes_colonized and game.gentian_colonized:
