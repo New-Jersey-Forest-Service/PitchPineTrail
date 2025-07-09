@@ -139,7 +139,15 @@ def main():
             "assets/zoom_2.png",
             "assets/zoom_3.png",
             "assets/zoom_4.png",
-            "assets/zoom_5.png"
+            "assets/zoom_5.png",
+            "assets/zoom_6.png",
+            "assets/zoom_7.png",
+            "assets/zoom_8.png",
+            "assets/zoom_9.png",
+            "assets/zoom_10.png",
+            "assets/zoom_11.png",
+            "assets/zoom_12.png",
+            "assets/zoom_13.png"
         ]
 
         def show_next_zoom(index=0):
@@ -148,10 +156,10 @@ def main():
                 photo = ImageTk.PhotoImage(img)
                 img_label.config(image=photo)
                 img_label.image = photo  # Prevent garbage collection
-                root.after(400, lambda: show_next_zoom(index + 1))
+                root.after(15, lambda: show_next_zoom(index + 1))
             else:
                 # Show zoom_6.png and overlay the button
-                img = Image.open("assets/zoom_6.png").resize((1920, 1080))
+                img = Image.open("assets/zoom_14.png").resize((1920, 1080))
                 photo = ImageTk.PhotoImage(img)
                 img_label.config(image=photo)
                 img_label.image = photo
@@ -167,7 +175,7 @@ def main():
                     bg="#f7d79e",
                     fg="#663e1d",
                     activebackground="#069134",
-                    command=lambda: [zoom_frame.pack_forget(), show_game_screen()]
+                    command=lambda: [play_lets_play_sound(), zoom_frame.pack_forget(), show_game_screen()]
                 ).pack(pady=10)
 
                 # --- Definitions Button Frame (same placement as main screen) ---
@@ -274,9 +282,9 @@ def main():
             font=("Courier",13, "bold")
         )
         game_status_message.pack()
-        fire_risk_label = tk.Label(metrics_frame, wraplength=400, justify="left", padx=10, pady=0, bg="#FFFFFF", font=FONT)
+        fire_risk_label = tk.Label(metrics_frame, wraplength=400, justify="left", padx=10, pady=0, bg="#FFFFFF", font=("Courier", 14, "bold"))
         fire_risk_label.pack()
-        spb_risk_label = tk.Label(metrics_frame, wraplength=400, justify="left", padx=10, pady=0, bg="#FFFFFF", font=FONT)
+        spb_risk_label = tk.Label(metrics_frame, wraplength=400, justify="left", padx=10, pady=0, bg="#FFFFFF", font=("Courier", 14, "bold"))
         spb_risk_label.pack()
         fire_risk_label.config(
             text=f"\nFire Risk: {summary['fire_risk']}",
@@ -359,9 +367,9 @@ def main():
             font=("Courier",13, "bold")
         )
         game_status_message.pack()
-        fire_risk_label = tk.Label(metrics_frame, wraplength=400, justify="left", padx=10, pady=0, bg="#FFFFFF", font=FONT)
+        fire_risk_label = tk.Label(metrics_frame, wraplength=400, justify="left", padx=10, pady=0, bg="#FFFFFF", font=("Courier", 14, "bold"))
         fire_risk_label.pack()
-        spb_risk_label = tk.Label(metrics_frame, wraplength=400, justify="left", padx=10, pady=0, bg="#FFFFFF", font=FONT)
+        spb_risk_label = tk.Label(metrics_frame, wraplength=400, justify="left", padx=10, pady=0, bg="#FFFFFF", font=("Courier", 14, "bold"))
         spb_risk_label.pack()
         fire_risk_label.config(
             text=f"\n\n\nFire Risk: {status_dict['fire_risk']}",
@@ -385,7 +393,7 @@ def main():
 
         tk.Label(
             text_frame,
-            text="The forest's growing stock trees have been depleted!\nWe're supposed to be growing a forest!",
+            text="The forest's growing stock trees have been depleted! \n\nWe're supposed to be growing a forest!",
             bg="#1b2336", fg="#05dd4c", font=("Courier New", 18, "bold"),
             pady=0, wraplength=400, justify="center"
         ).pack()
@@ -445,9 +453,9 @@ def main():
             font=("Courier",13, "bold")
         )
         game_status_message.pack()
-        fire_risk_label = tk.Label(metrics_frame, wraplength=400, justify="left", padx=10, pady=0, bg="#FFFFFF", font=FONT)
+        fire_risk_label = tk.Label(metrics_frame, wraplength=400, justify="left", padx=10, pady=0, bg="#FFFFFF", font=("Courier", 14, "bold"))
         fire_risk_label.pack()
-        spb_risk_label = tk.Label(metrics_frame, wraplength=400, justify="left", padx=10, pady=0, bg="#FFFFFF", font=FONT)
+        spb_risk_label = tk.Label(metrics_frame, wraplength=400, justify="left", padx=10, pady=0, bg="#FFFFFF", font=("Courier", 14, "bold"))
         spb_risk_label.pack()
         fire_risk_label.config(
             text=f"\n\n\nFire Risk: {status_dict['fire_risk']}",
@@ -531,9 +539,9 @@ def main():
             font=("Courier",13, "bold")
         )
         game_status_message.pack()
-        fire_risk_label = tk.Label(metrics_frame, wraplength=400, justify="left", padx=10, pady=0, bg="#FFFFFF", font=FONT)
+        fire_risk_label = tk.Label(metrics_frame, wraplength=400, justify="left", padx=10, pady=0, bg="#FFFFFF", font=("Courier", 14, "bold"))
         fire_risk_label.pack()
-        spb_risk_label = tk.Label(metrics_frame, wraplength=400, justify="left", padx=10, pady=0, bg="#FFFFFF", font=FONT)
+        spb_risk_label = tk.Label(metrics_frame, wraplength=400, justify="left", padx=10, pady=0, bg="#FFFFFF", font=("Courier", 14, "bold"))
         spb_risk_label.pack()
         fire_risk_label.config(
             text=f"\n\n\nFire Risk: {status_dict['fire_risk']}",
@@ -616,9 +624,9 @@ def main():
             font=("Courier",13, "bold")
         )
         game_status_message.pack()
-        fire_risk_label = tk.Label(metrics_frame, wraplength=400, justify="left", padx=10, pady=0, bg="#FFFFFF", font=FONT)
+        fire_risk_label = tk.Label(metrics_frame, wraplength=400, justify="left", padx=10, pady=0, bg="#FFFFFF", font=("Courier", 14, "bold"))
         fire_risk_label.pack()
-        spb_risk_label = tk.Label(metrics_frame, wraplength=400, justify="left", padx=10, pady=0, bg="#FFFFFF", font=FONT)
+        spb_risk_label = tk.Label(metrics_frame, wraplength=400, justify="left", padx=10, pady=0, bg="#FFFFFF", font=("Courier", 14, "bold"))
         spb_risk_label.pack()
         fire_risk_label.config(
             text=f"\n\n\nFire Risk: {status_dict['fire_risk']}",
@@ -700,9 +708,9 @@ def main():
             font=("Courier",13, "bold")
         )
         game_status_message.pack()
-        fire_risk_label = tk.Label(metrics_frame, wraplength=400, justify="left", padx=10, pady=0, bg="#FFFFFF", font=FONT)
+        fire_risk_label = tk.Label(metrics_frame, wraplength=400, justify="left", padx=10, pady=0, bg="#FFFFFF", font=("Courier", 14, "bold"))
         fire_risk_label.pack()
-        spb_risk_label = tk.Label(metrics_frame, wraplength=400, justify="left", padx=10, pady=0, bg="#FFFFFF", font=FONT)
+        spb_risk_label = tk.Label(metrics_frame, wraplength=400, justify="left", padx=10, pady=0, bg="#FFFFFF", font=("Courier", 14, "bold"))
         spb_risk_label.pack()
         narration = tk.StringVar()
         narration.set("What will you do next?")
@@ -761,6 +769,16 @@ def main():
                 return
         update_status_labels()
         for k, v in ACTIONS.items():
+            if k == '1':
+                btn_command = lambda k=k: [play_do_nothing_sound(), next_turn(k)]
+            elif k == '2':
+                btn_command = lambda k=k: [play_thin_lightly_sound(), next_turn(k)]
+            elif k == '3':
+                btn_command = lambda k=k: [play_thin_heavily_sound(), next_turn(k)]
+            elif k == '4':
+                btn_command = lambda k=k: [play_prescribed_burn_sound(), next_turn(k)]
+            else:
+                btn_command = lambda k=k: next_turn(k)
             tk.Button(
                 button_frame,
                 text=f"{k}. {v}",
@@ -768,7 +786,7 @@ def main():
                 bg="#404d6d",
                 fg="#05dd4c",
                 activebackground="#05dd4c",
-                command=lambda k=k: next_turn(k)
+                command=btn_command
             ).pack(pady=5)
         # --- Definitions Button Frame ---
         definitions_frame = tk.Frame(game_frame, bg="#FFFFFF")
@@ -838,9 +856,9 @@ def main():
             font=("Courier",13, "bold")
         )
         game_status_message.pack()
-        fire_risk_label = tk.Label(metrics_frame, wraplength=400, justify="left", padx=10, pady=0, bg="#FFFFFF", font=FONT)
+        fire_risk_label = tk.Label(metrics_frame, wraplength=400, justify="left", padx=10, pady=0, bg="#FFFFFF", font=("Courier", 14, "bold"))
         fire_risk_label.pack()
-        spb_risk_label = tk.Label(metrics_frame, wraplength=400, justify="left", padx=10, pady=0, bg="#FFFFFF", font=FONT)
+        spb_risk_label = tk.Label(metrics_frame, wraplength=400, justify="left", padx=10, pady=0, bg="#FFFFFF", font=("Courier", 14, "bold"))
         spb_risk_label.pack()
         fire_risk_label.config(
             text=f"\n\n\nFire Risk: {status_dict['fire_risk']}",
@@ -866,7 +884,7 @@ def main():
         ).place(relx=0.225, rely=0.915, anchor="center")
 
     # Start the main event loop
-    #show_closing_screen()  # <-- TEMP: Jump directly to screen for testing
+    #show_low_ba_screen()  # <-- TEMP: Jump directly to screen for testing
     root.mainloop()
 
 #defining sound functions
@@ -966,6 +984,41 @@ def play_page_close_sound():
         sound.play()
     except Exception as e:
         print("Error playing page close sound:", e)
+
+def play_do_nothing_sound():
+    try:
+        sound = pygame.mixer.Sound("assets/do_nothing.wav")
+        sound.play()
+    except Exception as e:
+        print("Error playing do nothing sound:", e)
+
+def play_thin_lightly_sound():
+    try:
+        sound = pygame.mixer.Sound("assets/thin_lightly.wav")
+        sound.play()
+    except Exception as e:
+        print("Error playing thin lightly sound:", e)
+
+def play_thin_heavily_sound():
+    try:
+        sound = pygame.mixer.Sound("assets/thin_heavily.wav")
+        sound.play()
+    except Exception as e:
+        print("Error playing thin heavily sound:", e)
+
+def play_prescribed_burn_sound():
+    try:
+        sound = pygame.mixer.Sound("assets/prescribed_burn.wav")
+        sound.play()
+    except Exception as e:
+        print("Error playing prescribed burn sound:", e)
+
+def play_lets_play_sound():
+    try:
+        sound = pygame.mixer.Sound("assets/lets_play.wav")
+        sound.play()
+    except Exception as e:
+        print("Error playing lets play sound:", e)
 
 if __name__ == "__main__":
     main()
