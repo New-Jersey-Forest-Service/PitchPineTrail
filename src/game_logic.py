@@ -5,6 +5,7 @@ NJ Forest Service
 William Zipse
 Cara Escalona
 Justin Gimmillaro
+Andrea Brown
 
 ---------------------------------------------------
 Core game logic for simulating a pitch pine forest stand over time
@@ -78,7 +79,7 @@ class Game:
         self.action_history = []  # Clear the action history
         self.low_ba_count = 0
         self.pine_snakes_colonized = False
-        self.gentian_colonized = False  # Reset gentian colonization status
+        self.gentian_colonized = False  
         self.gentian_screen_shown = False
 
     def update_stand(self, action):
@@ -177,7 +178,7 @@ class Game:
 
         # Step 10: Pine snake logic
         if (45 <= ba_next <= 70) and not self.pine_snakes_colonized:
-            if random.random() < 0.5:
+            if random.random() < 0.3:
                 self.pine_snakes_colonized = True
 
         # Step 11: Gentian logic (only after prescribed burn)
