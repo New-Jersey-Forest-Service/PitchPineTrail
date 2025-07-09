@@ -5,7 +5,7 @@ NJ Forest Service
 William Zipse
 Cara Escalona
 Justin Gimmillaro
-Andrea Pfaff
+Andrea Brown
 
 ---------------------------------------------------
 Graphical user interface for the Pitch Pine Trail forest management simulation.
@@ -245,12 +245,23 @@ def main():
         closing_frame = tk.Frame(root, bg=BG_COLOR)
         closing_frame.pack(fill="both", expand=True)
 
-        # Choose background image based on achievement
-        if game.pine_snakes_colonized and game.gentian_colonized:
+         # Get QMD value
+        qmd = game.get_status_dict()['QMD']
+
+        # Choose background image based on achievement (QMD 20 determines bad vs okay finish)
+        if qmd < 21 and not game.pine_snakes_colonized and not game.gentian_colonized:
+            bg_img_path = "assets/bad_nomedal.png"
+        elif qmd < 21 and game.pine_snakes_colonized and game.gentian_colonized:
+            bg_img_path = "assets/bad_snake-gentianmedal.png"
+        elif qmd < 21 and game.pine_snakes_colonized and not game.gentian_colonized:
+            bg_img_path = "assets/bad_snakemedal.png"
+        elif qmd < 21 and not game.pine_snakes_colonized and game.gentian_colonized:
+            bg_img_path = "assets/bad_gentianmedal.png"
+        elif qmd > 21 and game.pine_snakes_colonized and game.gentian_colonized:
             bg_img_path = "assets/okay_snake-gentianmedal.png"
-        elif game.pine_snakes_colonized and not game.gentian_colonized:
+        elif qmd > 21 and game.pine_snakes_colonized and not game.gentian_colonized:
             bg_img_path = "assets/okay_snakemedal.png"
-        elif not game.pine_snakes_colonized and game.gentian_colonized:
+        elif qmd > 21 and not game.pine_snakes_colonized and game.gentian_colonized:
             bg_img_path = "assets/okay_gentianmedal.png"
         else:
             bg_img_path = "assets/okay_nomedal.png"
@@ -832,12 +843,22 @@ def main():
             game.stand['year'] += 10
             welcome_frame.place_forget()
             update_status_labels()
+
+            # --- Always check for game end first ---
+            if game.is_low_ba_game_over():
+                show_low_ba_screen()
+                return
             if getattr(game.stand, 'catastrophic_wildfire', False) or game.stand.get('catastrophic_wildfire', False):
                 show_fire_loss_screen()
                 return
             if event == 'SPB outbreak!' and game.stand['SPB_risk'] == 'High':
                 show_spb_loss_screen()
                 return
+            if game.stand['year'] >= 100:
+                show_closing_screen()
+                return
+
+            # --- Only show achievement screens if game is not over ---
             if not pine_snakes_before and game.pine_snakes_colonized:
                 show_pine_snake_screen()
                 return
@@ -845,16 +866,11 @@ def main():
                 game.gentian_screen_shown = True
                 show_gentian_screen()
                 return
+
             if event:
                 narration.set(event)
             else:
                 narration.set("What will you do next?")
-            if game.is_low_ba_game_over():
-                show_low_ba_screen()
-                return
-            if game.stand['year'] >= 100:
-                show_closing_screen()
-                return
         update_status_labels()
         for k, v in ACTIONS.items():
             if k == '1':
