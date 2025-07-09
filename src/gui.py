@@ -245,12 +245,16 @@ def main():
         closing_frame = tk.Frame(root, bg=BG_COLOR)
         closing_frame.pack(fill="both", expand=True)
 
-        # Choose background image based on pine snake achievement
-        if game.pine_snakes_colonized:
-            bg_img_path = "assets/okay_medal.png"
+        # Choose background image based on achievement
+        if game.pine_snakes_colonized and game.gentian_colonized:
+            bg_img_path = "assets/okay_snake-gentianmedal.png"
+        elif game.pine_snakes_colonized and not game.gentian_colonized:
+            bg_img_path = "assets/okay_snakemedal.png"
+        elif not game.pine_snakes_colonized and game.gentian_colonized:
+            bg_img_path = "assets/okay_gentianmedal.png"
         else:
             bg_img_path = "assets/okay_nomedal.png"
-
+        
         # Load and display the background image in a label
         bg_img = Image.open(bg_img_path)
         bg_img = bg_img.resize((1920, 1080))
@@ -665,6 +669,86 @@ def main():
             command=lambda: [snake_frame.pack_forget(), show_game_screen()]
         ).pack(pady=0)
 
+    def show_gentian_screen():
+        """Display the screen for successful gentian colonization."""
+        play_gentian_sound()
+        for widget in root.winfo_children():
+            widget.pack_forget()
+        gentian_frame = tk.Frame(root, bg=BG_COLOR)
+        gentian_frame.pack(fill="both", expand=True)
+    
+        # Load and display the background image in a label
+        bg_img = Image.open("assets/gentian.png")
+        bg_img = bg_img.resize((1920, 1080))
+        bg_photo = ImageTk.PhotoImage(bg_img)
+        bg_label = tk.Label(gentian_frame, image=bg_photo)
+        bg_label.image = bg_photo  # Prevent garbage collection
+        bg_label.place(relx=0, rely=0, relwidth=1, relheight=1)
+    
+        # --- Metrics Frame (copied from main game screen) ---
+        metrics_frame = tk.Frame(gentian_frame, bg="#FFFFFF", bd=0)
+        metrics_frame.place(relx=0.845, rely=0.73, anchor="center")
+        game_status = tk.StringVar()
+        status_dict = game.get_status_dict()
+        game_status.set(
+            f"Year: {status_dict['year']}\n"
+            f"\nBasal Area (BA): {status_dict['BA']:.1f} sqft/acre\n"
+            f"\nTrees Per Acre (TPA): {status_dict['TPA']}\n"
+            f"\nQuadratic Mean Diameter (QMD): {status_dict['QMD']:.1f} inches\n"
+            f"\nCarbon per Acre: {status_dict['carbon']:.1f} Metric Tons/acre\n"
+            f"\nCrowning Index: {status_dict['CI']:.1f}"
+        )
+        game_status_message = tk.Message(
+            metrics_frame,
+            textvariable=game_status,
+            width=450,
+            justify="center",
+            bg="#FFFFFF",
+            fg=FG_COLOR,
+            font=("Courier",13, "bold")
+        )
+        game_status_message.pack()
+        fire_risk_label = tk.Label(metrics_frame, wraplength=400, justify="left", padx=10, pady=0, bg="#FFFFFF", font=("Courier", 14, "bold"))
+        fire_risk_label.pack()
+        spb_risk_label = tk.Label(metrics_frame, wraplength=400, justify="left", padx=10, pady=0, bg="#FFFFFF", font=("Courier", 14, "bold"))
+        spb_risk_label.pack()
+        fire_risk_label.config(
+            text=f"\n\n\nFire Risk: {status_dict['fire_risk']}",
+            fg=get_risk_color(status_dict['fire_risk'])
+        )
+        spb_risk_label.config(
+            text=f"Southern Pine Beetle Risk: {status_dict['SPB_risk']}",
+            fg=get_risk_color(status_dict['SPB_risk'])
+        )
+        narration = tk.StringVar()
+        narration.set("What will you do next?")
+        narration_label = tk.Label(
+            metrics_frame, textvariable=narration, wraplength=400, justify="left",
+            padx=10, pady=5, bg="#FFFFFF", fg=FG_COLOR, font=FONT
+        )
+        narration_label.pack()
+    
+        # --- Text Frame ---
+        text_frame = tk.Frame(gentian_frame, bg="#1b2336", bd=0)
+        text_frame.place(relx=0.88, rely=0.2, anchor="center")
+    
+        tk.Label(
+            text_frame,
+            text="Congratulations! This forest now supports rare Pine Barrens gentian!\n\nGentian is growing in the stand!",
+            bg="#1b2336", fg="#05dd4c", font=("Courier New", 18, "bold"),
+            pady=10, wraplength=370, justify="center"
+        ).pack()
+    
+        # --- Button Frame ---
+        button_frame = tk.Frame(gentian_frame, bg="#000000", bd=0)
+        button_frame.place(relx=0.88, rely=0.33, anchor="center")
+    
+        tk.Button(
+            button_frame, text="Continue", font=("Courier", 16, "bold"), width=16,
+            bg="#05dd4c", fg="#1b2336", activebackground="#069134",
+            command=lambda: [gentian_frame.pack_forget(), show_game_screen()]
+        ).pack(pady=0)
+    
     # --- Main Game Screen ---
     def show_game_screen():
         stop_forest_sound()
@@ -756,6 +840,10 @@ def main():
                 return
             if not pine_snakes_before and game.pine_snakes_colonized:
                 show_pine_snake_screen()
+                return
+            if game.gentian_colonized and not game.gentian_screen_shown:
+                game.gentian_screen_shown = True
+                show_gentian_screen()
                 return
             if event:
                 narration.set(event)
@@ -884,7 +972,7 @@ def main():
         ).place(relx=0.225, rely=0.915, anchor="center")
 
     # Start the main event loop
-    #show_low_ba_screen()  # <-- TEMP: Jump directly to screen for testing
+    #show_gentian_screen()  # <-- TEMP: Jump directly to screen for testing
     root.mainloop()
 
 #defining sound functions
@@ -1019,6 +1107,13 @@ def play_lets_play_sound():
         sound.play()
     except Exception as e:
         print("Error playing lets play sound:", e)
+
+def play_gentian_sound():
+    try:
+        sound = pygame.mixer.Sound("assets/gentian.wav")
+        sound.play()
+    except Exception as e:
+        print("Error playing gentian sound:", e)
 
 if __name__ == "__main__":
     main()

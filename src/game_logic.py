@@ -52,7 +52,9 @@ class Game:
 
         self.low_ba_count = 0   # Track consecutive low BA cycles
         self.pine_snakes_colonized = False  # Track pine snake colonization
+        self.gentian_colonized = False  # Track gentian colonization
         self.action_history = []  # Add this line
+        self.gentian_screen_shown = False
 
     def reset_game(self):
         """Reset the game to initial conditions."""
@@ -76,6 +78,8 @@ class Game:
         self.action_history = []  # Clear the action history
         self.low_ba_count = 0
         self.pine_snakes_colonized = False
+        self.gentian_colonized = False  # Reset gentian colonization status
+        self.gentian_screen_shown = False
 
     def update_stand(self, action):
         """
@@ -176,6 +180,11 @@ class Game:
             if random.random() < 0.5:
                 self.pine_snakes_colonized = True
 
+        # Step 11: Gentian logic (only after prescribed burn)
+        if action == '4' and not self.gentian_colonized:
+            if random.random() < 0.2:
+                self.gentian_colonized = True
+
         # After updating the stand/year, record the action:
         self.action_history.append((self.stand['year'], action))
 
@@ -258,6 +267,9 @@ class Game:
         if self.pine_snakes_colonized:
             summary += "\nPine snakes are utilizing this stand!\n"
             
+        if self.gentian_colonized:
+            summary += "\nGentian is now growing in this stand!\n"
+
         return summary
 
     def get_action_summary(self):
