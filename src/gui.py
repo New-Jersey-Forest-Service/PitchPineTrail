@@ -931,7 +931,7 @@ def main():
                 def show_chainsaw_afterburn_then_afterburn_treedown():
                     game.thin_lightly_temp_bg = "assets/chainsaw_afterburn.png"
                     show_game_screen()
-                    root.after(500, finish_chainsaw_afterburn_event)
+                    root.after(1500, finish_chainsaw_afterburn_event)
                 def finish_chainsaw_afterburn_event():
                     game.thin_lightly_temp_bg = "assets/afterburn_treedown.png"
                     game.current_bg_img = "assets/afterburn_treedown.png"  # persist
@@ -998,7 +998,7 @@ def main():
                 def show_chainsaw_then_advance():
                     game.thin_lightly_temp_bg = "assets/chainsaw.png"
                     show_game_screen()
-                    root.after(500, lambda: finish_thin_lightly_event())
+                    root.after(1500, lambda: finish_thin_lightly_event())
                 def finish_thin_lightly_event():
                     game.thin_lightly_temp_bg = "assets/treedown.png"
                     game.current_bg_img = "assets/treedown.png"  # persist
