@@ -765,7 +765,72 @@ def main():
             command=lambda: [gentian_frame.pack_forget(), show_game_screen()]
         ).pack(pady=0)
     
-    # --- Main Game Screen ---
+    def show_field_guide_screen():
+        play_page_turn_sound()  # reuse page turn sound
+        for widget in root.winfo_children():
+            widget.pack_forget()
+        fg_frame = tk.Frame(root, bg=BG_COLOR)
+        fg_frame.pack(fill="both", expand=True)
+
+        # Background image (field guide)
+        bg_img = Image.open("assets/fieldguide.png")
+        bg_img = bg_img.resize((1920, 1080))
+        bg_photo = ImageTk.PhotoImage(bg_img)
+        bg_label = tk.Label(fg_frame, image=bg_photo)
+        bg_label.image = bg_photo
+        bg_label.place(relx=0, rely=0, relwidth=1, relheight=1)
+
+        # Metrics (same as definitions)
+        metrics_frame = tk.Frame(fg_frame, bg="#FFFFFF", bd=0)
+        metrics_frame.place(relx=0.845, rely=0.73, anchor="center")
+        game_status = tk.StringVar()
+        status_dict = game.get_status_dict()
+        game_status.set(
+            f"Year: {status_dict['year']}\n"
+            f"\nBasal Area (BA): {status_dict['BA']:.1f} sqft/acre\n"
+            f"\nTrees Per Acre (TPA): {status_dict['TPA']}\n"
+            f"\nQuadratic Mean Diameter (QMD): {status_dict['QMD']:.1f} inches\n"
+            f"\nCarbon per Acre: {status_dict['carbon']:.1f} Metric Tons/acre\n"
+            f"\nCrowning Index: {status_dict['CI']:.1f}"
+        )
+        game_status_message = tk.Message(
+            metrics_frame,
+            textvariable=game_status,
+            width=450,
+            justify="center",
+            bg="#FFFFFF",
+            fg=FG_COLOR,
+            font=("Courier",13,"bold")
+        )
+        game_status_message.pack()
+        fire_risk_label = tk.Label(metrics_frame, wraplength=400, justify="left",
+                                   padx=10, pady=0, bg="#FFFFFF", font=("Courier", 14, "bold"))
+        fire_risk_label.pack()
+        spb_risk_label = tk.Label(metrics_frame, wraplength=400, justify="left",
+                                  padx=10, pady=0, bg="#FFFFFF", font=("Courier", 14, "bold"))
+        spb_risk_label.pack()
+        fire_risk_label.config(
+            text=f"\n\n\nFire Risk: {status_dict['fire_risk']}",
+            fg=get_risk_color(status_dict['fire_risk'])
+        )
+        spb_risk_label.config(
+            text=f"Southern Pine Beetle Risk: {status_dict['SPB_risk']}",
+            fg=get_risk_color(status_dict['SPB_risk'])
+        )
+        narration = tk.StringVar()
+        narration.set("Field Guide")
+        narration_label = tk.Label(
+            metrics_frame, textvariable=narration, wraplength=400, justify="left",
+            padx=10, pady=5, bg="#FFFFFF", fg=FG_COLOR, font=FONT
+        )
+        narration_label.pack()
+
+        tk.Button(
+            fg_frame, text="Return to Game", font=("Courier", 18, "bold"), width=16,
+            bg="#929292", fg="#000000", activebackground="#FFFFFF",
+            command=lambda: [play_page_close_sound(), fg_frame.pack_forget(), show_game_screen()]
+        ).place(relx=0.225, rely=0.915, anchor="center")
+
     def show_game_screen():
         stop_forest_sound()
         play_forest_sound()
@@ -1063,10 +1128,23 @@ def main():
                 command=btn_command
             ).pack(pady=5)
             
-        # --- Definitions Button Frame ---
+        # --- Field Guide & Definitions Buttons ---
+        field_guide_frame = tk.Frame(game_frame, bg="#FFFFFF")
+        field_guide_frame.place(relx=0.05, rely=0.725, anchor="sw")
+        tk.Button(
+            field_guide_frame,
+            text="Click for Field Guide",
+            font=FONT,
+            width=23,
+            bg="#000000",
+            fg="#ffffff",
+            activebackground="#257416",
+            command=show_field_guide_screen
+        ).pack()
+
         definitions_frame = tk.Frame(game_frame, bg="#FFFFFF")
         definitions_frame.place(relx=0.05, rely=0.96, anchor="sw")
-        definitions_button = tk.Button(
+        tk.Button(
             definitions_frame,
             text="Click for Definitions",
             font=FONT,
@@ -1075,8 +1153,7 @@ def main():
             fg="#ffffff",
             activebackground="#FFE208",
             command=show_definitions_screen
-        )
-        definitions_button.pack()
+        ).pack()
 
         # --- Green Exit Button (top right) ---
         exit_frame = tk.Frame(game_frame, bg="#FFFFFF")
