@@ -28,6 +28,7 @@ def main():
     game.prescribed_burn_event = False
     game.prescribed_burn_temp_bg = None
     game.thin_lightly_temp_bg = None
+    game.summer_tanager_screen_shown = False  # NEW
     BG_COLOR = "#FFFFFF"    # White background
     FG_COLOR = "#000000"    # Black text
     FONT = ("Courier New", 12, "bold")
@@ -65,6 +66,7 @@ def main():
         game.prescribed_burn_event = False
         game.prescribed_burn_temp_bg = None
         game.thin_lightly_temp_bg = None
+        game.summer_tanager_screen_shown = False
         for widget in root.winfo_children():
             widget.pack_forget()
         show_game_screen()
@@ -765,6 +767,85 @@ def main():
             command=lambda: [gentian_frame.pack_forget(), show_game_screen()]
         ).pack(pady=0)
     
+    def show_summer_tanager_screen():
+        """Display the screen for Summer Tanager visitation."""
+        play_tanager_sound()
+        for widget in root.winfo_children():
+            widget.pack_forget()
+        tanager_frame = tk.Frame(root, bg=BG_COLOR)
+        tanager_frame.pack(fill="both", expand=True)
+
+        # Background image
+        bg_img = Image.open("assets/Tanager.png")
+        bg_img = bg_img.resize((1920, 1080))
+        bg_photo = ImageTk.PhotoImage(bg_img)
+        bg_label = tk.Label(tanager_frame, image=bg_photo)
+        bg_label.image = bg_photo
+        bg_label.place(relx=0, rely=0, relwidth=1, relheight=1)
+
+        # Metrics (copied pattern)
+        metrics_frame = tk.Frame(tanager_frame, bg="#FFFFFF", bd=0)
+        metrics_frame.place(relx=0.845, rely=0.73, anchor="center")
+        game_status = tk.StringVar()
+        status_dict = game.get_status_dict()
+        game_status.set(
+            f"Year: {status_dict['year']}\n"
+            f"\nBasal Area (BA): {status_dict['BA']:.1f} sqft/acre\n"
+            f"\nTrees Per Acre (TPA): {status_dict['TPA']}\n"
+            f"\nQuadratic Mean Diameter (QMD): {status_dict['QMD']:.1f} inches\n"
+            f"\nCarbon per Acre: {status_dict['carbon']:.1f} Metric Tons/acre\n"
+            f"\nCrowning Index: {status_dict['CI']:.1f}"
+        )
+        game_status_message = tk.Message(
+            metrics_frame,
+            textvariable=game_status,
+            width=450,
+            justify="center",
+            bg="#FFFFFF",
+            fg=FG_COLOR,
+            font=("Courier",13, "bold")
+        )
+        game_status_message.pack()
+        fire_risk_label = tk.Label(metrics_frame, wraplength=400, justify="left",
+                                   padx=10, pady=0, bg="#FFFFFF", font=("Courier", 14, "bold"))
+        fire_risk_label.pack()
+        spb_risk_label = tk.Label(metrics_frame, wraplength=400, justify="left",
+                                  padx=10, pady=0, bg="#FFFFFF", font=("Courier", 14, "bold"))
+        spb_risk_label.pack()
+        fire_risk_label.config(
+            text=f"\n\n\nFire Risk: {status_dict['fire_risk']}",
+            fg=get_risk_color(status_dict['fire_risk'])
+        )
+        spb_risk_label.config(
+            text=f"Southern Pine Beetle Risk: {status_dict['SPB_risk']}",
+            fg=get_risk_color(status_dict['SPB_risk'])
+        )
+        narration = tk.StringVar()
+        narration.set("What will you do next?")
+        tk.Label(
+            metrics_frame, textvariable=narration, wraplength=400, justify="left",
+            padx=10, pady=5, bg="#FFFFFF", fg=FG_COLOR, font=FONT
+        ).pack()
+
+        # Text frame
+        text_frame = tk.Frame(tanager_frame, bg="#1b2336", bd=0)
+        text_frame.place(relx=0.88, rely=0.2, anchor="center")
+        tk.Label(
+            text_frame,
+            text="Congratulations! This forest is being visited by Summer Tanagers.\n\nThese neotropical birds are migrating through the stand!",
+            bg="#1b2336", fg="#05dd4c", font=("Courier New", 18, "bold"),
+            pady=10, wraplength=370, justify="center"
+        ).pack()
+
+        # Button frame
+        button_frame = tk.Frame(tanager_frame, bg="#000000", bd=0)
+        button_frame.place(relx=0.88, rely=0.33, anchor="center")
+        tk.Button(
+            button_frame, text="Continue", font=("Courier", 16, "bold"), width=16,
+            bg="#05dd4c", fg="#1b2336", activebackground="#069134",
+            command=lambda: [tanager_frame.pack_forget(), show_game_screen()]
+        ).pack(pady=0)
+    
     def show_field_guide_screen():
         play_page_turn_sound()  # reuse page turn sound
         for widget in root.winfo_children():
@@ -1101,6 +1182,10 @@ def main():
                 game.gentian_screen_shown = True
                 show_gentian_screen()
                 return
+            if getattr(game, 'summer_tanager_colonized', False) and not getattr(game, 'summer_tanager_screen_shown', False):
+                game.summer_tanager_screen_shown = True
+                show_summer_tanager_screen()
+                return
 
             if event:
                 narration.set(event)
@@ -1378,6 +1463,13 @@ def play_gentian_sound():
         sound.play()
     except Exception as e:
         print("Error playing gentian sound:", e)
+
+def play_tanager_sound():
+    try:
+        sound = pygame.mixer.Sound("assets/tanager.wav")
+        sound.play()
+    except Exception as e:
+        print("Error playing tanager sound:", e)
 
 if __name__ == "__main__":
     main()
