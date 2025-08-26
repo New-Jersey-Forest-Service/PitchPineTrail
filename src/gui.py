@@ -256,20 +256,36 @@ def main():
         qmd = game.get_status_dict()['QMD']
 
         # Choose background image based on achievement (QMD 21 determines bad vs okay finish)
-        if qmd < 21 and not game.pine_snakes_colonized and not game.gentian_colonized:
+        if qmd < 21 and not game.pine_snakes_colonized and not game.gentian_colonized and not game.summer_tanager_colonized:
             bg_img_path = "assets/bad_nomedal.png"
-        elif qmd < 21 and game.pine_snakes_colonized and game.gentian_colonized:
+        elif qmd < 21 and game.pine_snakes_colonized and game.gentian_colonized and not game.summer_tanager_colonized:
             bg_img_path = "assets/bad_snake-gentianmedal.png"
-        elif qmd < 21 and game.pine_snakes_colonized and not game.gentian_colonized:
+        elif qmd < 21 and game.pine_snakes_colonized and not game.gentian_colonized and not game.summer_tanager_colonized:
             bg_img_path = "assets/bad_snakemedal.png"
-        elif qmd < 21 and not game.pine_snakes_colonized and game.gentian_colonized:
+        elif qmd < 21 and not game.pine_snakes_colonized and game.gentian_colonized and not game.summer_tanager_colonized:
             bg_img_path = "assets/bad_gentianmedal.png"
-        elif qmd > 21 and game.pine_snakes_colonized and game.gentian_colonized:
+        elif qmd < 21 and not game.pine_snakes_colonized and not game.gentian_colonized and game.summer_tanager_colonized:
+            bg_img_path = "assets/bad_tanagermedal.png"
+        elif qmd < 21 and game.pine_snakes_colonized and game.gentian_colonized and game.summer_tanager_colonized:
+            bg_img_path = "assets/bad_snake-gentian-tanagermedal.png"
+        elif qmd < 21 and game.pine_snakes_colonized and not game.gentian_colonized and game.summer_tanager_colonized:
+            bg_img_path = "assets/bad_snake-tanagermedal.png"
+        elif qmd < 21 and not game.pine_snakes_colonized and game.gentian_colonized and game.summer_tanager_colonized:
+            bg_img_path = "assets/bad_gentian-tanagermedal.png"
+        elif qmd > 21 and game.pine_snakes_colonized and game.gentian_colonized and not game.summer_tanager_colonized:
             bg_img_path = "assets/okay_snake-gentianmedal.png"
-        elif qmd > 21 and game.pine_snakes_colonized and not game.gentian_colonized:
+        elif qmd > 21 and game.pine_snakes_colonized and not game.gentian_colonized and not game.summer_tanager_colonized:
             bg_img_path = "assets/okay_snakemedal.png"
-        elif qmd > 21 and not game.pine_snakes_colonized and game.gentian_colonized:
+        elif qmd > 21 and not game.pine_snakes_colonized and game.gentian_colonized and not game.summer_tanager_colonized:
             bg_img_path = "assets/okay_gentianmedal.png"
+        elif qmd > 21 and not game.pine_snakes_colonized and not game.gentian_colonized and game.summer_tanager_colonized:
+            bg_img_path = "assets/okay_tanagermedal.png"
+        elif qmd > 21 and game.pine_snakes_colonized and game.gentian_colonized and game.summer_tanager_colonized:
+            bg_img_path = "assets/okay_snake-gentian-tanagermedal.png"
+        elif qmd > 21 and game.pine_snakes_colonized and not game.gentian_colonized and game.summer_tanager_colonized:
+            bg_img_path = "assets/okay_snake-tanagermedal.png"
+        elif qmd > 21 and not game.pine_snakes_colonized and game.gentian_colonized and game.summer_tanager_colonized:
+            bg_img_path = "assets/okay_gentian-tanagermedal.png"
         else:
             bg_img_path = "assets/okay_nomedal.png"
         
