@@ -175,7 +175,7 @@ class Game:
         self.stand['SPB_risk'] = spb_risk
 
         # Step 9: record if BA ever in 30–40 window for summer tanager colonization
-        if 30 <= ba_next <= 40:
+        if 30 <= ba_next <= 45:
             self.suitable_tanager_ba_reached = True
 
         # Step 10: Track low BA for game-over
