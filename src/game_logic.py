@@ -174,7 +174,7 @@ class Game:
         self.stand['fire_risk'] = fire_risk
         self.stand['SPB_risk'] = spb_risk
 
-        # Step 9: record if BA ever in 30–40 window for summer tanager colonization
+        # Step 9: record if BA ever in 30–45 window for summer tanager colonization
         if 30 <= ba_next <= 45:
             self.suitable_tanager_ba_reached = True
 
