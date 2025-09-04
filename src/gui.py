@@ -61,6 +61,8 @@ def main():
 
     def restart_game(frame_to_remove):
         game.reset_game()
+        stop_spb_eating_sound()
+        stop_fire_sound()
         game.current_bg_img = "assets/Evenagestand.png"
         game.thin_lightly_event = False
         game.prescribed_burn_event = False
