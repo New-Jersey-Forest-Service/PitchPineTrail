@@ -56,6 +56,8 @@ class Game:
         self.gentian_colonized = False  # Track gentian colonization
         self.action_history = []  # Add this line
         self.gentian_screen_shown = False
+        self.summer_tanager_colonized = False
+        self.suitable_tanager_ba_reached = False
 
     def reset_game(self):
         """Reset the game to initial conditions."""
@@ -81,6 +83,8 @@ class Game:
         self.pine_snakes_colonized = False
         self.gentian_colonized = False  
         self.gentian_screen_shown = False
+        self.summer_tanager_colonized = False
+        self.suitable_tanager_ba_reached = False
 
     def update_stand(self, action):
         """
@@ -170,24 +174,39 @@ class Game:
         self.stand['fire_risk'] = fire_risk
         self.stand['SPB_risk'] = spb_risk
 
-        # Step 9: Track low BA for game-over
+        # Step 9: record if BA ever in 30–45 window for summer tanager colonization
+        if 30 <= ba_next <= 45:
+            self.suitable_tanager_ba_reached = True
+
+        # Step 10: Track low BA for game-over
         if ba_next < 35:
             self.low_ba_count += 1
         else:
             self.low_ba_count = 0
 
-        # Step 10: Pine snake logic
+        # Step 11: Pine snake logic
         if (45 <= ba_next <= 70) and not self.pine_snakes_colonized:
             if random.random() < 0.3:
                 self.pine_snakes_colonized = True
 
-        # Step 11: Gentian logic (only after prescribed burn)
+        # Step 12: Gentian logic (only after prescribed burn)
         if action == '4' and not self.gentian_colonized:
             if random.random() < 0.2:
                 self.gentian_colonized = True
 
+        # Step 13: Summer Tanager logic (0.5 probability once conditions met)
+        if (not self.summer_tanager_colonized
+            and self.suitable_tanager_ba_reached
+            and len(self.action_history) >= 2
+            and self.action_history[-1][1] == '1'
+            and self.action_history[-2][1] == '1'):
+            if random.random() < 0.5:
+                self.summer_tanager_colonized = True
+
         # After updating the stand/year, record the action:
         self.action_history.append((self.stand['year'], action))
+
+        
 
     def is_low_ba_game_over(self):
         """Check if game should end due to consecutive low BA conditions."""
@@ -270,6 +289,9 @@ class Game:
             
         if self.gentian_colonized:
             summary += "\nGentian is now growing in this stand!\n"
+
+        if self.summer_tanager_colonized:
+            summary += "\nSummer tanager has colonized this stand!\n"
 
         return summary
 
