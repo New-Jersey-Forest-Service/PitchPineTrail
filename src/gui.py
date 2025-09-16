@@ -32,6 +32,10 @@ def main():
     game.summer_tanager_screen_shown = False  # NEW
     game.pb_after_first_heavythin_shown = False  # NEW: first PB after first heavy-thin has animated
     game.pb_after_heavythin_with_tl_shown = False  # NEW: first PB-after-heavythin when TL already chosen
+    # NEW: persistent achievement flags (used for ending/summary)
+    game.pine_snake_achieved = False
+    game.gentian_achieved = False
+    game.summer_tanager_achieved = False
     BG_COLOR = "#FFFFFF"    # White background
     FG_COLOR = "#000000"    # Black text
     FONT = ("Courier New", 12, "bold")
@@ -71,10 +75,14 @@ def main():
         game.prescribed_burn_event = False
         game.prescribed_burn_temp_bg = None
         game.thin_lightly_temp_bg = None
-        game.thin_heavily_temp_bg = None  # NEW: reset heavy-thin temp bg
+        game.thin_heavily_temp_bg = None
         game.summer_tanager_screen_shown = False
-        game.pb_after_first_heavythin_shown = False  # NEW: reset
-        game.pb_after_heavythin_with_tl_shown = False  # NEW: reset
+        game.pb_after_first_heavythin_shown = False
+        game.pb_after_heavythin_with_tl_shown = False
+        # NEW: reset persistent achievements
+        game.pine_snake_achieved = False
+        game.gentian_achieved = False
+        game.summer_tanager_achieved = False
         for widget in root.winfo_children():
             widget.pack_forget()
         show_game_screen()
@@ -263,36 +271,41 @@ def main():
          # Get QMD value
         qmd = game.get_status_dict()['QMD']
 
-        # Choose background image based on achievement (QMD 21 determines bad vs okay finish)
-        if qmd < 21 and not game.pine_snakes_colonized and not game.gentian_colonized and not game.summer_tanager_colonized:
+        # NEW: use persistent achievement flags (fallback to current colonized)
+        ach_snake = getattr(game, 'pine_snake_achieved', False) or game.pine_snakes_colonized
+        ach_gent  = getattr(game, 'gentian_achieved', False) or game.gentian_colonized
+        ach_tan   = getattr(game, 'summer_tanager_achieved', False) or getattr(game, 'summer_tanager_colonized', False)
+
+        # Choose background image based on achievement
+        if qmd < 21 and not ach_snake and not ach_gent and not ach_tan:
             bg_img_path = "assets/bad_nomedal.png"
-        elif qmd < 21 and game.pine_snakes_colonized and game.gentian_colonized and not game.summer_tanager_colonized:
+        elif qmd < 21 and ach_snake and ach_gent and not ach_tan:
             bg_img_path = "assets/bad_snake-gentianmedal.png"
-        elif qmd < 21 and game.pine_snakes_colonized and not game.gentian_colonized and not game.summer_tanager_colonized:
+        elif qmd < 21 and ach_snake and not ach_gent and not ach_tan:
             bg_img_path = "assets/bad_snakemedal.png"
-        elif qmd < 21 and not game.pine_snakes_colonized and game.gentian_colonized and not game.summer_tanager_colonized:
+        elif qmd < 21 and not ach_snake and ach_gent and not ach_tan:
             bg_img_path = "assets/bad_gentianmedal.png"
-        elif qmd < 21 and not game.pine_snakes_colonized and not game.gentian_colonized and game.summer_tanager_colonized:
+        elif qmd < 21 and not ach_snake and not ach_gent and ach_tan:
             bg_img_path = "assets/bad_tanagermedal.png"
-        elif qmd < 21 and game.pine_snakes_colonized and game.gentian_colonized and game.summer_tanager_colonized:
+        elif qmd < 21 and ach_snake and ach_gent and ach_tan:
             bg_img_path = "assets/bad_snake-gentian-tanagermedal.png"
-        elif qmd < 21 and game.pine_snakes_colonized and not game.gentian_colonized and game.summer_tanager_colonized:
+        elif qmd < 21 and ach_snake and not ach_gent and ach_tan:
             bg_img_path = "assets/bad_snake-tanagermedal.png"
-        elif qmd < 21 and not game.pine_snakes_colonized and game.gentian_colonized and game.summer_tanager_colonized:
+        elif qmd < 21 and not ach_snake and ach_gent and ach_tan:
             bg_img_path = "assets/bad_gentian-tanagermedal.png"
-        elif qmd > 21 and game.pine_snakes_colonized and game.gentian_colonized and not game.summer_tanager_colonized:
+        elif qmd > 21 and ach_snake and ach_gent and not ach_tan:
             bg_img_path = "assets/okay_snake-gentianmedal.png"
-        elif qmd > 21 and game.pine_snakes_colonized and not game.gentian_colonized and not game.summer_tanager_colonized:
+        elif qmd > 21 and ach_snake and not ach_gent and not ach_tan:
             bg_img_path = "assets/okay_snakemedal.png"
-        elif qmd > 21 and not game.pine_snakes_colonized and game.gentian_colonized and not game.summer_tanager_colonized:
+        elif qmd > 21 and not ach_snake and ach_gent and not ach_tan:
             bg_img_path = "assets/okay_gentianmedal.png"
-        elif qmd > 21 and not game.pine_snakes_colonized and not game.gentian_colonized and game.summer_tanager_colonized:
+        elif qmd > 21 and not ach_snake and not ach_gent and ach_tan:
             bg_img_path = "assets/okay_tanagermedal.png"
-        elif qmd > 21 and game.pine_snakes_colonized and game.gentian_colonized and game.summer_tanager_colonized:
+        elif qmd > 21 and ach_snake and ach_gent and ach_tan:
             bg_img_path = "assets/okay_snake-gentian-tanagermedal.png"
-        elif qmd > 21 and game.pine_snakes_colonized and not game.gentian_colonized and game.summer_tanager_colonized:
+        elif qmd > 21 and ach_snake and not ach_gent and ach_tan:
             bg_img_path = "assets/okay_snake-tanagermedal.png"
-        elif qmd > 21 and not game.pine_snakes_colonized and game.gentian_colonized and game.summer_tanager_colonized:
+        elif qmd > 21 and not ach_snake and ach_gent and ach_tan:
             bg_img_path = "assets/okay_gentian-tanagermedal.png"
         else:
             bg_img_path = "assets/okay_nomedal.png"
@@ -1092,51 +1105,6 @@ def main():
                     narration.set("What will you do next?")
                 return
 
-            # NEW: If final background is already set, skip any further turn animations
-            if getattr(game, 'current_bg_img', None) == "assets/afterburn_heavythin_treedown.png":
-                pine_snakes_before = game.pine_snakes_colonized
-                game.update_stand(action)
-                event = game.simulate_event()
-                game.stand['year'] += 10
-                welcome_frame.place_forget()
-                update_status_labels()
-
-                # Game end checks (loss conditions first)
-                if game.is_low_ba_game_over():
-                    show_low_ba_screen()
-                    return
-                if getattr(game.stand, 'catastrophic_wildfire', False) or game.stand.get('catastrophic_wildfire', False):
-                    show_fire_loss_screen()
-                    return
-                if event == 'SPB outbreak!' and game.stand['SPB_risk'] == 'High':
-                    show_spb_loss_screen()
-                    return
-
-                # Achievement screens (show before win screen if triggered now)
-                if not pine_snakes_before and game.pine_snakes_colonized:
-                    show_pine_snake_screen()
-                    return
-                if game.gentian_colonized and not game.gentian_screen_shown:
-                    game.gentian_screen_shown = True
-                    show_gentian_screen()
-                    return
-                if getattr(game, 'summer_tanager_colonized', False) and not getattr(game, 'summer_tanager_screen_shown', False):
-                    game.summer_tanager_screen_shown = True
-                    show_summer_tanager_screen()
-                    return
-
-                # Win check after achievements so they display first when year hits 100
-                if game.stand['year'] >= 100:
-                    show_closing_screen()
-                    return
-
-                # Default narration
-                if event:
-                    narration.set(event)
-                else:
-                    narration.set("What will you do next?")
-                return
-
             # --- Prescribed burn after thin lightly but not thin heavily ---
             if (action == '4'
                 and not game.prescribed_burn_event
@@ -1851,14 +1819,18 @@ def main():
 
             # --- Achievements before win screen so they show at year 100 ---
             if not pine_snakes_before and game.pine_snakes_colonized:
+                game.pine_snake_achieved = True
                 show_pine_snake_screen()
                 return
-            if game.gentian_colonized and not game.gentian_screen_shown:
+            if (not gentian_before and game.gentian_colonized and not game.gentian_screen_shown):
                 game.gentian_screen_shown = True
+                game.gentian_achieved = True
                 show_gentian_screen()
                 return
-            if getattr(game, 'summer_tanager_colonized', False) and not getattr(game, 'summer_tanager_screen_shown', False):
+            if (not tanager_before and getattr(game, 'summer_tanager_colonized', False)
+                and not getattr(game, 'summer_tanager_screen_shown', False)):
                 game.summer_tanager_screen_shown = True
+                game.summer_tanager_achieved = True
                 show_summer_tanager_screen()
                 return
 
