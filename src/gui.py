@@ -708,7 +708,7 @@ def main():
         tk.Button(
             button_frame, text="Continue", font=("Courier", 16, "bold"), width=16,
             bg="#05dd4c", fg="#1b2336", activebackground="#069134",
-            command=lambda: [snake_frame.pack_forget(), show_game_screen()]
+            command=lambda: [snake_frame.pack_forget(), (show_closing_screen() if game.stand['year'] >= 100 else show_game_screen())]
         ).pack(pady=0)
 
     def show_gentian_screen():
@@ -788,7 +788,7 @@ def main():
         tk.Button(
             button_frame, text="Continue", font=("Courier", 16, "bold"), width=16,
             bg="#05dd4c", fg="#1b2336", activebackground="#069134",
-            command=lambda: [gentian_frame.pack_forget(), show_game_screen()]
+            command=lambda: [gentian_frame.pack_forget(), (show_closing_screen() if game.stand['year'] >= 100 else show_game_screen())]
         ).pack(pady=0)
     
     def show_summer_tanager_screen():
@@ -867,7 +867,7 @@ def main():
         tk.Button(
             button_frame, text="Continue", font=("Courier", 16, "bold"), width=16,
             bg="#05dd4c", fg="#1b2336", activebackground="#069134",
-            command=lambda: [tanager_frame.pack_forget(), show_game_screen()]
+            command=lambda: [tanager_frame.pack_forget(), (show_closing_screen() if game.stand['year'] >= 100 else show_game_screen())]
         ).pack(pady=0)
     
     def show_field_guide_screen():
@@ -1042,8 +1042,13 @@ def main():
                               and any(i > first_heavy_idx for i in burn_indices))
             pb_both_sides = pb_before_heavy and pb_after_heavy
 
-            # NEW: If final background is already set, skip any further turn animations
-            if getattr(game, 'current_bg_img', None) == "assets/afterburn_heavythin_treedown.png":
+            # Track achievement state from BEFORE this action + per-turn guard
+            gentian_before = game.gentian_colonized
+            tanager_before = getattr(game, 'summer_tanager_colonized', False)
+            achievement_shown_this_turn = False
+
+            # NEW: Final decade fast-path — no animations between year 90 and 100
+            if 90 <= game.stand['year'] < 100:
                 pine_snakes_before = game.pine_snakes_colonized
                 game.update_stand(action)
                 event = game.simulate_event()
@@ -1051,7 +1056,7 @@ def main():
                 welcome_frame.place_forget()
                 update_status_labels()
 
-                # Game end checks
+                # Loss checks first
                 if game.is_low_ba_game_over():
                     show_low_ba_screen()
                     return
@@ -1061,11 +1066,8 @@ def main():
                 if event == 'SPB outbreak!' and game.stand['SPB_risk'] == 'High':
                     show_spb_loss_screen()
                     return
-                if game.stand['year'] >= 100:
-                    show_closing_screen()
-                    return
 
-                # Achievement screens
+                # Achievements before win so they show first at year 100
                 if not pine_snakes_before and game.pine_snakes_colonized:
                     show_pine_snake_screen()
                     return
@@ -1076,6 +1078,56 @@ def main():
                 if getattr(game, 'summer_tanager_colonized', False) and not getattr(game, 'summer_tanager_screen_shown', False):
                     game.summer_tanager_screen_shown = True
                     show_summer_tanager_screen()
+                    return
+
+                # Win check after achievements
+                if game.stand['year'] >= 100:
+                    show_closing_screen()
+                    return
+
+                # Default narration if still < 100
+                if event:
+                    narration.set(event)
+                else:
+                    narration.set("What will you do next?")
+                return
+
+            # NEW: If final background is already set, skip any further turn animations
+            if getattr(game, 'current_bg_img', None) == "assets/afterburn_heavythin_treedown.png":
+                pine_snakes_before = game.pine_snakes_colonized
+                game.update_stand(action)
+                event = game.simulate_event()
+                game.stand['year'] += 10
+                welcome_frame.place_forget()
+                update_status_labels()
+
+                # Game end checks (loss conditions first)
+                if game.is_low_ba_game_over():
+                    show_low_ba_screen()
+                    return
+                if getattr(game.stand, 'catastrophic_wildfire', False) or game.stand.get('catastrophic_wildfire', False):
+                    show_fire_loss_screen()
+                    return
+                if event == 'SPB outbreak!' and game.stand['SPB_risk'] == 'High':
+                    show_spb_loss_screen()
+                    return
+
+                # Achievement screens (show before win screen if triggered now)
+                if not pine_snakes_before and game.pine_snakes_colonized:
+                    show_pine_snake_screen()
+                    return
+                if game.gentian_colonized and not game.gentian_screen_shown:
+                    game.gentian_screen_shown = True
+                    show_gentian_screen()
+                    return
+                if getattr(game, 'summer_tanager_colonized', False) and not getattr(game, 'summer_tanager_screen_shown', False):
+                    game.summer_tanager_screen_shown = True
+                    show_summer_tanager_screen()
+                    return
+
+                # Win check after achievements so they display first when year hits 100
+                if game.stand['year'] >= 100:
+                    show_closing_screen()
                     return
 
                 # Default narration
@@ -1231,7 +1283,7 @@ def main():
                     root.after(100, lambda: setattr(game, 'thin_lightly_temp_bg', None))
                 show_chainsaw_then_advance()
                 return
-
+            
             # --- Thin lightly after thin heavily but not prescribed burn (first thin-lightly only) ---
             if (action == '2'
                 and not game.thin_lightly_event
@@ -1476,7 +1528,7 @@ def main():
             if (action == '2'
                 and not game.thin_lightly_event
                 and game.prescribed_burn_event
-                and any(a == '3' for _, a in game.action_history)  # heavy-thin happened sometime
+                and any(a == '3' for _, a in game.action_history)   # heavy-thin happened sometime
                 and not pb_both_sides):  # <-- added to avoid conflict when PB also occurred after heavy-thin
 
                 # Ensure the first heavy-thin occurred AFTER the first prescribed burn
@@ -1611,6 +1663,7 @@ def main():
                 and game.prescribed_burn_event                             # PB has happened before
                 and any(a == '3' for _, a in game.action_history)          # heavy-thin happened earlier
                 and not game.thin_lightly_event                            # no thin lightly yet
+                and pb_before_heavy                                        # NEW: first PB occurred BEFORE first heavy-thin
                 and not getattr(game, 'pb_after_first_heavythin_shown', False)):  # only once
 
                 game.pb_after_first_heavythin_shown = True  # mark so we only animate once
@@ -1655,6 +1708,7 @@ def main():
                 and game.prescribed_burn_event                      # PB has happened before
                 and any(a == '3' for _, a in game.action_history)   # heavy-thin happened earlier
                 and game.thin_lightly_event                         # TL has already been chosen
+                and pb_before_heavy                                 # NEW: first PB occurred BEFORE first heavy-thin
                 and not getattr(game, 'pb_after_heavythin_with_tl_shown', False)):  # only once
 
                 game.pb_after_heavythin_with_tl_shown = True  # mark so we only animate once
@@ -1784,7 +1838,7 @@ def main():
             welcome_frame.place_forget()
             update_status_labels()
 
-            # --- Always check for game end first ---
+            # --- Loss checks first ---
             if game.is_low_ba_game_over():
                 show_low_ba_screen()
                 return
@@ -1794,11 +1848,8 @@ def main():
             if event == 'SPB outbreak!' and game.stand['SPB_risk'] == 'High':
                 show_spb_loss_screen()
                 return
-            if game.stand['year'] >= 100:
-                show_closing_screen()
-                return
 
-            # --- Only show achievement screens if game is not over ---
+            # --- Achievements before win screen so they show at year 100 ---
             if not pine_snakes_before and game.pine_snakes_colonized:
                 show_pine_snake_screen()
                 return
@@ -1809,6 +1860,11 @@ def main():
             if getattr(game, 'summer_tanager_colonized', False) and not getattr(game, 'summer_tanager_screen_shown', False):
                 game.summer_tanager_screen_shown = True
                 show_summer_tanager_screen()
+                return
+
+            # --- Win check after achievements ---
+            if game.stand['year'] >= 100:
+                show_closing_screen()
                 return
 
             if event:
