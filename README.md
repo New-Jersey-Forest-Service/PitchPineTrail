@@ -15,6 +15,9 @@ PitchPineTrail
 └── README.md            # Project documentation
 ```
 
+## Install Instruction Video for Beginners 
+https://www.youtube.com/watch?v=HVITFqAQqi0
+
 ## Setup Instructions
 1. Clone the repository:
    ```
