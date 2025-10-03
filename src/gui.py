@@ -274,79 +274,73 @@ def main():
         ach_tan   = getattr(game, 'summer_tanager_achieved', False) or getattr(game, 'summer_tanager_colonized', False)
         ach_frog  = getattr(game, 'tree_frog_achieved', False) or getattr(game, 'pine_barrens_tree_frog_colonized', False)  # NEW
 
-        # Choose background image with frog medal support
+        # Choose background image
         if qmd < 21:
-            if ach_frog:
-                if ach_snake and ach_gent and ach_tan:
-                    bg_img_path = "assets/bad_snake-gentian-tanager-frogmedal.png"
-                elif ach_snake and ach_gent and not ach_tan:
-                    bg_img_path = "assets/bad_snake-gentian-frogmedal.png"
-                elif ach_snake and not ach_gent and ach_tan:
-                    bg_img_path = "assets/bad_snake-tanager-frogmedal.png"
-                elif ach_snake and not ach_gent and not ach_tan:
-                    bg_img_path = "assets/bad_snake-frogmedal.png"
-                elif not ach_snake and ach_gent and ach_tan:
-                    bg_img_path = "assets/bad_gentian-tanager-frogmedal.png"
-                elif not ach_snake and ach_gent and not ach_tan:
-                    bg_img_path = "assets/bad_gentian-frogmedal.png"
-                elif not ach_snake and not ach_gent and ach_tan:
-                    bg_img_path = "assets/bad_tanager-frogmedal.png"
-                else:
-                    bg_img_path = "assets/bad_frogmedal.png"
+            if ach_snake and ach_gent and ach_tan and ach_frog:
+                bg_img_path = "assets/bad_snake-gentian-tanager-frogmedal.png"
+            elif ach_snake and ach_gent and not ach_tan and ach_frog:
+                bg_img_path = "assets/bad_snake-gentian-frogmedal.png"
+            elif ach_snake and not ach_gent and ach_tan and ach_frog:
+                bg_img_path = "assets/bad_snake-tanager-frogmedal.png"
+            elif ach_snake and not ach_gent and not ach_tan and ach_frog:
+                bg_img_path = "assets/bad_snake-frogmedal.png"
+            elif not ach_snake and ach_gent and ach_tan and ach_frog:
+                bg_img_path = "assets/bad_gentian-tanager-frogmedal.png"
+            elif not ach_snake and ach_gent and not ach_tan and ach_frog:
+                bg_img_path = "assets/bad_gentian-frogmedal.png"
+            elif not ach_snake and not ach_gent and ach_tan and ach_frog:
+                bg_img_path = "assets/bad_tanager-frogmedal.png"
+            elif ach_frog and not ach_snake and not ach_gent and not ach_tan:
+                bg_img_path = "assets/bad_frogmedal.png"
+            elif ach_snake and ach_gent and ach_tan and not ach_frog:
+                bg_img_path = "assets/bad_snake-gentian-tanagermedal.png"
+            elif ach_snake and ach_gent and not ach_tan and not ach_frog:
+                bg_img_path = "assets/bad_snake-gentianmedal.png"
+            elif ach_snake and not ach_gent and ach_tan and not ach_frog:
+                bg_img_path = "assets/bad_snake-tanagermedal.png"
+            elif ach_snake and not ach_gent and not ach_tan and not ach_frog:
+                bg_img_path = "assets/bad_snakemedal.png"
+            elif not ach_snake and ach_gent and ach_tan and not ach_frog:
+                bg_img_path = "assets/bad_gentian-tanagermedal.png"
+            elif not ach_snake and ach_gent and not ach_tan and not ach_frog:
+                bg_img_path = "assets/bad_gentianmedal.png"
+            elif not ach_snake and not ach_gent and ach_tan and not ach_frog:
+                bg_img_path = "assets/bad_tanagermedal.png"
             else:
-                if not ach_snake and not ach_gent and not ach_tan:
-                    bg_img_path = "assets/bad_nomedal.png"
-                elif ach_snake and ach_gent and not ach_tan:
-                    bg_img_path = "assets/bad_snake-gentianmedal.png"
-                elif ach_snake and not ach_gent and not ach_tan:
-                    bg_img_path = "assets/bad_snakemedal.png"
-                elif not ach_snake and ach_gent and not ach_tan:
-                    bg_img_path = "assets/bad_gentianmedal.png"
-                elif not ach_snake and not ach_gent and ach_tan:
-                    bg_img_path = "assets/bad_tanagermedal.png"
-                elif ach_snake and ach_gent and ach_tan:
-                    bg_img_path = "assets/bad_snake-gentian-tanagermedal.png"
-                elif ach_snake and not ach_gent and ach_tan:
-                    bg_img_path = "assets/bad_snake-tanagermedal.png"
-                elif not ach_snake and ach_gent and ach_tan:
-                    bg_img_path = "assets/bad_gentian-tanagermedal.png"
-                else:
-                    bg_img_path = "assets/bad_nomedal.png"
+                bg_img_path = "assets/bad_nomedal.png"
         elif qmd > 21:
-            if ach_frog:
-                if ach_snake and ach_gent and ach_tan:
-                    bg_img_path = "assets/okay_snake-gentian-tanager-frogmedal.png"
-                elif ach_snake and ach_gent and not ach_tan:
-                    bg_img_path = "assets/okay_snake-gentian-frogmedal.png"
-                elif ach_snake and not ach_gent and ach_tan:
-                    bg_img_path = "assets/okay_snake-tanager-frogmedal.png"
-                elif ach_snake and not ach_gent and not ach_tan:
-                    bg_img_path = "assets/okay_snake-frogmedal.png"
-                elif not ach_snake and ach_gent and ach_tan:
-                    bg_img_path = "assets/okay_gentian-tanager-frogmedal.png"
-                elif not ach_snake and ach_gent and not ach_tan:
-                    bg_img_path = "assets/okay_gentian-frogmedal.png"
-                elif not ach_snake and not ach_gent and ach_tan:
-                    bg_img_path = "assets/okay_tanager-frogmedal.png"
-                else:
-                    bg_img_path = "assets/okay_frogmedal.png"
+            if ach_snake and ach_gent and ach_tan and ach_frog:
+                bg_img_path = "assets/okay_snake-gentian-tanager-frogmedal.png"
+            elif ach_snake and ach_gent and not ach_tan and ach_frog:
+                bg_img_path = "assets/okay_snake-gentian-frogmedal.png"
+            elif ach_snake and not ach_gent and ach_tan and ach_frog:
+                bg_img_path = "assets/okay_snake-tanager-frogmedal.png"
+            elif ach_snake and not ach_gent and not ach_tan and ach_frog:
+                bg_img_path = "assets/okay_snake-frogmedal.png"
+            elif not ach_snake and ach_gent and ach_tan and ach_frog:
+                bg_img_path = "assets/okay_gentian-tanager-frogmedal.png"
+            elif not ach_snake and ach_gent and not ach_tan and ach_frog:
+                bg_img_path = "assets/okay_gentian-frogmedal.png"
+            elif not ach_snake and not ach_gent and ach_tan and ach_frog:
+                bg_img_path = "assets/okay_tanager-frogmedal.png"
+            elif ach_frog and not ach_snake and not ach_gent and not ach_tan:
+                bg_img_path = "assets/okay_frogmedal.png"
+            elif ach_snake and ach_gent and ach_tan and not ach_frog:
+                bg_img_path = "assets/okay_snake-gentian-tanagermedal.png"
+            elif ach_snake and ach_gent and not ach_tan and not ach_frog:
+                bg_img_path = "assets/okay_snake-gentianmedal.png"
+            elif ach_snake and not ach_gent and ach_tan and not ach_frog:
+                bg_img_path = "assets/okay_snake-tanagermedal.png"
+            elif ach_snake and not ach_gent and not ach_tan and not ach_frog:
+                bg_img_path = "assets/okay_snakemedal.png"
+            elif not ach_snake and ach_gent and ach_tan and not ach_frog:
+                bg_img_path = "assets/okay_gentian-tanagermedal.png"
+            elif not ach_snake and ach_gent and not ach_tan and not ach_frog:
+                bg_img_path = "assets/okay_gentianmedal.png"
+            elif not ach_snake and not ach_gent and ach_tan and not ach_frog:
+                bg_img_path = "assets/okay_tanagermedal.png"
             else:
-                if ach_snake and ach_gent and not ach_tan:
-                    bg_img_path = "assets/okay_snake-gentianmedal.png"
-                elif ach_snake and not ach_gent and not ach_tan:
-                    bg_img_path = "assets/okay_snakemedal.png"
-                elif not ach_snake and ach_gent and not ach_tan:
-                    bg_img_path = "assets/okay_gentianmedal.png"
-                elif not ach_snake and not ach_gent and ach_tan:
-                    bg_img_path = "assets/okay_tanagermedal.png"
-                elif ach_snake and ach_gent and ach_tan:
-                    bg_img_path = "assets/okay_snake-gentian-tanagermedal.png"
-                elif ach_snake and not ach_gent and ach_tan:
-                    bg_img_path = "assets/okay_snake-tanagermedal.png"
-                elif not ach_snake and ach_gent and ach_tan:
-                    bg_img_path = "assets/okay_gentian-tanagermedal.png"
-                else:
-                    bg_img_path = "assets/okay_nomedal.png"
+                bg_img_path = "assets/okay_nomedal.png"
         else:
             bg_img_path = "assets/okay_nomedal.png"
         
