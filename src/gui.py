@@ -28,16 +28,16 @@ def main():
     game.prescribed_burn_event = False
     game.prescribed_burn_temp_bg = None
     game.thin_lightly_temp_bg = None
-    game.thin_heavily_temp_bg = None  # NEW: temp bg for heavy-thin animation
-    game.summer_tanager_screen_shown = False  # NEW
-    game.pb_after_first_heavythin_shown = False  # NEW: first PB after first heavy-thin has animated
-    game.pb_after_heavythin_with_tl_shown = False  # NEW: first PB-after-heavythin when TL already chosen
-    # NEW: persistent achievement flags (used for ending/summary)
+    game.thin_heavily_temp_bg = None  # temp bg for heavy-thin animation
+    game.summer_tanager_screen_shown = False  
+    game.pb_after_first_heavythin_shown = False  #first PB after first heavy-thin has animated
+    game.pb_after_heavythin_with_tl_shown = False  # first PB-after-heavythin when TL already chosen
     game.pine_snake_achieved = False
     game.gentian_achieved = False
     game.summer_tanager_achieved = False
-    game.tree_frog_achieved = False  # NEW: PB tree frog achievement
-    game.tree_frog_screen_shown = False  # NEW: one-time screen guard
+    game.tree_frog_achieved = False
+    game.tree_frog_screen_shown = False
+    game.animation_temp_bg = None
     BG_COLOR = "#FFFFFF"    # White background
     FG_COLOR = "#000000"    # Black text
     FONT = ("Courier New", 12, "bold")
@@ -46,7 +46,6 @@ def main():
     root = tk.Tk()
     root.title("Pitch Pine Trail")
     root.configure(bg=BG_COLOR)
-    #root.geometry("1920x1080")  # fall back for full screen
     root.attributes('-fullscreen', True)  #true fullscreen
     root.bind("<Escape>", lambda e: root.attributes("-fullscreen", False)) #exit fullscreen on Escape key
 
@@ -84,8 +83,8 @@ def main():
         game.pine_snake_achieved = False
         game.gentian_achieved = False
         game.summer_tanager_achieved = False
-        game.tree_frog_achieved = False  # NEW
-        game.tree_frog_screen_shown = False  # NEW
+        game.tree_frog_achieved = False 
+        game.tree_frog_screen_shown = False
         for widget in root.winfo_children():
             widget.pack_forget()
         show_game_screen()
@@ -269,10 +268,11 @@ def main():
         qmd = game.get_status_dict()['QMD']
 
         # NEW: use persistent achievement flags (fallback to current colonized)
-        ach_snake = getattr(game, 'pine_snake_achieved', False) or game.pine_snakes_colonized
-        ach_gent  = getattr(game, 'gentian_achieved', False) or game.gentian_colonized
+        ach_snake = getattr(game, 'pine_snake_achieved', False) or getattr(game, 'pine_snakes_colonized', False)
+        ach_gent  = getattr(game, 'gentian_achieved', False) or getattr(game, 'gentian_colonized', False)
         ach_tan   = getattr(game, 'summer_tanager_achieved', False) or getattr(game, 'summer_tanager_colonized', False)
-        ach_frog  = getattr(game, 'tree_frog_achieved', False) or getattr(game, 'pine_barrens_tree_frog_colonized', False)  # NEW
+        ach_frog  = getattr(game, 'tree_frog_achieved', False) or getattr(game, 'pine_barrens_tree_frog_colonized', False)
+
 
         # Choose background image
         if qmd < 21:
@@ -419,6 +419,8 @@ def main():
             command=root.destroy
         ).pack(side="left", padx=10, pady=0)
 
+    #LOSING SCREEN
+    # --- Low Basal Area Screen ---
     def show_low_ba_screen():
         """Display the game over screen for low basal area condition."""
         stop_forest_sound()
@@ -506,6 +508,7 @@ def main():
             command=root.destroy
         ).pack(side="left", padx=10, pady=5)
 
+    # --- Fire Loss Screen ---
     def show_fire_loss_screen():
         """Display the catastrophic wildfire end screen."""
         stop_forest_sound()
@@ -592,6 +595,7 @@ def main():
             command=root.destroy
         ).pack(side="left", padx=10, pady=5)
 
+    # --- SPB Loss Screen ---
     def show_spb_loss_screen():
         """Display the SPB outbreak end screen."""
         stop_forest_sound()
@@ -678,6 +682,8 @@ def main():
             command=root.destroy
         ).pack(side="left", padx=10, pady=5)
 
+    # ACHIEVMENT SCREENS
+    # --- Pine Snake Screen ---
     def show_pine_snake_screen():
         """Display the screen for successful pine snake habitat."""
         play_pine_snake_sound()  # Play over forest sound
@@ -758,6 +764,7 @@ def main():
             command=lambda: [snake_frame.pack_forget(), (show_closing_screen() if game.stand['year'] >= 100 else show_game_screen())]
         ).pack(pady=0)
 
+    # --- Gentian Screen ---
     def show_gentian_screen():
         """Display the screen for successful gentian colonization."""
         play_gentian_sound()
@@ -838,6 +845,7 @@ def main():
             command=lambda: [gentian_frame.pack_forget(), (show_closing_screen() if game.stand['year'] >= 100 else show_game_screen())]
         ).pack(pady=0)
     
+    # --- Summer Tanager Screen ---
     def show_summer_tanager_screen():
         """Display the screen for Summer Tanager visitation."""
         play_tanager_sound()
@@ -917,6 +925,7 @@ def main():
             command=lambda: [tanager_frame.pack_forget(), (show_closing_screen() if game.stand['year'] >= 100 else show_game_screen())]
         ).pack(pady=0)
 
+    # --- Tree Frog Screen ---
     def show_tree_frog_screen():
         """Display the screen for Pine Barrens tree frog colonization."""
         play_tree_frog_sound()
@@ -990,6 +999,8 @@ def main():
             command=lambda: [stop_tree_frog_sound(), frog_frame.pack_forget(), (show_closing_screen() if game.stand['year'] >= 100 else show_game_screen())]
         ).pack(pady=0)
 
+    # GAME ASSITANCE SCREENS
+    # --- Field Guide Screen ---
     def show_field_guide_screen():
         play_page_turn_sound()  # reuse page turn sound
         for widget in root.winfo_children():
@@ -1056,6 +1067,71 @@ def main():
             command=lambda: [play_page_close_sound(), fg_frame.pack_forget(), show_game_screen()]
         ).place(relx=0.225, rely=0.915, anchor="center")
 
+    # --- Definitions Screen ---
+    def show_definitions_screen():
+        play_page_turn_sound()  # Play page turn sound over forest sound
+        for widget in root.winfo_children():
+            widget.pack_forget()
+        def_frame = tk.Frame(root, bg=BG_COLOR)
+        def_frame.pack(fill="both", expand=True)
+        # Load and display the definitions background image in a label
+        bg_img = Image.open("assets/definitions.png")
+        bg_img = bg_img.resize((1920, 1080))
+        bg_photo = ImageTk.PhotoImage(bg_img)
+        bg_label = tk.Label(def_frame, image=bg_photo)
+        bg_label.image = bg_photo
+        bg_label.place(relx=0, rely=0, relwidth=1, relheight=1)
+
+        # --- Metrics Frame (copied from show_game_screen) ---
+        metrics_frame = tk.Frame(def_frame, bg="#FFFFFF", bd=0)
+        metrics_frame.place(relx=0.845, rely=0.73, anchor="center")
+        game_status = tk.StringVar()
+        status_dict = game.get_status_dict()
+        game_status.set(
+            f"Year: {status_dict['year']}\n"
+            f"\nBasal Area (BA): {status_dict['BA']:.1f} sqft/acre\n"
+            f"\nTrees Per Acre (TPA): {status_dict['TPA']}\n"
+            f"\nQuadratic Mean Diameter (QMD): {status_dict['QMD']:.1f} inches\n"
+            f"\nCarbon per Acre: {status_dict['carbon']:.1f} Metric Tons/acre\n"
+            f"\nCrowning Index: {status_dict['CI']:.1f}"
+        )
+        game_status_message = tk.Message(
+            metrics_frame,
+            textvariable=game_status,
+            width=450,
+            justify="center",
+            bg="#FFFFFF",
+            fg=FG_COLOR,
+            font=("Courier",13, "bold")
+        )
+        game_status_message.pack()
+        fire_risk_label = tk.Label(metrics_frame, wraplength=400, justify="left", padx=10, pady=0, bg="#FFFFFF", font=("Courier", 14, "bold"))
+        fire_risk_label.pack()
+        spb_risk_label = tk.Label(metrics_frame, wraplength=400, justify="left", padx=10, pady=0, bg="#FFFFFF", font=("Courier", 14, "bold"))
+        spb_risk_label.pack()
+        fire_risk_label.config(
+            text=f"\n\n\nFire Risk: {status_dict['fire_risk']}",
+            fg=get_risk_color(status_dict['fire_risk'])
+        )
+        spb_risk_label.config(
+            text=f"Southern Pine Beetle Risk: {status_dict['SPB_risk']}",
+            fg=get_risk_color(status_dict['SPB_risk'])
+        )
+        narration = tk.StringVar()
+        narration.set("What will you do next?")
+        narration_label = tk.Label(
+            metrics_frame, textvariable=narration, wraplength=400, justify="left",
+            padx=10, pady=5, bg="#FFFFFF", fg=FG_COLOR, font=FONT
+        )
+        narration_label.pack()
+
+        # Back button
+        tk.Button(
+            def_frame, text="Return to Game", font=("Courier", 18, "bold"), width=16,
+            bg="#e21fae", fg="#000000", activebackground="#FFFFFF",
+            command=lambda: [play_page_close_sound(), def_frame.pack_forget(), show_game_screen()]
+        ).place(relx=0.225, rely=0.915, anchor="center")
+
     def show_game_screen():
         stop_forest_sound()
         play_forest_sound()
@@ -1065,22 +1141,11 @@ def main():
         game_frame = tk.Frame(root, bg=BG_COLOR)
         game_frame.pack(fill="both", expand=True)
 
-        # --- Conditional background image ---
-        if getattr(game, 'prescribed_burn_temp_bg', None):
-            bg_img_path = game.prescribed_burn_temp_bg
-        elif getattr(game, 'thin_lightly_temp_bg', None):
-            bg_img_path = game.thin_lightly_temp_bg
-        elif getattr(game, 'thin_heavily_temp_bg', None):  # NEW: honor heavy-thin temp bg
-            bg_img_path = game.thin_heavily_temp_bg
-        # Prefer a stable, persisted background next
+        # --- Conditional background image (single temp + persisted final) ---
+        if getattr(game, 'animation_temp_bg', None):
+            bg_img_path = game.animation_temp_bg
         elif getattr(game, 'current_bg_img', None):
             bg_img_path = game.current_bg_img
-        elif game.prescribed_burn_event and game.thin_lightly_event and not any(a in ['3'] for _, a in game.action_history):
-            bg_img_path = "assets/afterburn_treedown.png"
-        elif game.thin_lightly_event:
-            bg_img_path = "assets/treedown.png"
-        elif game.prescribed_burn_event:
-            bg_img_path = "assets/afterburn.png"
         else:
             bg_img_path = "assets/Evenagestand.png"
 
@@ -1090,6 +1155,18 @@ def main():
         bg_label = tk.Label(game_frame, image=bg_photo)
         bg_label.image = bg_photo
         bg_label.place(relx=0, rely=0, relwidth=1, relheight=1)
+
+        # Helper to run a 1-step animation (start -> final, then clear temp)
+        def start_animation(start_path, duration_ms, final_path):
+            game.animation_temp_bg = start_path
+            show_game_screen()
+            root.after(duration_ms, lambda: finish_animation(final_path))
+
+        def finish_animation(final_path):
+            game.animation_temp_bg = final_path
+            game.current_bg_img = final_path  # persist final scene
+            show_game_screen()
+            root.after(100, lambda: setattr(game, 'animation_temp_bg', None))
 
         # --- Welcome Frame ---
         welcome_frame = tk.Frame(game_frame, bg="#FFFFFF", bd=0)
@@ -1162,6 +1239,10 @@ def main():
                               and any(i > first_heavy_idx for i in burn_indices))
             pb_both_sides = pb_before_heavy and pb_after_heavy
 
+            # Heavy-thin relative to the first prescribed burn
+            heavy_before_first_burn = (first_burn_idx is not None and any(i < first_burn_idx for i in heavy_indices))
+            heavy_after_first_burn  = (first_burn_idx is not None and any(i > first_burn_idx for i in heavy_indices))
+
             # Track achievement state from BEFORE this action + per-turn guard
             gentian_before = game.gentian_colonized
             tanager_before = getattr(game, 'summer_tanager_colonized', False)
@@ -1188,7 +1269,7 @@ def main():
                     return True
                 return False
 
-            # NEW: Final decade fast-path — no animations between year 90 and 100
+            # Final decade fast-path — no animations between year 90 and 100
             if 90 <= game.stand['year'] < 100:
                 pine_snakes_before = game.pine_snakes_colonized
                 game.update_stand(action)
@@ -1245,6 +1326,7 @@ def main():
                     narration.set("What will you do next?")
                 return
 
+            #TURN ANIMATIONS
             # --- Prescribed burn after thin lightly but not thin heavily ---
             if (action == '4'
                 and not game.prescribed_burn_event
@@ -1259,32 +1341,19 @@ def main():
 
                 # Achievement check
                 if not pine_snakes_before and game.pine_snakes_colonized:
-                    game.prescribed_burn_temp_bg = "assets/afterburn_treedown.png"
-                    game.thin_lightly_temp_bg = "assets/afterburn_treedown.png"
-                    game.current_bg_img = "assets/afterburn_treedown.png"  # persist
+                    game.current_bg_img = "assets/afterburn_treedown.png"
                     show_pine_snake_screen()
                     return
                 if (not gentian_before and game.gentian_colonized and not game.gentian_screen_shown):
                     game.gentian_screen_shown = True
-                    game.prescribed_burn_temp_bg = "assets/afterburn_treedown.png"
-                    game.thin_lightly_temp_bg = "assets/afterburn_treedown.png"
-                    game.current_bg_img = "assets/afterburn_treedown.png"  # persist
+                    game.current_bg_img = "assets/afterburn_treedown.png"
                     show_gentian_screen()
                     return
                 if show_new_bird_or_frog():
                     return
 
                 # Animation: prescribedburn_treedown.png for 2s, then afterburn_treedown.png
-                def show_prescribedburn_treedown_then_afterburn_treedown():
-                    game.prescribed_burn_temp_bg = "assets/prescribedburn_treedown.png"
-                    show_game_screen()
-                    root.after(2000, lambda: finish_prescribed_burn_treedown_event())
-                def finish_prescribed_burn_treedown_event():
-                    game.prescribed_burn_temp_bg = "assets/afterburn_treedown.png"
-                    game.current_bg_img = "assets/afterburn_treedown.png"  # persist
-                    show_game_screen()
-                    root.after(100, lambda: setattr(game, 'prescribed_burn_temp_bg', None))
-                show_prescribedburn_treedown_then_afterburn_treedown()
+                start_animation('assets/prescribedburn_treedown.png', 2000, 'assets/afterburn_treedown.png')
                 return
 
             # --- Thin lightly after prescribed burn but not thin heavily ---
@@ -1301,15 +1370,11 @@ def main():
 
                 # Achievement check (skip animation but persist final)
                 if not pine_snakes_before and game.pine_snakes_colonized:
-                    game.thin_lightly_temp_bg = "assets/afterburn_treedown.png"
-                    game.prescribed_burn_temp_bg = "assets/afterburn_treedown.png"
-                    game.current_bg_img = "assets/afterburn_treedown.png"  # persist
+                    game.current_bg_img = "assets/afterburn_treedown.png"
                     show_pine_snake_screen()
                     return
                 if (not gentian_before and game.gentian_colonized and not game.gentian_screen_shown):
                     game.gentian_screen_shown = True
-                    game.thin_lightly_temp_bg = "assets/afterburn_treedown.png"
-                    game.prescribed_burn_temp_bg = "assets/afterburn_treedown.png"
                     game.current_bg_img = "assets/afterburn_treedown.png"  # persist
                     show_gentian_screen()
                     return
@@ -1317,16 +1382,7 @@ def main():
                     return
 
                 # Animation: chainsaw_afterburn.png for 1.5s, then afterburn_treedown.png
-                def show_chainsaw_afterburn_then_afterburn_treedown():
-                    game.thin_lightly_temp_bg = "assets/chainsaw_afterburn.png"
-                    show_game_screen()
-                    root.after(1500, finish_chainsaw_afterburn_event)
-                def finish_chainsaw_afterburn_event():
-                    game.thin_lightly_temp_bg = "assets/afterburn_treedown.png"
-                    game.current_bg_img = "assets/afterburn_treedown.png"  # persist
-                    show_game_screen()
-                    root.after(100, lambda: setattr(game, 'thin_lightly_temp_bg', None))
-                show_chainsaw_afterburn_then_afterburn_treedown()
+                start_animation('assets/chainsaw_afterburn.png', 1500, 'assets/afterburn_treedown.png')
                 return
             
             # --- Prescribed burn event logic ---
@@ -1339,28 +1395,21 @@ def main():
                 event = game.simulate_event()
                 game.stand['year'] += 10
 
+                # Achievement check
                 if not pine_snakes_before and game.pine_snakes_colonized:
-                    game.prescribed_burn_temp_bg = "assets/afterburn.png"
+                    game.current_bg_img = "assets/afterburn.png"
                     show_pine_snake_screen()
                     return
                 if (not gentian_before and game.gentian_colonized and not game.gentian_screen_shown):
                     game.gentian_screen_shown = True
-                    game.prescribed_burn_temp_bg = "assets/afterburn.png"
+                    game.current_bg_img = "assets/afterburn.png"
                     show_gentian_screen()
                     return
                 if show_new_bird_or_frog():
                     return
 
-                def show_prescribedburn_then_afterburn():
-                    game.prescribed_burn_temp_bg = "assets/prescribedburn.png"
-                    show_game_screen()
-                    root.after(2000, lambda: finish_prescribed_burn_event())
-                def finish_prescribed_burn_event():
-                    game.prescribed_burn_temp_bg = "assets/afterburn.png"
-                    game.current_bg_img = "assets/afterburn.png"  # persist
-                    show_game_screen()
-                    root.after(100, lambda: setattr(game, 'prescribed_burn_temp_bg', None))
-                show_prescribedburn_then_afterburn()
+                # Animation: prescribedburn.png for 2s, then afterburn.png
+                start_animation('assets/prescribedburn.png', 2000, 'assets/afterburn.png')
                 return
 
             # --- Thin lightly event logic ---
@@ -1375,28 +1424,19 @@ def main():
 
                 # Achievement check
                 if not pine_snakes_before and game.pine_snakes_colonized:
-                    game.thin_lightly_temp_bg = "assets/afterburn_treedown.png"
+                    game.current_bg_img = "assets/afterburn_treedown.png"
                     show_pine_snake_screen()
                     return
                 if (not gentian_before and game.gentian_colonized and not game.gentian_screen_shown):
                     game.gentian_screen_shown = True
-                    game.thin_lightly_temp_bg = "assets/afterburn_treedown.png"
+                    game.current_bg_img = "assets/afterburn_treedown.png"
                     show_gentian_screen()
                     return
                 if show_new_bird_or_frog():
                     return
 
-                # If no achievement, play animation as normal
-                def show_chainsaw_then_advance():
-                    game.thin_lightly_temp_bg = "assets/chainsaw.png"
-                    show_game_screen()
-                    root.after(1500, lambda: finish_thin_lightly_event())
-                def finish_thin_lightly_event():
-                    game.thin_lightly_temp_bg = "assets/treedown.png"
-                    game.current_bg_img = "assets/treedown.png"  # persist
-                    show_game_screen()
-                    root.after(100, lambda: setattr(game, 'thin_lightly_temp_bg', None))
-                show_chainsaw_then_advance()
+                # Animation: chainsaw.png for 1.5, then treedown.png
+                start_animation('assets/chainsaw.png', 1500, 'assets/treedown.png')
                 return
             
             # --- Thin lightly after thin heavily but not prescribed burn (first thin-lightly only) ---
@@ -1414,13 +1454,11 @@ def main():
 
                 # Achievement checks (persist final)
                 if not pine_snakes_before and game.pine_snakes_colonized:
-                    game.thin_lightly_temp_bg = "assets/heavythin_treedown.png"
                     game.current_bg_img = "assets/heavythin_treedown.png"
                     show_pine_snake_screen()
                     return
                 if (not gentian_before and game.gentian_colonized and not game.gentian_screen_shown):
                     game.gentian_screen_shown = True
-                    game.thin_lightly_temp_bg = "assets/heavythin_treedown.png"
                     game.current_bg_img = "assets/heavythin_treedown.png"
                     show_gentian_screen()
                     return
@@ -1428,18 +1466,7 @@ def main():
                     return
 
                 # Animation: chainsaw_heavythin.png for 1.5s, then heavythin_treedown.png
-                def show_mower_treedown_then_heavythin_treedown_from_TL():
-                    game.thin_lightly_temp_bg = "assets/chainsaw_heavythin.png"
-                    show_game_screen()
-                    root.after(1500, finish_tl_after_heavythin_event)
-
-                def finish_tl_after_heavythin_event():
-                    game.thin_lightly_temp_bg = "assets/heavythin_treedown.png"
-                    game.current_bg_img = "assets/heavythin_treedown.png"  # persist final
-                    show_game_screen()
-                    root.after(100, lambda: setattr(game, 'thin_lightly_temp_bg', None))
-
-                show_mower_treedown_then_heavythin_treedown_from_TL()
+                start_animation('assets/chainsaw_heavythin.png', 1500, 'assets/heavythin_treedown.png')
                 return
 
             # --- Thin heavily after prescribed burn but not thin lightly (first heavy-thin only) ---
@@ -1455,13 +1482,11 @@ def main():
 
                 # Achievement checks (persist final)
                 if not pine_snakes_before and game.pine_snakes_colonized:
-                    game.thin_heavily_temp_bg = "assets/heavythin_afterburn.png"
                     game.current_bg_img = "assets/heavythin_afterburn.png"
                     show_pine_snake_screen()
                     return
                 if (not gentian_before and game.gentian_colonized and not game.gentian_screen_shown):
                     game.gentian_screen_shown = True
-                    game.thin_heavily_temp_bg = "assets/heavythin_afterburn.png"
                     game.current_bg_img = "assets/heavythin_afterburn.png"
                     show_gentian_screen()
                     return
@@ -1469,18 +1494,7 @@ def main():
                     return
 
                 # Animation: mower_afterburn.png for 2s, then heavythin_afterburn.png
-                def show_mower_afterburn_then_heavythin_afterburn():
-                    game.thin_heavily_temp_bg = "assets/mower_afterburn.png"
-                    show_game_screen()
-                    root.after(2000, finish_heavy_thin_afterburn_event)
-
-                def finish_heavy_thin_afterburn_event():
-                    game.thin_heavily_temp_bg = "assets/heavythin_afterburn.png"
-                    game.current_bg_img = "assets/heavythin_afterburn.png"  # persist final
-                    show_game_screen()
-                    root.after(100, lambda: setattr(game, 'thin_heavily_temp_bg', None))
-
-                show_mower_afterburn_then_heavythin_afterburn()
+                start_animation('assets/mower_afterburn.png', 2000, 'assets/heavythin_afterburn.png')
                 return
 
             # --- Thin heavily after thin lightly but not prescribed burn (first heavy-thin only) ---
@@ -1496,13 +1510,11 @@ def main():
 
                 # Achievement checks (persist final)
                 if not pine_snakes_before and game.pine_snakes_colonized:
-                    game.thin_heavily_temp_bg = "assets/heavythin_treedown.png"
                     game.current_bg_img = "assets/heavythin_treedown.png"
                     show_pine_snake_screen()
                     return
                 if (not gentian_before and game.gentian_colonized and not game.gentian_screen_shown):
                     game.gentian_screen_shown = True
-                    game.thin_heavily_temp_bg = "assets/heavythin_treedown.png"
                     game.current_bg_img = "assets/heavythin_treedown.png"
                     show_gentian_screen()
                     return
@@ -1510,18 +1522,7 @@ def main():
                     return
 
                 # Animation: mower_treedown.png for 2s, then heavythin_treedown.png
-                def show_mower_treedown_then_heavythin_treedown():
-                    game.thin_heavily_temp_bg = "assets/mower_treedown.png"
-                    show_game_screen()
-                    root.after(2000, finish_heavy_thin_treedown_event)
-
-                def finish_heavy_thin_treedown_event():
-                    game.thin_heavily_temp_bg = "assets/heavythin_treedown.png"
-                    game.current_bg_img = "assets/heavythin_treedown.png"  # persist final
-                    show_game_screen()
-                    root.after(100, lambda: setattr(game, 'thin_heavily_temp_bg', None))
-
-                show_mower_treedown_then_heavythin_treedown()
+                start_animation('assets/mower_treedown.png', 2000, 'assets/heavythin_treedown.png')
                 return
 
             # NEW: One-time heavy thin animation (only if TL and PB not yet chosen)
@@ -1537,13 +1538,11 @@ def main():
 
                 # Show achievements if they trigger (pattern matches other branches)
                 if not pine_snakes_before and game.pine_snakes_colonized:
-                    game.thin_heavily_temp_bg = "assets/heavythin.png"
                     game.current_bg_img = "assets/heavythin.png"
                     show_pine_snake_screen()
                     return
                 if (not gentian_before and game.gentian_colonized and not game.gentian_screen_shown):
                     game.gentian_screen_shown = True
-                    game.thin_heavily_temp_bg = "assets/heavythin.png"
                     game.current_bg_img = "assets/heavythin.png"
                     show_gentian_screen()
                     return
@@ -1551,18 +1550,7 @@ def main():
                     return
 
                 # Animation: mower.png for 2s, then heavythin.png
-                def show_mower_then_heavythin():
-                    game.thin_heavily_temp_bg = "assets/mower.png"
-                    show_game_screen()
-                    root.after(2000, finish_heavy_thin_event)
-
-                def finish_heavy_thin_event():
-                    game.thin_heavily_temp_bg = "assets/heavythin.png"
-                    game.current_bg_img = "assets/heavythin.png"  # persist final
-                    show_game_screen()
-                    root.after(100, lambda: setattr(game, 'thin_heavily_temp_bg', None))
-
-                show_mower_then_heavythin()
+                start_animation('assets/mower.png', 2000, 'assets/heavythin.png')
                 return
 
             # --- Thin heavily after thin lightly AND prescribed burn (first heavy-thin only) ---
@@ -1578,13 +1566,11 @@ def main():
 
                 # Achievement checks (persist final)
                 if not pine_snakes_before and game.pine_snakes_colonized:
-                    game.thin_heavily_temp_bg = "assets/heavythin_afterburn_treedown.png"
                     game.current_bg_img = "assets/heavythin_afterburn_treedown.png"
                     show_pine_snake_screen()
                     return
                 if (not gentian_before and game.gentian_colonized and not game.gentian_screen_shown):
                     game.gentian_screen_shown = True
-                    game.thin_heavily_temp_bg = "assets/heavythin_afterburn_treedown.png"
                     game.current_bg_img = "assets/heavythin_afterburn_treedown.png"
                     show_gentian_screen()
                     return
@@ -1592,18 +1578,7 @@ def main():
                     return
 
                 # Animation: mower_afterburn_treedown.png for 2s, then heavythin_afterburn_treedown.png
-                def show_mower_afterburn_treedown_then_heavythin_afterburn_treedown():
-                    game.thin_heavily_temp_bg = "assets/mower_afterburn_treedown.png"
-                    show_game_screen()
-                    root.after(2000, finish_heavy_thin_afterburn_treedown_event)
-
-                def finish_heavy_thin_afterburn_treedown_event():
-                    game.thin_heavily_temp_bg = "assets/heavythin_afterburn_treedown.png"
-                    game.current_bg_img = "assets/heavythin_afterburn_treedown.png"  # persist final
-                    show_game_screen()
-                    root.after(100, lambda: setattr(game, 'thin_heavily_temp_bg', None))
-
-                show_mower_afterburn_treedown_then_heavythin_afterburn_treedown()
+                start_animation('assets/mower_afterburn_treedown.png', 2000, 'assets/heavythin_afterburn_treedown.png')
                 return
 
             # NEW: Prescribed burn after thin heavily but not thin lightly (first PB only)
@@ -1621,15 +1596,11 @@ def main():
 
                 # Achievement check (persist final)
                 if not pine_snakes_before and game.pine_snakes_colonized:
-                    game.prescribed_burn_temp_bg = "assets/afterburn_heavythin.png"
-                    game.thin_heavily_temp_bg = "assets/afterburn_heavythin.png"
                     game.current_bg_img = "assets/afterburn_heavythin.png"
                     show_pine_snake_screen()
                     return
                 if (not gentian_before and game.gentian_colonized and not game.gentian_screen_shown):
                     game.gentian_screen_shown = True
-                    game.prescribed_burn_temp_bg = "assets/afterburn_heavythin.png"
-                    game.thin_heavily_temp_bg = "assets/afterburn_heavythin.png"
                     game.current_bg_img = "assets/afterburn_heavythin.png"
                     show_gentian_screen()
                     return
@@ -1637,18 +1608,7 @@ def main():
                     return
 
                 # Animation: prescribedburn_heavythin.png for 2s, then afterburn_heavythin.png
-                def show_prescribedburn_heavythin_then_heavythin_afterburn():
-                    game.prescribed_burn_temp_bg = "assets/prescribedburn_heavythin.png"
-                    show_game_screen()
-                    root.after(2000, finish_prescribed_burn_after_heavythin)
-
-                def finish_prescribed_burn_after_heavythin():
-                    game.prescribed_burn_temp_bg = "assets/afterburn_heavythin.png"
-                    game.current_bg_img = "assets/afterburn_heavythin.png"  # persist
-                    show_game_screen()
-                    root.after(100, lambda: setattr(game, 'prescribed_burn_temp_bg', None))
-
-                show_prescribedburn_heavythin_then_heavythin_afterburn()
+                start_animation('assets/prescribedburn_heavythin.png', 2000, 'assets/afterburn_heavythin.png')
                 return
 
             # --- Thin lightly after heavy-thin that occurred after prescribed burn (first thin-lightly only) ---
@@ -1656,7 +1616,8 @@ def main():
                 and not game.thin_lightly_event
                 and game.prescribed_burn_event
                 and any(a == '3' for _, a in game.action_history)
-                and not pb_both_sides):
+                and heavy_after_first_burn
+                and not heavy_before_first_burn):
 
                 game.thin_lightly_event = True
 
@@ -1667,13 +1628,11 @@ def main():
 
                 # Achievement checks (persist final)
                 if not pine_snakes_before and game.pine_snakes_colonized:
-                    game.thin_lightly_temp_bg = "assets/heavythin_afterburn_treedown.png"
                     game.current_bg_img = "assets/heavythin_afterburn_treedown.png"
                     show_pine_snake_screen()
                     return
                 if (not gentian_before and game.gentian_colonized and not game.gentian_screen_shown):
                     game.gentian_screen_shown = True
-                    game.thin_lightly_temp_bg = "assets/heavythin_afterburn_treedown.png"
                     game.current_bg_img = "assets/heavythin_afterburn_treedown.png"
                     show_gentian_screen()
                     return
@@ -1681,18 +1640,7 @@ def main():
                     return
 
                 # Animation: chainsaw_heavythin_afterburn.png for 1.5s, then heavythin_afterburn_treedown.png
-                def show_chainsaw_heavythin_afterburn_then_final():
-                    game.thin_lightly_temp_bg = "assets/chainsaw_heavythin_afterburn.png"
-                    show_game_screen()
-                    root.after(1500, finish_tl_after_heavythin_afterburn_event)
-
-                def finish_tl_after_heavythin_afterburn_event():
-                    game.thin_lightly_temp_bg = "assets/heavythin_afterburn_treedown.png"
-                    game.current_bg_img = "assets/heavythin_afterburn_treedown.png"  # persist final
-                    show_game_screen()
-                    root.after(100, lambda: setattr(game, 'thin_lightly_temp_bg', None))
-
-                show_chainsaw_heavythin_afterburn_then_final()
+                start_animation('assets/chainsaw_heavythin_afterburn.png', 1500, 'assets/heavythin_afterburn_treedown.png')
                 return
 
             # --- Thin lightly after heavy-thin that occurred before prescribed burn (first thin-lightly only) ---
@@ -1706,7 +1654,6 @@ def main():
                 first_heavy_idx = next((i for i, (_, a) in enumerate(game.action_history) if a == '3'), None)
                 if first_burn_idx is not None and first_heavy_idx is not None and first_heavy_idx < first_burn_idx:
                     game.thin_lightly_event = True
-
                     pine_snakes_before = game.pine_snakes_colonized
                     game.update_stand(action)
                     event = game.simulate_event()
@@ -1714,13 +1661,11 @@ def main():
 
                     # Achievement checks (persist final)
                     if not pine_snakes_before and game.pine_snakes_colonized:
-                        game.thin_lightly_temp_bg = "assets/afterburn_heavythin_treedown.png"
                         game.current_bg_img = "assets/afterburn_heavythin_treedown.png"
                         show_pine_snake_screen()
                         return
                     if (not gentian_before and game.gentian_colonized and not game.gentian_screen_shown):
                         game.gentian_screen_shown = True
-                        game.thin_lightly_temp_bg = "assets/afterburn_heavythin_treedown.png"
                         game.current_bg_img = "assets/afterburn_heavythin_treedown.png"
                         show_gentian_screen()
                         return
@@ -1728,18 +1673,7 @@ def main():
                         return
 
                     # Animation: chainsaw_afterburn_heavythin.png for 1.5s, then afterburn_heavythin_treedown.png
-                    def show_chainsaw_afterburn_heavythin_then_final():
-                        game.thin_lightly_temp_bg = "assets/chainsaw_afterburn_heavythin.png"
-                        show_game_screen()
-                        root.after(1500, finish_tl_after_afterburn_heavythin_event)
-
-                    def finish_tl_after_afterburn_heavythin_event():
-                        game.thin_lightly_temp_bg = "assets/afterburn_heavythin_treedown.png"
-                        game.current_bg_img = "assets/afterburn_heavythin_treedown.png"  # persist final
-                        show_game_screen()
-                        root.after(100, lambda: setattr(game, 'thin_lightly_temp_bg', None))
-
-                    show_chainsaw_afterburn_heavythin_then_final()
+                    start_animation('assets/chainsaw_afterburn_heavythin.png', 1500, 'assets/afterburn_heavythin_treedown.png')
                     return
 
             # --- Prescribed burn after BOTH thin lightly and thin heavily (first PB only) ---
@@ -1757,15 +1691,11 @@ def main():
 
                 # Achievement checks (persist final)
                 if not pine_snakes_before and game.pine_snakes_colonized:
-                    game.prescribed_burn_temp_bg = "assets/afterburn_heavythin_treedown.png"
-                    game.thin_heavily_temp_bg = "assets/afterburn_heavythin_treedown.png"
                     game.current_bg_img = "assets/afterburn_heavythin_treedown.png"
                     show_pine_snake_screen()
                     return
                 if (not gentian_before and game.gentian_colonized and not game.gentian_screen_shown):
                     game.gentian_screen_shown = True
-                    game.prescribed_burn_temp_bg = "assets/afterburn_heavythin_treedown.png"
-                    game.thin_heavily_temp_bg = "assets/afterburn_heavythin_treedown.png"
                     game.current_bg_img = "assets/afterburn_heavythin_treedown.png"
                     show_gentian_screen()
                     return
@@ -1773,21 +1703,10 @@ def main():
                     return
 
                 # Animation: prescribedburn_treedown_heavythin.png for 2s, then afterburn_heavythin_treedown.png
-                def show_prescribedburn_treedown_heavythin_then_final():
-                    game.prescribed_burn_temp_bg = "assets/prescribedburn_treedown_heavythin.png"
-                    show_game_screen()
-                    root.after(2000, finish_prescribed_burn_after_both)
-
-                def finish_prescribed_burn_after_both():
-                    game.prescribed_burn_temp_bg = "assets/afterburn_heavythin_treedown.png"
-                    game.current_bg_img = "assets/afterburn_heavythin_treedown.png"  # persist
-                    show_game_screen()
-                    root.after(100, lambda: setattr(game, 'prescribed_burn_temp_bg', None))
-
-                show_prescribedburn_treedown_heavythin_then_final()
+                start_animation('assets/prescribedburn_treedown_heavythin.png', 2000, 'assets/afterburn_heavythin_treedown.png')
                 return
 
-            # NEW: Prescribed burn chosen (again) for the first time AFTER first heavy-thin, with no thin lightly ever
+            # Prescribed burn chosen (again) for the first time AFTER first heavy-thin, with no thin lightly ever
             if (action == '4'
                 and game.prescribed_burn_event
                 and any(a == '3' for _, a in game.action_history)
@@ -1804,15 +1723,11 @@ def main():
 
                 # Achievement check (persist final)
                 if not pine_snakes_before and game.pine_snakes_colonized:
-                    game.prescribed_burn_temp_bg = "assets/afterburn_heavythin.png"
-                    game.thin_heavily_temp_bg = "assets/afterburn_heavythin.png"
                     game.current_bg_img = "assets/afterburn_heavythin.png"
                     show_pine_snake_screen()
                     return
                 if (not gentian_before and game.gentian_colonized and not game.gentian_screen_shown):
                     game.gentian_screen_shown = True
-                    game.prescribed_burn_temp_bg = "assets/afterburn_heavythin.png"
-                    game.thin_heavily_temp_bg = "assets/afterburn_heavythin.png"
                     game.current_bg_img = "assets/afterburn_heavythin.png"
                     show_gentian_screen()
                     return
@@ -1820,21 +1735,10 @@ def main():
                     return
 
                 # Animation: prescribedburn2_heavythin.png for 2s, then afterburn_heavythin.png
-                def show_prescribedburn2_heavythin_then_afterburn_heavythin():
-                    game.prescribed_burn_temp_bg = "assets/prescribedburn2_heavythin.png"
-                    show_game_screen()
-                    root.after(2000, finish_prescribed_burn2_after_heavythin)
-
-                def finish_prescribed_burn2_after_heavythin():
-                    game.prescribed_burn_temp_bg = "assets/afterburn_heavythin.png"
-                    game.current_bg_img = "assets/afterburn_heavythin.png"  # persist
-                    show_game_screen()
-                    root.after(100, lambda: setattr(game, 'prescribed_burn_temp_bg', None))
-
-                show_prescribedburn2_heavythin_then_afterburn_heavythin()
+                start_animation('assets/prescribedburn2_heavythin.png', 2000, 'assets/afterburn_heavythin.png')
                 return
 
-            # NEW: Prescribed burn chosen again after heavy-thin WHEN thin lightly has been chosen (animate once)
+            # Prescribed burn chosen again after heavy-thin WHEN thin lightly has been chosen (animate once)
             if (action == '4'
                 and game.prescribed_burn_event
                 and any(a == '3' for _, a in game.action_history)
@@ -1851,15 +1755,11 @@ def main():
 
                 # Achievement checks (persist final)
                 if not pine_snakes_before and game.pine_snakes_colonized:
-                    game.prescribed_burn_temp_bg = "assets/afterburn_heavythin_treedown.png"
-                    game.thin_heavily_temp_bg = "assets/afterburn_heavythin_treedown.png"
                     game.current_bg_img = "assets/afterburn_heavythin_treedown.png"
                     show_pine_snake_screen()
                     return
                 if (not gentian_before and game.gentian_colonized and not game.gentian_screen_shown):
                     game.gentian_screen_shown = True
-                    game.prescribed_burn_temp_bg = "assets/afterburn_heavythin_treedown.png"
-                    game.thin_heavily_temp_bg = "assets/afterburn_heavythin_treedown.png"
                     game.current_bg_img = "assets/afterburn_heavythin_treedown.png"
                     show_gentian_screen()
                     return
@@ -1867,18 +1767,7 @@ def main():
                     return
 
                 # Animation: prescribedburn2_heavythin_treedown.png for 2s, then afterburn_heavythin_treedown.png
-                def show_prescribedburn2_treedown_then_afterburn_treedown():
-                    game.prescribed_burn_temp_bg = "assets/prescribedburn2_heavythin_treedown.png"
-                    show_game_screen()
-                    root.after(2000, finish_prescribed_burn2_with_tl)
-
-                def finish_prescribed_burn2_with_tl():
-                    game.prescribed_burn_temp_bg = "assets/afterburn_heavythin_treedown.png"
-                    game.current_bg_img = "assets/afterburn_heavythin_treedown.png"  # persist
-                    show_game_screen()
-                    root.after(100, lambda: setattr(game, 'prescribed_burn_temp_bg', None))
-
-                show_prescribedburn2_treedown_then_afterburn_treedown()
+                start_animation('assets/prescribedburn2_heavythin_treedown.png', 2000, 'assets/afterburn_heavythin_treedown.png')
                 return
 
             # --- Thin lightly (first time) when PB occurred both BEFORE and AFTER first heavy-thin ---
@@ -1895,13 +1784,11 @@ def main():
 
                 # Achievement checks (persist final)
                 if not pine_snakes_before and game.pine_snakes_colonized:
-                    game.thin_lightly_temp_bg = "assets/afterburn_heavythin_treedown.png"
                     game.current_bg_img = "assets/afterburn_heavythin_treedown.png"
                     show_pine_snake_screen()
                     return
                 if (not gentian_before and game.gentian_colonized and not game.gentian_screen_shown):
                     game.gentian_screen_shown = True
-                    game.thin_lightly_temp_bg = "assets/afterburn_heavythin_treedown.png"
                     game.current_bg_img = "assets/afterburn_heavythin_treedown.png"
                     show_gentian_screen()
                     return
@@ -1909,18 +1796,7 @@ def main():
                     return
 
                 # Animation: chainsaw_afterburn_heavythin.png for 1.5s, then afterburn_heavythin_treedown.png
-                def show_chainsaw_afterburn_heavythin_then_final():
-                    game.thin_lightly_temp_bg = "assets/chainsaw_afterburn_heavythin.png"
-                    show_game_screen()
-                    root.after(1500, finish_tl_after_afterburn_heavythin_repeat_pb)
-
-                def finish_tl_after_afterburn_heavythin_repeat_pb():
-                    game.thin_lightly_temp_bg = "assets/afterburn_heavythin_treedown.png"
-                    game.current_bg_img = "assets/afterburn_heavythin_treedown.png"  # persist final
-                    show_game_screen()
-                    root.after(100, lambda: setattr(game, 'thin_lightly_temp_bg', None))
-
-                show_chainsaw_afterburn_heavythin_then_final()
+                start_animation('assets/chainsaw_afterburn_heavythin.png', 1500, 'assets/afterburn_heavythin_treedown.png')
                 return
 
             # --- Thin lightly after FIRST heavy-thin and BEFORE FIRST prescribed burn (first TL only) ---
@@ -1940,13 +1816,11 @@ def main():
 
                 # Achievement checks (persist final)
                 if not pine_snakes_before and game.pine_snakes_colonized:
-                    game.thin_lightly_temp_bg = "assets/afterburn_heavythin_treedown.png"
                     game.current_bg_img = "assets/afterburn_heavythin_treedown.png"
                     show_pine_snake_screen()
                     return
                 if (not gentian_before and game.gentian_colonized and not game.gentian_screen_shown):
                     game.gentian_screen_shown = True
-                    game.thin_lightly_temp_bg = "assets/afterburn_heavythin_treedown.png"
                     game.current_bg_img = "assets/afterburn_heavythin_treedown.png"
                     show_gentian_screen()
                     return
@@ -1954,18 +1828,7 @@ def main():
                     return
 
                 # Animation: chainsaw_afterburn_heavythin.png for 1.5s, then afterburn_heavythin_treedown.png
-                def show_chainsaw_afterburn_heavythin_then_final():
-                    game.thin_lightly_temp_bg = "assets/chainsaw_afterburn_heavythin.png"
-                    show_game_screen()
-                    root.after(1500, finish_tl_after_first_ht_before_first_pb)
-
-                def finish_tl_after_first_ht_before_first_pb():
-                    game.thin_lightly_temp_bg = "assets/afterburn_heavythin_treedown.png"
-                    game.current_bg_img = "assets/afterburn_heavythin_treedown.png"  # persist final
-                    show_game_screen()
-                    root.after(100, lambda: setattr(game, 'thin_lightly_temp_bg', None))
-
-                show_chainsaw_afterburn_heavythin_then_final()
+                start_animation('assets/chainsaw_afterburn_heavythin.png', 1500, 'assets/afterburn_heavythin_treedown.png')
                 return
 
             pine_snakes_before = game.pine_snakes_colonized
@@ -2040,7 +1903,7 @@ def main():
                 command=btn_command
             ).pack(pady=5)
             
-        # --- Field Guide & Definitions Buttons ---
+        # --- Field Guide & Definitions Buttons on Main Screen ---
         field_guide_frame = tk.Frame(game_frame, bg="#FFFFFF")
         field_guide_frame.place(relx=0.05, rely=0.725, anchor="sw")
         tk.Button(
@@ -2082,70 +1945,6 @@ def main():
             command=root.destroy
         )
         exit_button.pack()
-
-    def show_definitions_screen():
-        play_page_turn_sound()  # Play page turn sound over forest sound
-        for widget in root.winfo_children():
-            widget.pack_forget()
-        def_frame = tk.Frame(root, bg=BG_COLOR)
-        def_frame.pack(fill="both", expand=True)
-        # Load and display the definitions background image in a label
-        bg_img = Image.open("assets/definitions.png")
-        bg_img = bg_img.resize((1920, 1080))
-        bg_photo = ImageTk.PhotoImage(bg_img)
-        bg_label = tk.Label(def_frame, image=bg_photo)
-        bg_label.image = bg_photo
-        bg_label.place(relx=0, rely=0, relwidth=1, relheight=1)
-
-        # --- Metrics Frame (copied from show_game_screen) ---
-        metrics_frame = tk.Frame(def_frame, bg="#FFFFFF", bd=0)
-        metrics_frame.place(relx=0.845, rely=0.73, anchor="center")
-        game_status = tk.StringVar()
-        status_dict = game.get_status_dict()
-        game_status.set(
-            f"Year: {status_dict['year']}\n"
-            f"\nBasal Area (BA): {status_dict['BA']:.1f} sqft/acre\n"
-            f"\nTrees Per Acre (TPA): {status_dict['TPA']}\n"
-            f"\nQuadratic Mean Diameter (QMD): {status_dict['QMD']:.1f} inches\n"
-            f"\nCarbon per Acre: {status_dict['carbon']:.1f} Metric Tons/acre\n"
-            f"\nCrowning Index: {status_dict['CI']:.1f}"
-        )
-        game_status_message = tk.Message(
-            metrics_frame,
-            textvariable=game_status,
-            width=450,
-            justify="center",
-            bg="#FFFFFF",
-            fg=FG_COLOR,
-            font=("Courier",13, "bold")
-        )
-        game_status_message.pack()
-        fire_risk_label = tk.Label(metrics_frame, wraplength=400, justify="left", padx=10, pady=0, bg="#FFFFFF", font=("Courier", 14, "bold"))
-        fire_risk_label.pack()
-        spb_risk_label = tk.Label(metrics_frame, wraplength=400, justify="left", padx=10, pady=0, bg="#FFFFFF", font=("Courier", 14, "bold"))
-        spb_risk_label.pack()
-        fire_risk_label.config(
-            text=f"\n\n\nFire Risk: {status_dict['fire_risk']}",
-            fg=get_risk_color(status_dict['fire_risk'])
-        )
-        spb_risk_label.config(
-            text=f"Southern Pine Beetle Risk: {status_dict['SPB_risk']}",
-            fg=get_risk_color(status_dict['SPB_risk'])
-        )
-        narration = tk.StringVar()
-        narration.set("What will you do next?")
-        narration_label = tk.Label(
-            metrics_frame, textvariable=narration, wraplength=400, justify="left",
-            padx=10, pady=5, bg="#FFFFFF", fg=FG_COLOR, font=FONT
-        )
-        narration_label.pack()
-
-        # Back button
-        tk.Button(
-            def_frame, text="Return to Game", font=("Courier", 18, "bold"), width=16,
-            bg="#e21fae", fg="#000000", activebackground="#FFFFFF",
-            command=lambda: [play_page_close_sound(), def_frame.pack_forget(), show_game_screen()]
-        ).place(relx=0.225, rely=0.915, anchor="center")
 
     # Start the main event loop
     #show_gentian_screen()  # <-- TEMP: Jump directly to screen for testing

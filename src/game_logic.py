@@ -52,13 +52,22 @@ class Game:
         }
 
         self.low_ba_count = 0   # Track consecutive low BA cycles
-        self.pine_snakes_colonized = False  # Track pine snake colonization
-        self.gentian_colonized = False  # Track gentian colonization
         self.action_history = []  # Add this line
-        self.gentian_screen_shown = False
-        self.summer_tanager_colonized = False
+        # Colonization state (always defined)
+        self.pine_snakes_colonized = False
+        self.gentian_colonized = False
         self.suitable_tanager_ba_reached = False
-        self.pine_barrens_tree_frog_colonized = False  # Track PB tree frog colonization
+        self.summer_tanager_colonized = False
+        self.pine_barrens_tree_frog_colonized = False
+        # Achievement (persistent trophies)
+        self.pine_snake_achieved = False
+        self.gentian_achieved = False
+        self.summer_tanager_achieved = False
+        self.tree_frog_achieved = False
+        # One-time popup guards
+        self.summer_tanager_screen_shown = False
+        self.tree_frog_screen_shown = False
+        self.gentian_screen_shown = False
 
     def reset_game(self):
         """Reset the game to initial conditions."""
@@ -79,15 +88,24 @@ class Game:
             'catastrophic_wildfire': False
         }
 
-        self.action_history = []  # Clear the action history
-        self.low_ba_count = 0
+        self.low_ba_count = 0   # Track consecutive low BA cycles
+        self.action_history = []  # Add this line
+        # Colonization state (always defined)
         self.pine_snakes_colonized = False
-        self.gentian_colonized = False  
-        self.gentian_screen_shown = False
-        self.summer_tanager_colonized = False
+        self.gentian_colonized = False
         self.suitable_tanager_ba_reached = False
-        self.pine_barrens_tree_frog_colonized = False  # Reset PB tree frog colonization
-
+        self.summer_tanager_colonized = False
+        self.pine_barrens_tree_frog_colonized = False
+        # Achievement (persistent trophies)
+        self.pine_snake_achieved = False
+        self.gentian_achieved = False
+        self.summer_tanager_achieved = False
+        self.tree_frog_achieved = False
+        # One-time popup guards
+        self.summer_tanager_screen_shown = False
+        self.tree_frog_screen_shown = False
+        self.gentian_screen_shown = False
+        
     def update_stand(self, action):
         """
         Update forest stand characteristics using Reineke-based growth and Crowning Index logic.
