@@ -1246,24 +1246,38 @@ def main():
             # Track achievement state from BEFORE this action + per-turn guard
             gentian_before = game.gentian_colonized
             tanager_before = getattr(game, 'summer_tanager_colonized', False)
-            tree_frog_before = getattr(game, 'pine_barrens_tree_frog_colonized', False)  # NEW
+            tree_frog_before = getattr(game, 'pine_barrens_tree_frog_colonized', False)
+            pine_snakes_before = game.pine_snakes_colonized
             achievement_shown_this_turn = False
 
             # Helper: show newly-triggered Tanager or Tree Frog and return True if shown
-            def show_new_bird_or_frog():
+            def show_new_achievement(final_bg_img):
+                # Pine snake
+                if (not pine_snakes_before and game.pine_snakes_colonized):
+                    game.pine_snake_achieved = True
+                    game.current_bg_img = final_bg_img
+                    show_pine_snake_screen()
+                    return True
+                # Gentian
+                if (not gentian_before and game.gentian_colonized and not game.gentian_screen_shown):
+                    game.gentian_screen_shown = True
+                    game.gentian_achieved = True
+                    game.current_bg_img = final_bg_img
+                    show_gentian_screen()
+                    return True
+                # Summer Tanager
                 if (not tanager_before
                     and getattr(game, 'summer_tanager_colonized', False)
                     and not getattr(game, 'summer_tanager_screen_shown', False)):
                     game.summer_tanager_screen_shown = True
-                    # optional: persist achievement
                     game.summer_tanager_achieved = True
                     show_summer_tanager_screen()
                     return True
+                # Tree Frog
                 if (not tree_frog_before
                     and getattr(game, 'pine_barrens_tree_frog_colonized', False)
                     and not getattr(game, 'tree_frog_screen_shown', False)):
                     game.tree_frog_screen_shown = True
-                    # optional: persist achievement
                     game.tree_frog_achieved = True
                     show_tree_frog_screen()
                     return True
@@ -1340,16 +1354,7 @@ def main():
                 game.stand['year'] += 10
 
                 # Achievement check
-                if not pine_snakes_before and game.pine_snakes_colonized:
-                    game.current_bg_img = "assets/afterburn_treedown.png"
-                    show_pine_snake_screen()
-                    return
-                if (not gentian_before and game.gentian_colonized and not game.gentian_screen_shown):
-                    game.gentian_screen_shown = True
-                    game.current_bg_img = "assets/afterburn_treedown.png"
-                    show_gentian_screen()
-                    return
-                if show_new_bird_or_frog():
+                if show_new_achievement('assets/afterburn_treedown.png'):
                     return
 
                 # Animation: prescribedburn_treedown.png for 2s, then afterburn_treedown.png
@@ -1369,16 +1374,7 @@ def main():
                 game.stand['year'] += 10
 
                 # Achievement check (skip animation but persist final)
-                if not pine_snakes_before and game.pine_snakes_colonized:
-                    game.current_bg_img = "assets/afterburn_treedown.png"
-                    show_pine_snake_screen()
-                    return
-                if (not gentian_before and game.gentian_colonized and not game.gentian_screen_shown):
-                    game.gentian_screen_shown = True
-                    game.current_bg_img = "assets/afterburn_treedown.png"  # persist
-                    show_gentian_screen()
-                    return
-                if show_new_bird_or_frog():
+                if show_new_achievement('assets/afterburn_treedown.png'):
                     return
 
                 # Animation: chainsaw_afterburn.png for 1.5s, then afterburn_treedown.png
@@ -1396,16 +1392,7 @@ def main():
                 game.stand['year'] += 10
 
                 # Achievement check
-                if not pine_snakes_before and game.pine_snakes_colonized:
-                    game.current_bg_img = "assets/afterburn.png"
-                    show_pine_snake_screen()
-                    return
-                if (not gentian_before and game.gentian_colonized and not game.gentian_screen_shown):
-                    game.gentian_screen_shown = True
-                    game.current_bg_img = "assets/afterburn.png"
-                    show_gentian_screen()
-                    return
-                if show_new_bird_or_frog():
+                if show_new_achievement('assets/afterburn.png'):
                     return
 
                 # Animation: prescribedburn.png for 2s, then afterburn.png
@@ -1423,16 +1410,7 @@ def main():
                 game.stand['year'] += 10
 
                 # Achievement check
-                if not pine_snakes_before and game.pine_snakes_colonized:
-                    game.current_bg_img = "assets/afterburn_treedown.png"
-                    show_pine_snake_screen()
-                    return
-                if (not gentian_before and game.gentian_colonized and not game.gentian_screen_shown):
-                    game.gentian_screen_shown = True
-                    game.current_bg_img = "assets/afterburn_treedown.png"
-                    show_gentian_screen()
-                    return
-                if show_new_bird_or_frog():
+                if show_new_achievement('assets/afterburn_treedown.png'):
                     return
 
                 # Animation: chainsaw.png for 1.5, then treedown.png
@@ -1453,16 +1431,7 @@ def main():
                 game.stand['year'] += 10
 
                 # Achievement checks (persist final)
-                if not pine_snakes_before and game.pine_snakes_colonized:
-                    game.current_bg_img = "assets/heavythin_treedown.png"
-                    show_pine_snake_screen()
-                    return
-                if (not gentian_before and game.gentian_colonized and not game.gentian_screen_shown):
-                    game.gentian_screen_shown = True
-                    game.current_bg_img = "assets/heavythin_treedown.png"
-                    show_gentian_screen()
-                    return
-                if show_new_bird_or_frog():
+                if show_new_achievement('assets/heavythin_treedown.png'):
                     return
 
                 # Animation: chainsaw_heavythin.png for 1.5s, then heavythin_treedown.png
@@ -1481,16 +1450,7 @@ def main():
                 game.stand['year'] += 10
 
                 # Achievement checks (persist final)
-                if not pine_snakes_before and game.pine_snakes_colonized:
-                    game.current_bg_img = "assets/heavythin_afterburn.png"
-                    show_pine_snake_screen()
-                    return
-                if (not gentian_before and game.gentian_colonized and not game.gentian_screen_shown):
-                    game.gentian_screen_shown = True
-                    game.current_bg_img = "assets/heavythin_afterburn.png"
-                    show_gentian_screen()
-                    return
-                if show_new_bird_or_frog():
+                if show_new_achievement('assets/heavythin_afterburn.png'):
                     return
 
                 # Animation: mower_afterburn.png for 2s, then heavythin_afterburn.png
@@ -1509,23 +1469,14 @@ def main():
                 game.stand['year'] += 10
 
                 # Achievement checks (persist final)
-                if not pine_snakes_before and game.pine_snakes_colonized:
-                    game.current_bg_img = "assets/heavythin_treedown.png"
-                    show_pine_snake_screen()
-                    return
-                if (not gentian_before and game.gentian_colonized and not game.gentian_screen_shown):
-                    game.gentian_screen_shown = True
-                    game.current_bg_img = "assets/heavythin_treedown.png"
-                    show_gentian_screen()
-                    return
-                if show_new_bird_or_frog():
+                if show_new_achievement('assets/heavythin_treedown.png'):
                     return
 
                 # Animation: mower_treedown.png for 2s, then heavythin_treedown.png
                 start_animation('assets/mower_treedown.png', 2000, 'assets/heavythin_treedown.png')
                 return
 
-            # NEW: One-time heavy thin animation (only if TL and PB not yet chosen)
+            # One-time heavy thin animation (only if TL and PB not yet chosen)
             if (action == '3'
                 and not any(a == '3' for _, a in game.action_history)
                 and not game.thin_lightly_event
@@ -1536,17 +1487,8 @@ def main():
                 event = game.simulate_event()
                 game.stand['year'] += 10
 
-                # Show achievements if they trigger (pattern matches other branches)
-                if not pine_snakes_before and game.pine_snakes_colonized:
-                    game.current_bg_img = "assets/heavythin.png"
-                    show_pine_snake_screen()
-                    return
-                if (not gentian_before and game.gentian_colonized and not game.gentian_screen_shown):
-                    game.gentian_screen_shown = True
-                    game.current_bg_img = "assets/heavythin.png"
-                    show_gentian_screen()
-                    return
-                if show_new_bird_or_frog():
+                # Achievement checks (persist final)
+                if show_new_achievement('assets/heavythin.png'):
                     return
 
                 # Animation: mower.png for 2s, then heavythin.png
@@ -1565,16 +1507,7 @@ def main():
                 game.stand['year'] += 10
 
                 # Achievement checks (persist final)
-                if not pine_snakes_before and game.pine_snakes_colonized:
-                    game.current_bg_img = "assets/heavythin_afterburn_treedown.png"
-                    show_pine_snake_screen()
-                    return
-                if (not gentian_before and game.gentian_colonized and not game.gentian_screen_shown):
-                    game.gentian_screen_shown = True
-                    game.current_bg_img = "assets/heavythin_afterburn_treedown.png"
-                    show_gentian_screen()
-                    return
-                if show_new_bird_or_frog():
+                if show_new_achievement('assets/heavythin_afterburn_treedown.png'):
                     return
 
                 # Animation: mower_afterburn_treedown.png for 2s, then heavythin_afterburn_treedown.png
@@ -1595,16 +1528,7 @@ def main():
                 game.stand['year'] += 10
 
                 # Achievement check (persist final)
-                if not pine_snakes_before and game.pine_snakes_colonized:
-                    game.current_bg_img = "assets/afterburn_heavythin.png"
-                    show_pine_snake_screen()
-                    return
-                if (not gentian_before and game.gentian_colonized and not game.gentian_screen_shown):
-                    game.gentian_screen_shown = True
-                    game.current_bg_img = "assets/afterburn_heavythin.png"
-                    show_gentian_screen()
-                    return
-                if show_new_bird_or_frog():
+                if show_new_achievement('assets/afterburn_heavythin.png'):
                     return
 
                 # Animation: prescribedburn_heavythin.png for 2s, then afterburn_heavythin.png
@@ -1627,16 +1551,7 @@ def main():
                 game.stand['year'] += 10
 
                 # Achievement checks (persist final)
-                if not pine_snakes_before and game.pine_snakes_colonized:
-                    game.current_bg_img = "assets/heavythin_afterburn_treedown.png"
-                    show_pine_snake_screen()
-                    return
-                if (not gentian_before and game.gentian_colonized and not game.gentian_screen_shown):
-                    game.gentian_screen_shown = True
-                    game.current_bg_img = "assets/heavythin_afterburn_treedown.png"
-                    show_gentian_screen()
-                    return
-                if show_new_bird_or_frog():
+                if show_new_achievement('assets/heavythin_afterburn_treedown.png'):
                     return
 
                 # Animation: chainsaw_heavythin_afterburn.png for 1.5s, then heavythin_afterburn_treedown.png
@@ -1660,16 +1575,7 @@ def main():
                     game.stand['year'] += 10
 
                     # Achievement checks (persist final)
-                    if not pine_snakes_before and game.pine_snakes_colonized:
-                        game.current_bg_img = "assets/afterburn_heavythin_treedown.png"
-                        show_pine_snake_screen()
-                        return
-                    if (not gentian_before and game.gentian_colonized and not game.gentian_screen_shown):
-                        game.gentian_screen_shown = True
-                        game.current_bg_img = "assets/afterburn_heavythin_treedown.png"
-                        show_gentian_screen()
-                        return
-                    if show_new_bird_or_frog():
+                    if show_new_achievement('assets/afterburn_heavythin_treedown.png'):
                         return
 
                     # Animation: chainsaw_afterburn_heavythin.png for 1.5s, then afterburn_heavythin_treedown.png
@@ -1690,16 +1596,7 @@ def main():
                 game.stand['year'] += 10
 
                 # Achievement checks (persist final)
-                if not pine_snakes_before and game.pine_snakes_colonized:
-                    game.current_bg_img = "assets/afterburn_heavythin_treedown.png"
-                    show_pine_snake_screen()
-                    return
-                if (not gentian_before and game.gentian_colonized and not game.gentian_screen_shown):
-                    game.gentian_screen_shown = True
-                    game.current_bg_img = "assets/afterburn_heavythin_treedown.png"
-                    show_gentian_screen()
-                    return
-                if show_new_bird_or_frog():
+                if show_new_achievement('assets/afterburn_heavythin_treedown.png'):
                     return
 
                 # Animation: prescribedburn_treedown_heavythin.png for 2s, then afterburn_heavythin_treedown.png
@@ -1722,16 +1619,7 @@ def main():
                 game.stand['year'] += 10
 
                 # Achievement check (persist final)
-                if not pine_snakes_before and game.pine_snakes_colonized:
-                    game.current_bg_img = "assets/afterburn_heavythin.png"
-                    show_pine_snake_screen()
-                    return
-                if (not gentian_before and game.gentian_colonized and not game.gentian_screen_shown):
-                    game.gentian_screen_shown = True
-                    game.current_bg_img = "assets/afterburn_heavythin.png"
-                    show_gentian_screen()
-                    return
-                if show_new_bird_or_frog():
+                if show_new_achievement('assets/afterburn_heavythin.png'):
                     return
 
                 # Animation: prescribedburn2_heavythin.png for 2s, then afterburn_heavythin.png
@@ -1754,16 +1642,7 @@ def main():
                 game.stand['year'] += 10
 
                 # Achievement checks (persist final)
-                if not pine_snakes_before and game.pine_snakes_colonized:
-                    game.current_bg_img = "assets/afterburn_heavythin_treedown.png"
-                    show_pine_snake_screen()
-                    return
-                if (not gentian_before and game.gentian_colonized and not game.gentian_screen_shown):
-                    game.gentian_screen_shown = True
-                    game.current_bg_img = "assets/afterburn_heavythin_treedown.png"
-                    show_gentian_screen()
-                    return
-                if show_new_bird_or_frog():
+                if show_new_achievement('assets/afterburn_heavythin_treedown.png'):
                     return
 
                 # Animation: prescribedburn2_heavythin_treedown.png for 2s, then afterburn_heavythin_treedown.png
@@ -1783,16 +1662,7 @@ def main():
                 game.stand['year'] += 10
 
                 # Achievement checks (persist final)
-                if not pine_snakes_before and game.pine_snakes_colonized:
-                    game.current_bg_img = "assets/afterburn_heavythin_treedown.png"
-                    show_pine_snake_screen()
-                    return
-                if (not gentian_before and game.gentian_colonized and not game.gentian_screen_shown):
-                    game.gentian_screen_shown = True
-                    game.current_bg_img = "assets/afterburn_heavythin_treedown.png"
-                    show_gentian_screen()
-                    return
-                if show_new_bird_or_frog():
+                if show_new_achievement('assets/afterburn_heavythin_treedown.png'):
                     return
 
                 # Animation: chainsaw_afterburn_heavythin.png for 1.5s, then afterburn_heavythin_treedown.png
@@ -1815,16 +1685,7 @@ def main():
                 game.stand['year'] += 10
 
                 # Achievement checks (persist final)
-                if not pine_snakes_before and game.pine_snakes_colonized:
-                    game.current_bg_img = "assets/afterburn_heavythin_treedown.png"
-                    show_pine_snake_screen()
-                    return
-                if (not gentian_before and game.gentian_colonized and not game.gentian_screen_shown):
-                    game.gentian_screen_shown = True
-                    game.current_bg_img = "assets/afterburn_heavythin_treedown.png"
-                    show_gentian_screen()
-                    return
-                if show_new_bird_or_frog():
+                if show_new_achievement('assets/afterburn_heavythin_treedown.png'):
                     return
 
                 # Animation: chainsaw_afterburn_heavythin.png for 1.5s, then afterburn_heavythin_treedown.png
