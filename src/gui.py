@@ -159,14 +159,15 @@ def main():
         img_label.pack(fill="both", expand=True)
 
         zoom_images = [
-            "assets/zoom_0.png",
             "assets/zoom_1.png",
             "assets/zoom_2.png",
             "assets/zoom_3.png",
             "assets/zoom_4.png",
             "assets/zoom_5.png",
             "assets/zoom_6.png",
-            "assets/zoom_7.png"
+            "assets/zoom_7.png",
+            "assets/zoom_8.png",
+            "assets/zoom_9.png"
         ]
 
         def show_next_zoom(index=0):
@@ -177,8 +178,8 @@ def main():
                 img_label.image = photo  # Prevent garbage collection
                 root.after(15, lambda: show_next_zoom(index + 1))
             else:
-                # Show zoom_6.png and overlay the button
-                img = Image.open("assets/zoom_8.png").resize((1920, 1080))
+                # Show zoom_10.png and overlay the button
+                img = Image.open("assets/zoom_10.png").resize((1920, 1080))
                 photo = ImageTk.PhotoImage(img)
                 img_label.config(image=photo)
                 img_label.image = photo
