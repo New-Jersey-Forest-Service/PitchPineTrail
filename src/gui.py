@@ -1811,7 +1811,7 @@ def main():
     #show_gentian_screen()  # <-- TEMP: Jump directly to screen for testing
     root.mainloop()
 
-#defining sound functions
+#DEFINING SOUND FUNCTIONS
 def play_forest_sound():
     try:
         pygame.mixer.music.load("assets/forest_sound.wav")
