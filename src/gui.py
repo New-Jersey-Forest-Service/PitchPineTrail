@@ -38,6 +38,8 @@ def main():
     game.tree_frog_achieved = False
     game.tree_frog_screen_shown = False
     game.animation_temp_bg = None
+    game.achievement_queue = []         # queue of achievements to show this turn
+    game.achievement_final_bg = None    # persisted final background for this turn
     BG_COLOR = "#FFFFFF"    # White background
     FG_COLOR = "#000000"    # Black text
     FONT = ("Courier New", 12, "bold")
@@ -762,7 +764,7 @@ def main():
         tk.Button(
             button_frame, text="Continue", font=("Courier", 16, "bold"), width=16,
             bg="#05dd4c", fg="#1b2336", activebackground="#069134",
-            command=lambda: [snake_frame.pack_forget(), (show_closing_screen() if game.stand['year'] >= 100 else show_game_screen())]
+            command=lambda: [snake_frame.pack_forget(), show_next_queued_achievement_or_game()]
         ).pack(pady=0)
 
     # --- Gentian Screen ---
@@ -843,7 +845,7 @@ def main():
         tk.Button(
             button_frame, text="Continue", font=("Courier", 16, "bold"), width=16,
             bg="#05dd4c", fg="#1b2336", activebackground="#069134",
-            command=lambda: [gentian_frame.pack_forget(), (show_closing_screen() if game.stand['year'] >= 100 else show_game_screen())]
+            command=lambda: [gentian_frame.pack_forget(), show_next_queued_achievement_or_game()]
         ).pack(pady=0)
     
     # --- Summer Tanager Screen ---
@@ -923,7 +925,7 @@ def main():
         tk.Button(
             button_frame, text="Continue", font=("Courier", 16, "bold"), width=16,
             bg="#05dd4c", fg="#1b2336", activebackground="#069134",
-            command=lambda: [tanager_frame.pack_forget(), (show_closing_screen() if game.stand['year'] >= 100 else show_game_screen())]
+            command=lambda: [tanager_frame.pack_forget(), show_next_queued_achievement_or_game()]
         ).pack(pady=0)
 
     # --- Tree Frog Screen ---
@@ -997,7 +999,7 @@ def main():
         tk.Button(
             button_frame, text="Continue", font=("Courier", 16, "bold"), width=16,
             bg="#05dd4c", fg="#1b2336", activebackground="#069134",
-            command=lambda: [stop_tree_frog_sound(), frog_frame.pack_forget(), (show_closing_screen() if game.stand['year'] >= 100 else show_game_screen())]
+            command=lambda: [stop_tree_frog_sound(), frog_frame.pack_forget(), show_next_queued_achievement_or_game()]
         ).pack(pady=0)
 
     # GAME ASSITANCE SCREENS
@@ -1249,38 +1251,28 @@ def main():
             tanager_before = getattr(game, 'summer_tanager_colonized', False)
             tree_frog_before = getattr(game, 'pine_barrens_tree_frog_colonized', False)
             pine_snakes_before = game.pine_snakes_colonized
-            achievement_shown_this_turn = False
 
-            # Helper: show newly-triggered Tanager or Tree Frog and return True if shown
-            def show_new_achievement(final_bg_img):
-                # Pine snake
-                if (not pine_snakes_before and game.pine_snakes_colonized):
-                    game.pine_snake_achieved = True
-                    game.current_bg_img = final_bg_img
-                    show_pine_snake_screen()
-                    return True
-                # Gentian
-                if (not gentian_before and game.gentian_colonized and not game.gentian_screen_shown):
-                    game.gentian_screen_shown = True
-                    game.gentian_achieved = True
-                    game.current_bg_img = final_bg_img
-                    show_gentian_screen()
-                    return True
-                # Summer Tanager
-                if (not tanager_before
-                    and getattr(game, 'summer_tanager_colonized', False)
-                    and not getattr(game, 'summer_tanager_screen_shown', False)):
-                    game.summer_tanager_screen_shown = True
-                    game.summer_tanager_achieved = True
-                    show_summer_tanager_screen()
-                    return True
-                # Tree Frog
-                if (not tree_frog_before
-                    and getattr(game, 'pine_barrens_tree_frog_colonized', False)
-                    and not getattr(game, 'tree_frog_screen_shown', False)):
-                    game.tree_frog_screen_shown = True
-                    game.tree_frog_achieved = True
-                    show_tree_frog_screen()
+            # queue all achievements earned THIS turn; show first if any.
+            def queue_achievements_and_show(final_bg_img):
+                new_snake = (not pine_snakes_before and game.pine_snakes_colonized)
+                new_gent  = (not gentian_before and game.gentian_colonized and not game.gentian_screen_shown)
+                new_tan   = (not tanager_before and getattr(game, 'summer_tanager_colonized', False)
+                             and not getattr(game, 'summer_tanager_screen_shown', False))
+                new_frog  = (not tree_frog_before and getattr(game, 'pine_barrens_tree_frog_colonized', False)
+                             and not getattr(game, 'tree_frog_screen_shown', False))
+
+                queue = []
+                # Order here defines popup order within the turn; adjust if desired
+                if new_snake: queue.append('snake')
+                if new_gent:  queue.append('gentian')
+                if new_tan:   queue.append('tanager')
+                if new_frog:  queue.append('frog')
+
+                if queue:
+                    game.current_bg_img = final_bg_img       # persist this turn’s final scene
+                    game.achievement_final_bg = final_bg_img  # keep if needed later
+                    game.achievement_queue = queue
+                    show_next_queued_achievement_or_game()
                     return True
                 return False
 
@@ -1305,28 +1297,8 @@ def main():
                     return
 
                 # Achievements before win so they show first at year 100
-                if not pine_snakes_before and game.pine_snakes_colonized:
-                    game.pine_snake_achieved = True
-                    show_pine_snake_screen()
-                    return
-                if (not gentian_before and game.gentian_colonized and not game.gentian_screen_shown):
-                    game.gentian_screen_shown = True
-                    game.gentian_achieved = True
-                    show_gentian_screen()
-                    return
-                if (not tanager_before
-                    and getattr(game, 'summer_tanager_colonized', False)
-                    and not getattr(game, 'summer_tanager_screen_shown', False)):
-                    game.summer_tanager_screen_shown = True
-                    game.summer_tanager_achieved = True
-                    show_summer_tanager_screen()
-                    return
-                if (not tree_frog_before
-                    and getattr(game, 'pine_barrens_tree_frog_colonized', False)
-                    and not getattr(game, 'tree_frog_screen_shown', False)):
-                    game.tree_frog_screen_shown = True
-                    game.tree_frog_achieved = True
-                    show_tree_frog_screen()
+                final_img = getattr(game, 'current_bg_img', "assets/Evenagestand.png")
+                if queue_achievements_and_show(final_img):
                     return
 
                 # Win check after achievements
@@ -1355,7 +1327,7 @@ def main():
                 game.stand['year'] += 10
 
                 # Achievement check
-                if show_new_achievement('assets/afterburn_treedown.png'):
+                if queue_achievements_and_show('assets/afterburn_treedown.png'):
                     return
 
                 # Animation: prescribedburn_treedown.png for 2s, then afterburn_treedown.png
@@ -1375,7 +1347,7 @@ def main():
                 game.stand['year'] += 10
 
                 # Achievement check (skip animation but persist final)
-                if show_new_achievement('assets/afterburn_treedown.png'):
+                if queue_achievements_and_show('assets/afterburn_treedown.png'):
                     return
 
                 # Animation: chainsaw_afterburn.png for 1.5s, then afterburn_treedown.png
@@ -1393,7 +1365,7 @@ def main():
                 game.stand['year'] += 10
 
                 # Achievement check
-                if show_new_achievement('assets/afterburn.png'):
+                if queue_achievements_and_show('assets/afterburn.png'):
                     return
 
                 # Animation: prescribedburn.png for 2s, then afterburn.png
@@ -1411,7 +1383,7 @@ def main():
                 game.stand['year'] += 10
 
                 # Achievement check
-                if show_new_achievement('assets/afterburn_treedown.png'):
+                if queue_achievements_and_show('assets/treedown.png'):
                     return
 
                 # Animation: chainsaw.png for 1.5, then treedown.png
@@ -1432,7 +1404,7 @@ def main():
                 game.stand['year'] += 10
 
                 # Achievement checks (persist final)
-                if show_new_achievement('assets/heavythin_treedown.png'):
+                if queue_achievements_and_show('assets/heavythin_treedown.png'):
                     return
 
                 # Animation: chainsaw_heavythin.png for 1.5s, then heavythin_treedown.png
@@ -1451,7 +1423,7 @@ def main():
                 game.stand['year'] += 10
 
                 # Achievement checks (persist final)
-                if show_new_achievement('assets/heavythin_afterburn.png'):
+                if queue_achievements_and_show('assets/heavythin_afterburn.png'):
                     return
 
                 # Animation: mower_afterburn.png for 2s, then heavythin_afterburn.png
@@ -1470,7 +1442,7 @@ def main():
                 game.stand['year'] += 10
 
                 # Achievement checks (persist final)
-                if show_new_achievement('assets/heavythin_treedown.png'):
+                if queue_achievements_and_show('assets/heavythin_treedown.png'):
                     return
 
                 # Animation: mower_treedown.png for 2s, then heavythin_treedown.png
@@ -1489,7 +1461,7 @@ def main():
                 game.stand['year'] += 10
 
                 # Achievement checks (persist final)
-                if show_new_achievement('assets/heavythin.png'):
+                if queue_achievements_and_show('assets/heavythin.png'):
                     return
 
                 # Animation: mower.png for 2s, then heavythin.png
@@ -1508,7 +1480,7 @@ def main():
                 game.stand['year'] += 10
 
                 # Achievement checks (persist final)
-                if show_new_achievement('assets/heavythin_afterburn_treedown.png'):
+                if queue_achievements_and_show('assets/heavythin_afterburn_treedown.png'):
                     return
 
                 # Animation: mower_afterburn_treedown.png for 2s, then heavythin_afterburn_treedown.png
@@ -1529,7 +1501,7 @@ def main():
                 game.stand['year'] += 10
 
                 # Achievement check (persist final)
-                if show_new_achievement('assets/afterburn_heavythin.png'):
+                if queue_achievements_and_show('assets/afterburn_heavythin.png'):
                     return
 
                 # Animation: prescribedburn_heavythin.png for 2s, then afterburn_heavythin.png
@@ -1552,7 +1524,7 @@ def main():
                 game.stand['year'] += 10
 
                 # Achievement checks (persist final)
-                if show_new_achievement('assets/heavythin_afterburn_treedown.png'):
+                if queue_achievements_and_show('assets/heavythin_afterburn_treedown.png'):
                     return
 
                 # Animation: chainsaw_heavythin_afterburn.png for 1.5s, then heavythin_afterburn_treedown.png
@@ -1576,7 +1548,7 @@ def main():
                     game.stand['year'] += 10
 
                     # Achievement checks (persist final)
-                    if show_new_achievement('assets/afterburn_heavythin_treedown.png'):
+                    if queue_achievements_and_show('assets/afterburn_heavythin_treedown.png'):
                         return
 
                     # Animation: chainsaw_afterburn_heavythin.png for 1.5s, then afterburn_heavythin_treedown.png
@@ -1597,7 +1569,7 @@ def main():
                 game.stand['year'] += 10
 
                 # Achievement checks (persist final)
-                if show_new_achievement('assets/afterburn_heavythin_treedown.png'):
+                if queue_achievements_and_show('assets/afterburn_heavythin_treedown.png'):
                     return
 
                 # Animation: prescribedburn_treedown_heavythin.png for 2s, then afterburn_heavythin_treedown.png
@@ -1620,7 +1592,7 @@ def main():
                 game.stand['year'] += 10
 
                 # Achievement check (persist final)
-                if show_new_achievement('assets/afterburn_heavythin.png'):
+                if queue_achievements_and_show('assets/afterburn_heavythin.png'):
                     return
 
                 # Animation: prescribedburn2_heavythin.png for 2s, then afterburn_heavythin.png
@@ -1643,7 +1615,7 @@ def main():
                 game.stand['year'] += 10
 
                 # Achievement checks (persist final)
-                if show_new_achievement('assets/afterburn_heavythin_treedown.png'):
+                if queue_achievements_and_show('assets/afterburn_heavythin_treedown.png'):
                     return
 
                 # Animation: prescribedburn2_heavythin_treedown.png for 2s, then afterburn_heavythin_treedown.png
@@ -1663,7 +1635,7 @@ def main():
                 game.stand['year'] += 10
 
                 # Achievement checks (persist final)
-                if show_new_achievement('assets/afterburn_heavythin_treedown.png'):
+                if queue_achievements_and_show('assets/afterburn_heavythin_treedown.png'):
                     return
 
                 # Animation: chainsaw_afterburn_heavythin.png for 1.5s, then afterburn_heavythin_treedown.png
@@ -1686,7 +1658,7 @@ def main():
                 game.stand['year'] += 10
 
                 # Achievement checks (persist final)
-                if show_new_achievement('assets/afterburn_heavythin_treedown.png'):
+                if queue_achievements_and_show('assets/afterburn_heavythin_treedown.png'):
                     return
 
                 # Animation: chainsaw_afterburn_heavythin.png for 1.5s, then afterburn_heavythin_treedown.png
@@ -1711,27 +1683,9 @@ def main():
                 show_spb_loss_screen()
                 return
 
-            # --- Achievements before win screen so they show at year 100 ---
-            if not pine_snakes_before and game.pine_snakes_colonized:
-                game.pine_snake_achieved = True
-                show_pine_snake_screen()
-                return
-            if (not gentian_before and game.gentian_colonized and not game.gentian_screen_shown):
-                game.gentian_screen_shown = True
-                game.gentian_achieved = True
-                show_gentian_screen()
-                return
-            if (not tanager_before and getattr(game, 'summer_tanager_colonized', False)
-                and not getattr(game, 'summer_tanager_screen_shown', False)):
-                game.summer_tanager_screen_shown = True
-                game.summer_tanager_achieved = True
-                show_summer_tanager_screen()
-                return
-            if (not tree_frog_before and getattr(game, 'pine_barrens_tree_frog_colonized', False)  # NEW
-                and not getattr(game, 'tree_frog_screen_shown', False)):
-                game.tree_frog_screen_shown = True
-                game.tree_frog_achieved = True
-                show_tree_frog_screen()
+            # --- Achievements (use queue; no animation in default path) ---
+            final_img = getattr(game, 'current_bg_img', "assets/Evenagestand.png")
+            if queue_achievements_and_show(final_img):
                 return
 
             # --- Win check after achievements ---
@@ -1807,6 +1761,37 @@ def main():
             command=root.destroy
         )
         exit_button.pack()
+
+    # Helper to show next queued achievement or return to game/closing
+    def show_next_queued_achievement_or_game():
+        """Show next queued achievement popup, else return to game/closing."""
+        q = getattr(game, 'achievement_queue', [])
+        if q:
+            code = q.pop(0)
+            if code == 'snake':
+                game.pine_snake_achieved = True
+                show_pine_snake_screen()
+                return
+            if code == 'gentian':
+                game.gentian_screen_shown = True
+                game.gentian_achieved = True
+                show_gentian_screen()
+                return
+            if code == 'tanager':
+                game.summer_tanager_screen_shown = True
+                game.summer_tanager_achieved = True
+                show_summer_tanager_screen()
+                return
+            if code == 'frog':
+                game.tree_frog_screen_shown = True
+                game.tree_frog_achieved = True
+                show_tree_frog_screen()
+                return
+        # No more queued achievements
+        if game.stand['year'] >= 100:
+            show_closing_screen()
+        else:
+            show_game_screen()
 
     # Start the main event loop
     #show_gentian_screen()  # <-- TEMP: Jump directly to screen for testing
