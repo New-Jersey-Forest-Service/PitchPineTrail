@@ -52,12 +52,22 @@ class Game:
         }
 
         self.low_ba_count = 0   # Track consecutive low BA cycles
-        self.pine_snakes_colonized = False  # Track pine snake colonization
-        self.gentian_colonized = False  # Track gentian colonization
         self.action_history = []  # Add this line
-        self.gentian_screen_shown = False
-        self.summer_tanager_colonized = False
+        # Colonization state (always defined)
+        self.pine_snakes_colonized = False
+        self.gentian_colonized = False
         self.suitable_tanager_ba_reached = False
+        self.summer_tanager_colonized = False
+        self.pine_barrens_tree_frog_colonized = False
+        # Achievement (persistent trophies)
+        self.pine_snake_achieved = False
+        self.gentian_achieved = False
+        self.summer_tanager_achieved = False
+        self.tree_frog_achieved = False
+        # One-time popup guards
+        self.summer_tanager_screen_shown = False
+        self.tree_frog_screen_shown = False
+        self.gentian_screen_shown = False
 
     def reset_game(self):
         """Reset the game to initial conditions."""
@@ -78,14 +88,24 @@ class Game:
             'catastrophic_wildfire': False
         }
 
-        self.action_history = []  # Clear the action history
-        self.low_ba_count = 0
+        self.low_ba_count = 0   # Track consecutive low BA cycles
+        self.action_history = []  # Add this line
+        # Colonization state (always defined)
         self.pine_snakes_colonized = False
-        self.gentian_colonized = False  
-        self.gentian_screen_shown = False
-        self.summer_tanager_colonized = False
+        self.gentian_colonized = False
         self.suitable_tanager_ba_reached = False
-
+        self.summer_tanager_colonized = False
+        self.pine_barrens_tree_frog_colonized = False
+        # Achievement (persistent trophies)
+        self.pine_snake_achieved = False
+        self.gentian_achieved = False
+        self.summer_tanager_achieved = False
+        self.tree_frog_achieved = False
+        # One-time popup guards
+        self.summer_tanager_screen_shown = False
+        self.tree_frog_screen_shown = False
+        self.gentian_screen_shown = False
+        
     def update_stand(self, action):
         """
         Update forest stand characteristics using Reineke-based growth and Crowning Index logic.
@@ -203,6 +223,23 @@ class Game:
             if random.random() < 0.5:
                 self.summer_tanager_colonized = True
 
+        # Step 14: Pine Barrens tree frog logic
+        # Colonize after sequence: heavy thin ('3') -> prescribed burn ('4') -> >=2 consecutive '1's
+        if not self.pine_barrens_tree_frog_colonized:
+            # Include current action in the sequence check (since we append after logic)
+            actions = [a for (_, a) in self.action_history] + [action]
+            if len(actions) >= 4:
+                # Count trailing 'Do nothing' ('1') actions
+                i = len(actions) - 1
+                trailing_no_mgmt = 0
+                while i >= 0 and actions[i] == '1':
+                    trailing_no_mgmt += 1
+                    i -= 1
+                # Require at least two '1's and that they are immediately preceded by '4' then '3'
+                if trailing_no_mgmt >= 2 and i >= 1 and actions[i] == '4' and actions[i - 1] == '3':
+                    if random.random() < 0.8:  # 80% chance to colonize
+                        self.pine_barrens_tree_frog_colonized = True
+
         # After updating the stand/year, record the action:
         self.action_history.append((self.stand['year'], action))
 
@@ -292,6 +329,9 @@ class Game:
 
         if self.summer_tanager_colonized:
             summary += "\nSummer tanager has colonized this stand!\n"
+
+        if self.pine_barrens_tree_frog_colonized:
+            summary += "\nPine Barrens tree frog has colonized this stand!\n"
 
         return summary
 
