@@ -37,6 +37,8 @@ def main():
     game.summer_tanager_achieved = False
     game.tree_frog_achieved = False
     game.tree_frog_screen_shown = False
+    game.indigo_bunting_achieved = False
+    game.indigo_bunting_screen_shown = False
     game.animation_temp_bg = None
     game.achievement_queue = []         # queue of achievements to show this turn
     game.achievement_final_bg = None    # persisted final background for this turn
@@ -70,23 +72,34 @@ def main():
 
 
     def restart_game(frame_to_remove):
+        # Reset game model (stats, colonization, achievements, popups)
         game.reset_game()
+
+        # Stop any looping/active sounds
         stop_spb_eating_sound()
         stop_fire_sound()
+        try:
+            stop_tree_frog_sound()
+        except Exception:
+            pass
+
+        # Reset GUI-only state
         game.current_bg_img = "assets/Evenagestand.png"
+        game.animation_temp_bg = None
+        game.achievement_queue = []
+        game.achievement_final_bg = None
+
         game.thin_lightly_event = False
         game.prescribed_burn_event = False
+        game.pb_after_first_heavythin_shown = False
+        game.pb_after_heavythin_with_tl_shown = False
+
+        # Legacy temp fields (safe to keep if referenced elsewhere)
         game.prescribed_burn_temp_bg = None
         game.thin_lightly_temp_bg = None
         game.thin_heavily_temp_bg = None
-        game.summer_tanager_screen_shown = False
-        game.pb_after_first_heavythin_shown = False
-        game.pb_after_heavythin_with_tl_shown = False
-        game.pine_snake_achieved = False
-        game.gentian_achieved = False
-        game.summer_tanager_achieved = False
-        game.tree_frog_achieved = False 
-        game.tree_frog_screen_shown = False
+
+        # Rebuild UI
         for widget in root.winfo_children():
             widget.pack_forget()
         show_game_screen()
@@ -275,77 +288,23 @@ def main():
         ach_gent  = getattr(game, 'gentian_achieved', False) or getattr(game, 'gentian_colonized', False)
         ach_tan   = getattr(game, 'summer_tanager_achieved', False) or getattr(game, 'summer_tanager_colonized', False)
         ach_frog  = getattr(game, 'tree_frog_achieved', False) or getattr(game, 'pine_barrens_tree_frog_colonized', False)
+        ach_bunt   = getattr(game, 'indigo_bunting_achieved', False) or getattr(game, 'indigo_bunting_colonized', False)
 
 
-        # Choose background image
-        if qmd < 21:
-            if ach_snake and ach_gent and ach_tan and ach_frog:
-                bg_img_path = "assets/bad_snake-gentian-tanager-frogmedal.png"
-            elif ach_snake and ach_gent and not ach_tan and ach_frog:
-                bg_img_path = "assets/bad_snake-gentian-frogmedal.png"
-            elif ach_snake and not ach_gent and ach_tan and ach_frog:
-                bg_img_path = "assets/bad_snake-tanager-frogmedal.png"
-            elif ach_snake and not ach_gent and not ach_tan and ach_frog:
-                bg_img_path = "assets/bad_snake-frogmedal.png"
-            elif not ach_snake and ach_gent and ach_tan and ach_frog:
-                bg_img_path = "assets/bad_gentian-tanager-frogmedal.png"
-            elif not ach_snake and ach_gent and not ach_tan and ach_frog:
-                bg_img_path = "assets/bad_gentian-frogmedal.png"
-            elif not ach_snake and not ach_gent and ach_tan and ach_frog:
-                bg_img_path = "assets/bad_tanager-frogmedal.png"
-            elif ach_frog and not ach_snake and not ach_gent and not ach_tan:
-                bg_img_path = "assets/bad_frogmedal.png"
-            elif ach_snake and ach_gent and ach_tan and not ach_frog:
-                bg_img_path = "assets/bad_snake-gentian-tanagermedal.png"
-            elif ach_snake and ach_gent and not ach_tan and not ach_frog:
-                bg_img_path = "assets/bad_snake-gentianmedal.png"
-            elif ach_snake and not ach_gent and ach_tan and not ach_frog:
-                bg_img_path = "assets/bad_snake-tanagermedal.png"
-            elif ach_snake and not ach_gent and not ach_tan and not ach_frog:
-                bg_img_path = "assets/bad_snakemedal.png"
-            elif not ach_snake and ach_gent and ach_tan and not ach_frog:
-                bg_img_path = "assets/bad_gentian-tanagermedal.png"
-            elif not ach_snake and ach_gent and not ach_tan and not ach_frog:
-                bg_img_path = "assets/bad_gentianmedal.png"
-            elif not ach_snake and not ach_gent and ach_tan and not ach_frog:
-                bg_img_path = "assets/bad_tanagermedal.png"
-            else:
-                bg_img_path = "assets/bad_nomedal.png"
-        elif qmd > 21:
-            if ach_snake and ach_gent and ach_tan and ach_frog:
-                bg_img_path = "assets/okay_snake-gentian-tanager-frogmedal.png"
-            elif ach_snake and ach_gent and not ach_tan and ach_frog:
-                bg_img_path = "assets/okay_snake-gentian-frogmedal.png"
-            elif ach_snake and not ach_gent and ach_tan and ach_frog:
-                bg_img_path = "assets/okay_snake-tanager-frogmedal.png"
-            elif ach_snake and not ach_gent and not ach_tan and ach_frog:
-                bg_img_path = "assets/okay_snake-frogmedal.png"
-            elif not ach_snake and ach_gent and ach_tan and ach_frog:
-                bg_img_path = "assets/okay_gentian-tanager-frogmedal.png"
-            elif not ach_snake and ach_gent and not ach_tan and ach_frog:
-                bg_img_path = "assets/okay_gentian-frogmedal.png"
-            elif not ach_snake and not ach_gent and ach_tan and ach_frog:
-                bg_img_path = "assets/okay_tanager-frogmedal.png"
-            elif ach_frog and not ach_snake and not ach_gent and not ach_tan:
-                bg_img_path = "assets/okay_frogmedal.png"
-            elif ach_snake and ach_gent and ach_tan and not ach_frog:
-                bg_img_path = "assets/okay_snake-gentian-tanagermedal.png"
-            elif ach_snake and ach_gent and not ach_tan and not ach_frog:
-                bg_img_path = "assets/okay_snake-gentianmedal.png"
-            elif ach_snake and not ach_gent and ach_tan and not ach_frog:
-                bg_img_path = "assets/okay_snake-tanagermedal.png"
-            elif ach_snake and not ach_gent and not ach_tan and not ach_frog:
-                bg_img_path = "assets/okay_snakemedal.png"
-            elif not ach_snake and ach_gent and ach_tan and not ach_frog:
-                bg_img_path = "assets/okay_gentian-tanagermedal.png"
-            elif not ach_snake and ach_gent and not ach_tan and not ach_frog:
-                bg_img_path = "assets/okay_gentianmedal.png"
-            elif not ach_snake and not ach_gent and ach_tan and not ach_frog:
-                bg_img_path = "assets/okay_tanagermedal.png"
-            else:
-                bg_img_path = "assets/okay_nomedal.png"
+        # Choose background image (build filename based on achievements)
+        base = "bad" if qmd < 21 else "okay"
+        ordered = [
+            ("snake",   ach_snake),
+            ("gentian", ach_gent),
+            ("tanager", ach_tan),
+            ("frog",    ach_frog),
+            ("bunting", ach_bunt),
+        ]
+        medals = "-".join(name for name, present in ordered if present)
+        if medals:
+            bg_img_path = f"assets/{base}_{medals}medal.png"
         else:
-            bg_img_path = "assets/okay_nomedal.png"
+            bg_img_path = f"assets/{base}_nomedal.png"
         
         # Load and display the background image in a label
         bg_img = Image.open(bg_img_path)
@@ -928,6 +887,83 @@ def main():
             command=lambda: [tanager_frame.pack_forget(), show_next_queued_achievement_or_game()]
         ).pack(pady=0)
 
+    # --- Indigo Bunting Screen ---
+    def show_indigo_bunting_screen():
+        """Display the screen for Indigo Bunting visitation."""
+        try:
+            play_bunting_sound()
+        except Exception:
+            pass
+        for widget in root.winfo_children():
+            widget.pack_forget()
+        bunting_frame = tk.Frame(root, bg=BG_COLOR)
+        bunting_frame.pack(fill="both", expand=True)
+
+        # Background image
+        bg_img = Image.open("assets/bunting.png")
+        bg_img = bg_img.resize((1920, 1080))
+        bg_photo = ImageTk.PhotoImage(bg_img)
+        bg_label = tk.Label(bunting_frame, image=bg_photo)
+        bg_label.image = bg_photo
+        bg_label.place(relx=0, rely=0, relwidth=1, relheight=1)
+
+        # Metrics (copied pattern)
+        metrics_frame = tk.Frame(bunting_frame, bg="#FFFFFF", bd=0)
+        metrics_frame.place(relx=0.845, rely=0.73, anchor="center")
+        game_status = tk.StringVar()
+        status_dict = game.get_status_dict()
+        game_status.set(
+            f"Year: {status_dict['year']}\n"
+            f"\nBasal Area (BA): {status_dict['BA']:.1f} sqft/acre\n"
+            f"\nTrees Per Acre (TPA): {status_dict['TPA']}\n"
+            f"\nQuadratic Mean Diameter (QMD): {status_dict['QMD']:.1f} inches\n"
+            f"\nCarbon per Acre: {status_dict['carbon']:.1f} Metric Tons/acre\n"
+            f"\nCrowning Index: {status_dict['CI']:.1f}"
+        )
+        game_status_message = tk.Message(
+            metrics_frame,
+            textvariable=game_status,
+            width=450,
+            justify="center",
+            bg="#FFFFFF",
+            fg=FG_COLOR,
+            font=("Courier",13, "bold")
+        )
+        game_status_message.pack()
+        fire_risk_label = tk.Label(metrics_frame, wraplength=400, justify="left",
+                                   padx=10, pady=0, bg="#FFFFFF", font=("Courier", 14, "bold"))
+        fire_risk_label.pack()
+        spb_risk_label = tk.Label(metrics_frame, wraplength=400, justify="left",
+                                  padx=10, pady=0, bg="#FFFFFF", font=("Courier", 14, "bold"))
+        spb_risk_label.pack()
+        fire_risk_label.config(
+            text=f"\n\n\nFire Risk: {status_dict['fire_risk']}",
+            fg=get_risk_color(status_dict['fire_risk'])
+        )
+        spb_risk_label.config(
+            text=f"Southern Pine Beetle Risk: {status_dict['SPB_risk']}",
+            fg=get_risk_color(status_dict['SPB_risk'])
+        )
+
+        # Text frame
+        text_frame = tk.Frame(bunting_frame, bg="#1b2336", bd=0)
+        text_frame.place(relx=0.88, rely=0.2, anchor="center")
+        tk.Label(
+            text_frame,
+            text="Congratulations! This forest is being visited by Indigo Buntings.\n\nThese neotropical birds are migrating through the stand!",
+            bg="#1b2336", fg="#05dd4c", font=("Courier New", 18, "bold"),
+            pady=10, wraplength=370, justify="center"
+        ).pack()
+
+        # Button frame
+        button_frame = tk.Frame(bunting_frame, bg="#000000", bd=0)
+        button_frame.place(relx=0.88, rely=0.33, anchor="center")
+        tk.Button(
+            button_frame, text="Continue", font=("Courier", 16, "bold"), width=16,
+            bg="#05dd4c", fg="#1b2336", activebackground="#069134",
+            command=lambda: [stop_bunting_sound(), bunting_frame.pack_forget(), show_next_queued_achievement_or_game()]
+        ).pack(pady=0)
+
     # --- Tree Frog Screen ---
     def show_tree_frog_screen():
         """Display the screen for Pine Barrens tree frog colonization."""
@@ -1247,10 +1283,12 @@ def main():
             heavy_after_first_burn  = (first_burn_idx is not None and any(i > first_burn_idx for i in heavy_indices))
 
             # Track achievement state from BEFORE this action + per-turn guard
+            pine_snakes_before = game.pine_snakes_colonized
             gentian_before = game.gentian_colonized
             tanager_before = getattr(game, 'summer_tanager_colonized', False)
+            bunting_before = getattr(game, 'indigo_bunting_colonized', False)
             tree_frog_before = getattr(game, 'pine_barrens_tree_frog_colonized', False)
-            pine_snakes_before = game.pine_snakes_colonized
+            
 
             # queue all achievements earned THIS turn; show first if any.
             def queue_achievements_and_show(final_bg_img):
@@ -1258,6 +1296,8 @@ def main():
                 new_gent  = (not gentian_before and game.gentian_colonized and not game.gentian_screen_shown)
                 new_tan   = (not tanager_before and getattr(game, 'summer_tanager_colonized', False)
                              and not getattr(game, 'summer_tanager_screen_shown', False))
+                new_bun   = (not bunting_before and getattr(game, 'indigo_bunting_colonized', False)
+                             and not getattr(game, 'indigo_bunting_screen_shown', False))
                 new_frog  = (not tree_frog_before and getattr(game, 'pine_barrens_tree_frog_colonized', False)
                              and not getattr(game, 'tree_frog_screen_shown', False))
 
@@ -1266,6 +1306,7 @@ def main():
                 if new_snake: queue.append('snake')
                 if new_gent:  queue.append('gentian')
                 if new_tan:   queue.append('tanager')
+                if new_bun:   queue.append('bunting')
                 if new_frog:  queue.append('frog')
 
                 if queue:
@@ -1782,6 +1823,11 @@ def main():
                 game.summer_tanager_achieved = True
                 show_summer_tanager_screen()
                 return
+            if code == 'bunting':
+                game.indigo_bunting_screen_shown = True
+                game.indigo_bunting_achieved = True
+                show_indigo_bunting_screen()
+                return
             if code == 'frog':
                 game.tree_frog_screen_shown = True
                 game.tree_frog_achieved = True
@@ -1943,6 +1989,22 @@ def play_tanager_sound():
         sound.play()
     except Exception as e:
         print("Error playing tanager sound:", e)
+
+def play_bunting_sound():
+    try:
+        sound = pygame.mixer.Sound("assets/bunting.wav")
+        # store channel so we can stop it on Continue
+        play_bunting_sound.sound = sound
+        play_bunting_sound.channel = sound.play()
+    except Exception as e:
+        print("Error playing bunting sound:", e)
+
+def stop_bunting_sound():
+    try:
+        if hasattr(play_bunting_sound, "channel") and play_bunting_sound.channel is not None:
+            play_bunting_sound.channel.stop()
+    except Exception as e:
+        print("Error stopping bunting sound:", e)
 
 def play_tree_frog_sound():
     try:
