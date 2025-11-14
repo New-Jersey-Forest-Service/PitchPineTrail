@@ -19,29 +19,25 @@ from PIL import Image, ImageTk
 import pygame
 
 def main():
-    pygame.mixer.init()  # <-- Move this here, at the very start of main()
+    pygame.mixer.init()
 
     # Initialize game and UI constants
-    game = Game()
+    game = Game()  # Model handles its own colonization & achievement flags
+    # GUI-only state
     game.current_bg_img = "assets/Evenagestand.png"
+    game.animation_temp_bg = None
+    game.achievement_queue = []
+    game.achievement_final_bg = None
+    # Action/animation sequencing flags
     game.thin_lightly_event = False
     game.prescribed_burn_event = False
+    game.pb_after_first_heavythin_shown = False
+    game.pb_after_heavythin_with_tl_shown = False
+    # Temp backgrounds for multi-step animations
     game.prescribed_burn_temp_bg = None
     game.thin_lightly_temp_bg = None
-    game.thin_heavily_temp_bg = None  # temp bg for heavy-thin animation
-    game.summer_tanager_screen_shown = False  
-    game.pb_after_first_heavythin_shown = False  #first PB after first heavy-thin has animated
-    game.pb_after_heavythin_with_tl_shown = False  # first PB-after-heavythin when TL already chosen
-    game.pine_snake_achieved = False
-    game.gentian_achieved = False
-    game.summer_tanager_achieved = False
-    game.tree_frog_achieved = False
-    game.tree_frog_screen_shown = False
-    game.indigo_bunting_achieved = False
-    game.indigo_bunting_screen_shown = False
-    game.animation_temp_bg = None
-    game.achievement_queue = []         # queue of achievements to show this turn
-    game.achievement_final_bg = None    # persisted final background for this turn
+    game.thin_heavily_temp_bg = None
+    #color and font constants
     BG_COLOR = "#FFFFFF"    # White background
     FG_COLOR = "#000000"    # Black text
     FONT = ("Courier New", 12, "bold")
