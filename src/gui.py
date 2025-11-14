@@ -17,6 +17,7 @@ from tkinter import messagebox
 from game_logic import Game, ACTIONS
 from PIL import Image, ImageTk
 import pygame
+import random
 
 def main():
     pygame.mixer.init()
@@ -962,22 +963,58 @@ def main():
 
     # --- Tree Frog Screen ---
     def show_tree_frog_screen():
-        """Display the screen for Pine Barrens tree frog colonization."""
+        """Display the screen for Pine Barrens tree frog colonization (random blinking until Continue)."""
         play_tree_frog_sound()
         for widget in root.winfo_children():
             widget.pack_forget()
         frog_frame = tk.Frame(root, bg=BG_COLOR)
         frog_frame.pack(fill="both", expand=True)
 
-        # Background image
-        bg_img = Image.open("assets/treefrog.png")
-        bg_img = bg_img.resize((1920, 1080))
-        bg_photo = ImageTk.PhotoImage(bg_img)
-        bg_label = tk.Label(frog_frame, image=bg_photo)
-        bg_label.image = bg_photo
+        img_a = Image.open("assets/treefrog.png").resize((1920, 1080))
+        img_b = Image.open("assets/treefrog_1.png").resize((1920, 1080))
+        photo_a = ImageTk.PhotoImage(img_a)
+        photo_b = ImageTk.PhotoImage(img_b)
+
+        bg_label = tk.Label(frog_frame, image=photo_a)
+        bg_label.image = photo_a
         bg_label.place(relx=0, rely=0, relwidth=1, relheight=1)
 
-        # Metrics (copied pattern)
+        # Random toggle state + scheduled callback id
+        state = {
+            "running": True,
+            "use_a": False,
+            "min_ms": 200,
+            "max_ms": 800,
+            "after_id": None,
+        }
+
+        def schedule_next():
+            delay = random.randint(state["min_ms"], state["max_ms"])
+            state["after_id"] = root.after(delay, do_toggle)
+
+        def do_toggle():
+            # If stopped or widgets gone, just exit without touching them
+            if (not state["running"]
+                or not frog_frame.winfo_exists()
+                or not bg_label.winfo_exists()):
+                return
+
+            # Flip image
+            if state["use_a"]:
+                bg_label.config(image=photo_a)
+                bg_label.image = photo_a
+            else:
+                bg_label.config(image=photo_b)
+                bg_label.image = photo_b
+            state["use_a"] = not state["use_a"]
+
+            # Re-schedule at a random interval
+            schedule_next()
+
+        # Start random blinking
+        schedule_next()
+
+        # --- Metrics (unchanged) ---
         metrics_frame = tk.Frame(frog_frame, bg="#FFFFFF", bd=0)
         metrics_frame.place(relx=0.845, rely=0.73, anchor="center")
         game_status = tk.StringVar()
@@ -1025,13 +1062,29 @@ def main():
             pady=10, wraplength=370, justify="center"
         ).pack()
 
-        # Continue button
+        # Continue button stops blinking, cancels callback, and returns
+        def on_continue():
+            state["running"] = False
+            if state.get("after_id"):
+                try:
+                    root.after_cancel(state["after_id"])
+                except Exception:
+                    pass
+                state["after_id"] = None
+            stop_tree_frog_sound()
+            # leave final image on treefrog.png if still present
+            if frog_frame.winfo_exists() and bg_label.winfo_exists():
+                bg_label.config(image=photo_a)
+                bg_label.image = photo_a
+            frog_frame.pack_forget()
+            show_next_queued_achievement_or_game()
+
         button_frame = tk.Frame(frog_frame, bg="#000000", bd=0)
         button_frame.place(relx=0.88, rely=0.33, anchor="center")
         tk.Button(
             button_frame, text="Continue", font=("Courier", 16, "bold"), width=16,
             bg="#05dd4c", fg="#1b2336", activebackground="#069134",
-            command=lambda: [stop_tree_frog_sound(), frog_frame.pack_forget(), show_next_queued_achievement_or_game()]
+            command=on_continue
         ).pack(pady=0)
 
     # GAME ASSITANCE SCREENS
@@ -1440,7 +1493,7 @@ def main():
                 event = game.simulate_event()
                 game.stand['year'] += 10
 
-                # Achievement checks (persist final)
+                # Achievement checks (skip animation but persist final)
                 if queue_achievements_and_show('assets/heavythin_treedown.png'):
                     return
 
@@ -2007,7 +2060,7 @@ def play_tree_frog_sound():
         sound = pygame.mixer.Sound("assets/treefrog.wav")
         # store channel so we can stop it later
         play_tree_frog_sound.sound = sound
-        play_tree_frog_sound.channel = sound.play()
+        play_tree_frog_sound.channel = sound.play(loops=-1)
     except Exception as e:
         print("Error playing tree frog sound:", e)
 
@@ -2015,6 +2068,7 @@ def stop_tree_frog_sound():
     try:
         if hasattr(play_tree_frog_sound, "channel") and play_tree_frog_sound.channel is not None:
             play_tree_frog_sound.channel.stop()
+            play_tree_frog_sound.channel = None
     except Exception as e:
         print("Error stopping tree frog sound:", e)
 
