@@ -1100,7 +1100,7 @@ def main():
             fg_frame, text="Return to Game", font=("Courier", 18, "bold"), width=16,
             bg="#929292", fg="#000000", activebackground="#FFFFFF",
             command=lambda: [play_page_close_sound(), fg_frame.pack_forget(), show_game_screen()]
-        ).place(relx=0.225, rely=0.915, anchor="center")
+        ).place(relx=0.5, rely=0.915, anchor="center")
 
     # --- Definitions Screen ---
     def show_definitions_screen():
