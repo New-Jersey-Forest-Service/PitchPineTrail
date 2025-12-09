@@ -289,7 +289,15 @@ def main():
 
 
         # Choose background image (build filename based on achievements)
-        base = "bad" if qmd < 21 else "okay"
+        status = game.get_status_dict()  # ensure we have current risks
+        fire_high = status.get('fire_risk') == 'High'
+        spb_high = status.get('SPB_risk') == 'High'
+        if qmd < 20 or fire_high or spb_high:
+            base = "bad"
+        elif 20 <= qmd < 23:
+            base = "okay"
+        else:
+            base = "good"
         ordered = [
             ("snake",   ach_snake),
             ("gentian", ach_gent),
