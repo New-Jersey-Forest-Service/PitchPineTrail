@@ -1853,7 +1853,12 @@ def main():
         exit_button.pack()
 
         # --- Hint button (top center) ---
-        hint_images = ["assets/hint1.png", "assets/hint2.png", "assets/hint3.png"]
+        hint_images = ["assets/hint1.png", 
+                       "assets/hint2.png", 
+                       "assets/hint3.png", 
+                       "assets/hint4.png",
+                       "assets/hint5.png",
+                       "assets/hint6.png"]
         if not hasattr(game, "hint_index"):
             game.hint_index = 0
         if not hasattr(game, "hint_overlay"):
