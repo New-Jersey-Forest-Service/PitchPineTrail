@@ -1852,6 +1852,91 @@ def main():
         )
         exit_button.pack()
 
+        # --- Hint button (top center) ---
+        hint_images = ["assets/hint1.png", "assets/hint2.png", "assets/hint3.png"]
+        if not hasattr(game, "hint_index"):
+            game.hint_index = 0
+        if not hasattr(game, "hint_overlay"):
+            game.hint_overlay = None
+
+        # Button (define before overlay so we can lift it)
+        hint_button_frame = tk.Frame(game_frame, bg="#FFFFFF")
+        # Top-center button
+        hint_button_frame.place(relx=0.67, rely=0.03, anchor="n")
+        tk.Button(
+            hint_button_frame,
+            text="Click for a Hint",
+            font=("Courier", 12, "bold"),
+            width=18,
+            bg="#1d1a7e",
+            fg="#FFFFFF",
+            activebackground="#5b82ff",
+            command=lambda: [play_hint_open_sound(), show_hint_overlay()]
+        ).pack()
+
+        def show_hint_overlay():
+            # Destroy previous overlay (only one at a time)
+            if game.hint_overlay and game.hint_overlay.winfo_exists():
+                try:
+                    game.hint_overlay.destroy()
+                except Exception:
+                    pass
+                game.hint_overlay = None
+
+            # Pick image and advance index
+            img_path = hint_images[game.hint_index % len(hint_images)]
+            game.hint_index = (game.hint_index + 1) % len(hint_images)
+
+            # Create overlay below the button, same X (stacking)
+            hint_overlay = tk.Frame(game_frame, bg="#FFFFFF", bd=0)
+            hint_overlay.place(relx=0.5, rely=0.02, anchor="n")  # under the button
+            game.hint_overlay = hint_overlay  # remember it
+
+            # Load image
+            try:
+                img = Image.open(img_path)
+                try:
+                    img = img.resize((900, 350), Image.Resampling.LANCZOS)
+                except Exception:
+                    img = img.resize((900, 350), Image.LANCZOS)
+                photo = ImageTk.PhotoImage(img)
+                img_label = tk.Label(hint_overlay, image=photo, bg="#FFFFFF", bd=0)
+                img_label.image = photo
+                img_label.pack()
+            except Exception as e:
+                print(f"Hint overlay error for {img_path}:", e)
+                img_label = tk.Label(
+                    hint_overlay,
+                    text=f"Hint unavailable ({img_path})",
+                    bg="#e6f2ff", fg="#000",
+                    font=("Courier", 14, "bold"), padx=10, pady=10
+                )
+                img_label.pack()
+
+            # Close hint
+            def close_hint():
+                play_hint_close_sound()
+                if game.hint_overlay and game.hint_overlay.winfo_exists():
+                    game.hint_overlay.destroy()
+                game.hint_overlay = None
+
+            # Close button layered on the overlay (top-right)
+            close_frame = tk.Frame(hint_overlay, bg="#FFFFFF", bd=0)
+            close_frame.place(relx=0.15, rely=0.86, anchor="ne")
+            tk.Button(
+                close_frame,
+                text="Close Hint",
+                font=("Courier", 11, "bold"),
+                width=12,
+                bg="#9c3432",
+                fg="#FFFFFF",
+                activebackground="#c26967",
+                command=close_hint
+            ).pack()
+
+            # Ensure the hint button stays visible on top
+            hint_button_frame.lift()
+
     # Helper to show next queued achievement or return to game/closing
     def show_next_queued_achievement_or_game():
         """Show next queued achievement popup, else return to game/closing."""
@@ -1962,6 +2047,13 @@ def play_page_turn_sound():
     except Exception as e:
         print("Error playing page turn sound:", e)
 
+def play_page_close_sound():
+    try:
+        sound = pygame.mixer.Sound("assets/page_close.wav")
+        sound.play()
+    except Exception as e:
+        print("Error playing page close sound:", e)
+
 def play_zoom_sound():
     try:
         sound = pygame.mixer.Sound("assets/zoom.wav")
@@ -1983,12 +2075,19 @@ def stop_wind_sound():
     except Exception as e:
         print("Error stopping wind sound:", e)
 
-def play_page_close_sound():
+def play_hint_open_sound():
     try:
-        sound = pygame.mixer.Sound("assets/page_close.wav")
+        sound = pygame.mixer.Sound("assets/hintopen.wav")
         sound.play()
     except Exception as e:
-        print("Error playing page close sound:", e)
+        print("Error playing hint open sound:", e)
+
+def play_hint_close_sound():
+    try:
+        sound = pygame.mixer.Sound("assets/hintclose.wav")
+        sound.play()
+    except Exception as e:
+        print("Error playing hint close sound:", e)
 
 def play_do_nothing_sound():
     try:
