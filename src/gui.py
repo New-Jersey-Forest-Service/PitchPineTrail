@@ -18,6 +18,7 @@ from game_logic import Game, ACTIONS
 from PIL import Image, ImageTk
 import pygame
 import random
+import webbrowser  # NEW: for hyperlink
 
 def main():
     pygame.mixer.init()
@@ -159,6 +160,59 @@ def main():
             command=show_definitions_screen
         )
         btn.place(relx=1.0, rely=1.0, anchor="se", x=-20, y=-20)  # 20px from bottom right
+
+    def show_exit_survey_overlay_in(parent):
+        """Show the exit survey overlay centered over the given parent frame."""
+         # Create centered overlay frame
+        overlay = tk.Frame(parent, bg="#FFFFFF", bd=0)
+        overlay.place(relx=0.02, rely=0.02, anchor="nw")
+
+        # Load survey image
+        try:
+            img = Image.open("assets/exitsurvey.png")
+            try:
+                img = img.resize((900, 494), Image.Resampling.LANCZOS)
+            except Exception:
+                img = img.resize((900, 494), Image.LANCZOS)
+            photo = ImageTk.PhotoImage(img)
+            img_label = tk.Label(overlay, image=photo, bg="#FFFFFF", bd=0)
+            img_label.image = photo
+            img_label.pack()
+        except Exception as e:
+            print("Exit survey overlay error:", e)
+            tk.Label(
+                overlay,
+                text="Exit Survey",
+                bg="#FFFFFF", fg="#000000",
+                font=("Courier", 16, "bold"), padx=12, pady=12
+            )
+            img_label.pack()
+        
+        # Buttons created after image; place them and lift to top
+        open_btn = tk.Button(
+            overlay,
+            text="Open Feedback Survey",
+            font=("Courier", 14, "bold"),
+            width=22,
+            bg="#d29e76",
+            fg="#39220d",
+            activebackground="#1c6213",
+            command=lambda: webbrowser.open("https://forms.office.com/g/N38DQhPe2V", new=1)
+        )
+        exit_btn = tk.Button(
+            overlay,
+            text="Exit",
+            font=("Courier", 17, "bold"),
+            width=10,
+            bg="#9c3432",
+            fg="#3d0606",
+            activebackground="#FFFFFF",
+            command=root.destroy
+        )
+
+        # Place independently (row near bottom of overlay)
+        open_btn.place(relx=0.52, rely=0.63, anchor="nw")
+        exit_btn.place(relx=0.73, rely=0.8, anchor="nw")
 
     #define zoom sequence images
     def start_zoom_sequence():
@@ -383,7 +437,7 @@ def main():
         tk.Button(
             button_frame, text="Exit", font=("Courier", 14, "bold"), width=15,
             bg="#9c3432", fg="#2c0505", activebackground="#611010",
-            command=root.destroy
+            command=lambda: show_exit_survey_overlay_in(closing_frame)
         ).pack(side="left", padx=10, pady=0)
 
     #LOSING SCREEN
@@ -472,7 +526,7 @@ def main():
         tk.Button(
             button_frame, text="Exit", font=("Courier", 14, "bold"), width=16,
             bg="#05dd4c", fg="#1b2336", activebackground="#611010",
-            command=root.destroy
+            command=lambda: show_exit_survey_overlay_in(low_ba_frame)
         ).pack(side="left", padx=10, pady=5)
 
     # --- Fire Loss Screen ---
@@ -559,7 +613,7 @@ def main():
         tk.Button(
             button_frame, text="Exit", font=("Courier", 14, "bold"), width=16,
             bg="#05dd4c", fg="#1b2336", activebackground="#611010",
-            command=root.destroy
+            command=lambda: show_exit_survey_overlay_in(fire_frame)
         ).pack(side="left", padx=10, pady=5)
 
     # --- SPB Loss Screen ---
@@ -646,7 +700,7 @@ def main():
         tk.Button(
             button_frame, text="Exit", font=("Courier", 14, "bold"), width=16,
             bg="#05dd4c", fg="#1b2336", activebackground="#611010",
-            command=root.destroy
+            command=lambda: show_exit_survey_overlay_in(spb_frame)
         ).pack(side="left", padx=10, pady=5)
 
     # ACHIEVMENT SCREENS
@@ -1844,21 +1898,21 @@ def main():
             command=show_definitions_screen
         ).pack()
 
-        # --- Green Exit Button (top right) ---
+        # --- Exit Button (top right) ---
         exit_frame = tk.Frame(game_frame, bg="#FFFFFF")
         exit_frame.place(relx=0.02, rely=0.02, anchor="nw")  
 
-        exit_button = tk.Button(
+        # Use the reusable overlay function
+        tk.Button(
             exit_frame,
             text="Exit",
             font=("Courier", 17, "bold"),
             width=10,
-            bg="#9c3432",      
+            bg="#9c3432",
             fg="#3d0606",
             activebackground="#FFFFFF",
-            command=root.destroy
-        )
-        exit_button.pack()
+            command=lambda: show_exit_survey_overlay_in(game_frame)
+        ).pack()
 
         # --- Hint button (top center) ---
         hint_images = ["assets/hint1.png", 
