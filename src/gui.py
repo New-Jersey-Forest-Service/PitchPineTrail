@@ -1866,7 +1866,9 @@ def main():
                        "assets/hint3.png", 
                        "assets/hint4.png",
                        "assets/hint5.png",
-                       "assets/hint6.png"]
+                       "assets/hint6.png",
+                       "assets/hint7.png",
+                       "assets/hint8.png"]
         if not hasattr(game, "hint_index"):
             game.hint_index = 0
         if not hasattr(game, "hint_overlay"):
@@ -1935,7 +1937,7 @@ def main():
 
             # Close button layered on the overlay (top-right)
             close_frame = tk.Frame(hint_overlay, bg="#FFFFFF", bd=0)
-            close_frame.place(relx=0.15, rely=0.86, anchor="ne")
+            close_frame.place(relx=0.14, rely=0.86, anchor="ne")
             tk.Button(
                 close_frame,
                 text="Close Hint",
