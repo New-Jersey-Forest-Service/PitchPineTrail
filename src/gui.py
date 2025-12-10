@@ -440,6 +440,57 @@ def main():
             command=lambda: show_exit_survey_overlay_in(closing_frame)
         ).pack(side="left", padx=10, pady=0)
 
+        # --- Certificate button and overlay ---
+        def show_certificate_overlay():
+            # Overlay frame positioned near the button row (adjust relx/rely as desired)
+            cert_overlay = tk.Frame(closing_frame, bg="#FFFFFF", bd=0)
+            cert_overlay.place(relx=0.48, rely=0.05, anchor="nw")
+
+            # Load nameplate image
+            try:
+                img = Image.open("assets/nameplate.png")
+                try:
+                    img = img.resize((550, 194), Image.Resampling.LANCZOS)
+                except Exception:
+                    img = img.resize((550, 180), Image.LANCZOS)
+                photo = ImageTk.PhotoImage(img)
+                img_label = tk.Label(cert_overlay, image=photo, bg="#FFFFFF", bd=0)
+                img_label.image = photo
+                img_label.pack()
+            except Exception as e:
+                print("Certificate overlay error:", e)
+                img_label = tk.Label(
+                    cert_overlay,
+                    text="Certificate nameplate",
+                    bg="#FFFFFF", fg="#000000",
+                    font=("Courier", 16, "bold"), padx=8, pady=8
+                )
+                img_label.pack()
+
+            # Single-line entry on top of the image, prefilled
+            entry = tk.Entry(cert_overlay, width=17, font=("Courier", 29, "bold"), justify="center", bd=2)
+            entry.insert(0, "your name here")
+            entry.place(relx=0.59, rely=0.39, anchor="n")  # position over the name area
+            entry.focus_set()
+            # Optional: select all so typing replaces immediately
+            try:
+                entry.selection_range(0, tk.END)
+            except Exception:
+                pass
+
+            
+        # Button to open the certificate overlay (place near the Exit/Try Again buttons)
+        tk.Button(
+            closing_frame,
+            text="Save your successful \nmanagement certificate",
+            font=("Courier", 18, "bold"),
+            width=25,
+            bg="#d38e0f",
+            fg="#473308",
+            activebackground="#8B580A",
+            command=show_certificate_overlay
+        ).place(relx=0.5, rely=0.07, anchor="nw")
+
     #LOSING SCREEN
     # --- Low Basal Area Screen ---
     def show_low_ba_screen():
