@@ -15,9 +15,11 @@ Provides interactive screens for gameplay, status display, and decision making.
 import tkinter as tk
 from tkinter import messagebox
 from game_logic import Game, ACTIONS
-from PIL import Image, ImageTk
+from PIL import Image, ImageTk, ImageGrab
 import pygame
 import random
+import webbrowser
+from tkinter import filedialog
 
 def main():
     pygame.mixer.init()
@@ -160,6 +162,59 @@ def main():
         )
         btn.place(relx=1.0, rely=1.0, anchor="se", x=-20, y=-20)  # 20px from bottom right
 
+    def show_exit_survey_overlay_in(parent):
+        """Show the exit survey overlay centered over the given parent frame."""
+         # Create centered overlay frame
+        overlay = tk.Frame(parent, bg="#FFFFFF", bd=0)
+        overlay.place(relx=0.02, rely=0.02, anchor="nw")
+
+        # Load survey image
+        try:
+            img = Image.open("assets/exitsurvey.png")
+            try:
+                img = img.resize((900, 494), Image.Resampling.LANCZOS)
+            except Exception:
+                img = img.resize((900, 494), Image.LANCZOS)
+            photo = ImageTk.PhotoImage(img)
+            img_label = tk.Label(overlay, image=photo, bg="#FFFFFF", bd=0)
+            img_label.image = photo
+            img_label.pack()
+        except Exception as e:
+            print("Exit survey overlay error:", e)
+            tk.Label(
+                overlay,
+                text="Exit Survey",
+                bg="#FFFFFF", fg="#000000",
+                font=("Courier", 16, "bold"), padx=12, pady=12
+            )
+            img_label.pack()
+        
+        # Buttons created after image; place them and lift to top
+        open_btn = tk.Button(
+            overlay,
+            text="Open Feedback Survey",
+            font=("Courier", 14, "bold"),
+            width=22,
+            bg="#d29e76",
+            fg="#39220d",
+            activebackground="#1c6213",
+            command=lambda: webbrowser.open("https://forms.office.com/g/N38DQhPe2V", new=1)
+        )
+        exit_btn = tk.Button(
+            overlay,
+            text="Exit",
+            font=("Courier", 17, "bold"),
+            width=10,
+            bg="#9c3432",
+            fg="#3d0606",
+            activebackground="#FFFFFF",
+            command=root.destroy
+        )
+
+        # Place independently (row near bottom of overlay)
+        open_btn.place(relx=0.52, rely=0.63, anchor="nw")
+        exit_btn.place(relx=0.73, rely=0.8, anchor="nw")
+
     #define zoom sequence images
     def start_zoom_sequence():
         play_zoom_sound()  # Play zoom sound over forest sound
@@ -289,7 +344,15 @@ def main():
 
 
         # Choose background image (build filename based on achievements)
-        base = "bad" if qmd < 21 else "okay"
+        status = game.get_status_dict()  # ensure we have current risks
+        fire_high = status.get('fire_risk') == 'High'
+        spb_high = status.get('SPB_risk') == 'High'
+        if qmd < 20 or fire_high or spb_high:
+            base = "bad"
+        elif 20 <= qmd < 23:
+            base = "okay"
+        else:
+            base = "good"
         ordered = [
             ("snake",   ach_snake),
             ("gentian", ach_gent),
@@ -375,8 +438,106 @@ def main():
         tk.Button(
             button_frame, text="Exit", font=("Courier", 14, "bold"), width=15,
             bg="#9c3432", fg="#2c0505", activebackground="#611010",
-            command=root.destroy
+            command=lambda: [play_page_turn_sound(), show_exit_survey_overlay_in(closing_frame)]
         ).pack(side="left", padx=10, pady=0)
+
+        # --- Certificate button and overlay ---
+        def show_certificate_overlay():
+            # Overlay frame for nameplate
+            cert_overlay = tk.Frame(closing_frame, bg="#FFFFFF", bd=0)
+            cert_overlay.place(relx=0.48, rely=0.05, anchor="nw")
+
+            # Load nameplate image
+            try:
+                img = Image.open("assets/nameplate.png")
+                try:
+                    img = img.resize((550, 194), Image.Resampling.LANCZOS)
+                except Exception:
+                    img = img.resize((550, 180), Image.LANCZOS)
+                photo = ImageTk.PhotoImage(img)
+                img_label = tk.Label(cert_overlay, image=photo, bg="#FFFFFF", bd=0)
+                img_label.image = photo
+                img_label.pack()
+            except Exception as e:
+                print("Certificate overlay error:", e)
+                img_label = tk.Label(
+                    cert_overlay,
+                    text="Certificate nameplate",
+                    bg="#FFFFFF", fg="#000000",
+                    font=("Courier", 16, "bold"), padx=8, pady=8
+                )
+                img_label.pack()
+
+            # Name entry on top of the image
+            entry = tk.Entry(cert_overlay, width=17, font=("Courier", 29, "bold"), justify="center", bd=2)
+            entry.insert(0, "your name here")
+            entry.place(relx=0.59, rely=0.39, anchor="n")
+            entry.focus_set()
+            try:
+                entry.selection_range(0, tk.END)
+            except Exception:
+                pass
+
+            # Create Save button in the closing_frame (independent of cert_overlay)
+            save_btn = tk.Button(
+                closing_frame,
+                text="Save",
+                font=("Courier", 14, "bold"),
+                width=10,
+                bg="#d38e0f",
+                fg="#473308",
+                activebackground="#8B580A"
+            )
+            # Position anywhere you like on the screen (independent)
+            save_btn.place(relx=0.734, rely=0.23, anchor="n")  # adjust relx/rely as needed
+
+            def do_save():
+                play_save_sound()
+
+                # Hide the save button before capture so it won't appear in the screenshot
+                try:
+                    save_btn.place_forget()
+                except Exception:
+                    pass
+
+                # Prompt for save location
+                from datetime import datetime
+                default_name = datetime.now().strftime("PitchPineTrail_certificate_%Y%m%d_%H%M%S.png")
+                file_path = filedialog.asksaveasfilename(
+                    title="Save Screenshot",
+                    defaultextension=".png",
+                    initialfile=default_name,
+                    filetypes=[("PNG Image", "*.png"), ("JPEG Image", "*.jpg;*.jpeg"), ("All Files", "*.*")]
+                )
+                if not file_path:
+                    return  # user canceled
+
+                # Capture the current app window (without the Save button)
+                try:
+                    x = root.winfo_rootx()
+                    y = root.winfo_rooty()
+                    w = root.winfo_width()
+                    h = root.winfo_height()
+                    img = ImageGrab.grab(bbox=(x, y, x + w, y + h))
+                    img.save(file_path)
+                    print(f"Saved screenshot: {file_path}")
+                except Exception as e:
+                    print("Error saving screenshot:", e)
+
+            # Wire up save action
+            save_btn.config(command=do_save)
+
+        # Button to open the certificate overlay (place near the Exit/Try Again buttons)
+        tk.Button(
+            closing_frame,
+            text="Save your successful \nmanagement certificate",
+            font=("Courier", 18, "bold"),
+            width=25,
+            bg="#d38e0f",
+            fg="#473308",
+            activebackground="#8B580A",
+            command=show_certificate_overlay
+        ).place(relx=0.5, rely=0.07, anchor="nw")
 
     #LOSING SCREEN
     # --- Low Basal Area Screen ---
@@ -464,7 +625,7 @@ def main():
         tk.Button(
             button_frame, text="Exit", font=("Courier", 14, "bold"), width=16,
             bg="#05dd4c", fg="#1b2336", activebackground="#611010",
-            command=root.destroy
+            command=lambda: [play_page_turn_sound(), show_exit_survey_overlay_in(low_ba_frame)]
         ).pack(side="left", padx=10, pady=5)
 
     # --- Fire Loss Screen ---
@@ -551,7 +712,7 @@ def main():
         tk.Button(
             button_frame, text="Exit", font=("Courier", 14, "bold"), width=16,
             bg="#05dd4c", fg="#1b2336", activebackground="#611010",
-            command=root.destroy
+            command=lambda: [play_page_turn_sound(), show_exit_survey_overlay_in(fire_frame)]
         ).pack(side="left", padx=10, pady=5)
 
     # --- SPB Loss Screen ---
@@ -638,7 +799,7 @@ def main():
         tk.Button(
             button_frame, text="Exit", font=("Courier", 14, "bold"), width=16,
             bg="#05dd4c", fg="#1b2336", activebackground="#611010",
-            command=root.destroy
+            command=lambda: [play_page_turn_sound(),show_exit_survey_overlay_in(spb_frame)]
         ).pack(side="left", padx=10, pady=5)
 
     # ACHIEVMENT SCREENS
@@ -1836,21 +1997,114 @@ def main():
             command=show_definitions_screen
         ).pack()
 
-        # --- Green Exit Button (top right) ---
+        # --- Exit Button (top right) ---
         exit_frame = tk.Frame(game_frame, bg="#FFFFFF")
         exit_frame.place(relx=0.02, rely=0.02, anchor="nw")  
 
-        exit_button = tk.Button(
+        # Use the reusable overlay function
+        tk.Button(
             exit_frame,
             text="Exit",
             font=("Courier", 17, "bold"),
             width=10,
-            bg="#9c3432",      
+            bg="#9c3432",
             fg="#3d0606",
             activebackground="#FFFFFF",
-            command=root.destroy
-        )
-        exit_button.pack()
+            command=lambda: [play_page_turn_sound(), show_exit_survey_overlay_in(game_frame)]
+        ).pack()
+
+        # --- Hint button (top center) ---
+        hint_images = ["assets/hint1.png", 
+                       "assets/hint2.png", 
+                       "assets/hint3.png", 
+                       "assets/hint4.png",
+                       "assets/hint5.png",
+                       "assets/hint6.png",
+                       "assets/hint7.png",
+                       "assets/hint8.png",
+                       "assets/hint9.png"]
+        if not hasattr(game, "hint_index"):
+            game.hint_index = 0
+        if not hasattr(game, "hint_overlay"):
+            game.hint_overlay = None
+
+        # Button (define before overlay so we can lift it)
+        hint_button_frame = tk.Frame(game_frame, bg="#FFFFFF")
+        # Top-center button
+        hint_button_frame.place(relx=0.67, rely=0.03, anchor="n")
+        tk.Button(
+            hint_button_frame,
+            text="Click for a Hint",
+            font=("Courier", 12, "bold"),
+            width=18,
+            bg="#1d1a7e",
+            fg="#FFFFFF",
+            activebackground="#5b82ff",
+            command=lambda: [play_hint_open_sound(), show_hint_overlay()]
+        ).pack()
+
+        def show_hint_overlay():
+            # Destroy previous overlay (only one at a time)
+            if game.hint_overlay and game.hint_overlay.winfo_exists():
+                try:
+                    game.hint_overlay.destroy()
+                except Exception:
+                    pass
+                game.hint_overlay = None
+
+            # Pick image and advance index
+            img_path = hint_images[game.hint_index % len(hint_images)]
+            game.hint_index = (game.hint_index + 1) % len(hint_images)
+
+            # Create overlay below the button, same X (stacking)
+            hint_overlay = tk.Frame(game_frame, bg="#FFFFFF", bd=0)
+            hint_overlay.place(relx=0.5, rely=0.02, anchor="n")  # under the button
+            game.hint_overlay = hint_overlay  # remember it
+
+            # Load image
+            try:
+                img = Image.open(img_path)
+                try:
+                    img = img.resize((900, 350), Image.Resampling.LANCZOS)
+                except Exception:
+                    img = img.resize((900, 350), Image.LANCZOS)
+                photo = ImageTk.PhotoImage(img)
+                img_label = tk.Label(hint_overlay, image=photo, bg="#FFFFFF", bd=0)
+                img_label.image = photo
+                img_label.pack()
+            except Exception as e:
+                print(f"Hint overlay error for {img_path}:", e)
+                img_label = tk.Label(
+                    hint_overlay,
+                    text=f"Hint unavailable ({img_path})",
+                    bg="#e6f2ff", fg="#000",
+                    font=("Courier", 14, "bold"), padx=10, pady=10
+                )
+                img_label.pack()
+
+            # Close hint
+            def close_hint():
+                play_hint_close_sound()
+                if game.hint_overlay and game.hint_overlay.winfo_exists():
+                    game.hint_overlay.destroy()
+                game.hint_overlay = None
+
+            # Close button layered on the overlay (top-right)
+            close_frame = tk.Frame(hint_overlay, bg="#FFFFFF", bd=0)
+            close_frame.place(relx=0.14, rely=0.86, anchor="ne")
+            tk.Button(
+                close_frame,
+                text="Close Hint",
+                font=("Courier", 11, "bold"),
+                width=12,
+                bg="#9c3432",
+                fg="#FFFFFF",
+                activebackground="#c26967",
+                command=close_hint
+            ).pack()
+
+            # Ensure the hint button stays visible on top
+            hint_button_frame.lift()
 
     # Helper to show next queued achievement or return to game/closing
     def show_next_queued_achievement_or_game():
@@ -1962,6 +2216,13 @@ def play_page_turn_sound():
     except Exception as e:
         print("Error playing page turn sound:", e)
 
+def play_page_close_sound():
+    try:
+        sound = pygame.mixer.Sound("assets/page_close.wav")
+        sound.play()
+    except Exception as e:
+        print("Error playing page close sound:", e)
+
 def play_zoom_sound():
     try:
         sound = pygame.mixer.Sound("assets/zoom.wav")
@@ -1983,12 +2244,19 @@ def stop_wind_sound():
     except Exception as e:
         print("Error stopping wind sound:", e)
 
-def play_page_close_sound():
+def play_hint_open_sound():
     try:
-        sound = pygame.mixer.Sound("assets/page_close.wav")
+        sound = pygame.mixer.Sound("assets/hintopen.wav")
         sound.play()
     except Exception as e:
-        print("Error playing page close sound:", e)
+        print("Error playing hint open sound:", e)
+
+def play_hint_close_sound():
+    try:
+        sound = pygame.mixer.Sound("assets/hintclose.wav")
+        sound.play()
+    except Exception as e:
+        print("Error playing hint close sound:", e)
 
 def play_do_nothing_sound():
     try:
@@ -2071,6 +2339,13 @@ def stop_tree_frog_sound():
             play_tree_frog_sound.channel = None
     except Exception as e:
         print("Error stopping tree frog sound:", e)
+
+def play_save_sound():
+    try:
+        sound = pygame.mixer.Sound("assets/save.wav")
+        sound.play()
+    except Exception as e:
+        print("Error playing save sound:", e)
 
 if __name__ == "__main__":
     main()
