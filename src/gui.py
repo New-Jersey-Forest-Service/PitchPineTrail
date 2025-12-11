@@ -2019,7 +2019,8 @@ def main():
                        "assets/hint5.png",
                        "assets/hint6.png",
                        "assets/hint7.png",
-                       "assets/hint8.png"]
+                       "assets/hint8.png",
+                       "assets/hint9.png"]
         if not hasattr(game, "hint_index"):
             game.hint_index = 0
         if not hasattr(game, "hint_overlay"):
