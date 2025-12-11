@@ -438,7 +438,7 @@ def main():
         tk.Button(
             button_frame, text="Exit", font=("Courier", 14, "bold"), width=15,
             bg="#9c3432", fg="#2c0505", activebackground="#611010",
-            command=lambda: show_exit_survey_overlay_in(closing_frame)
+            command=lambda: [play_page_turn_sound(), show_exit_survey_overlay_in(closing_frame)]
         ).pack(side="left", padx=10, pady=0)
 
         # --- Certificate button and overlay ---
@@ -492,6 +492,8 @@ def main():
             save_btn.place(relx=0.734, rely=0.23, anchor="n")  # adjust relx/rely as needed
 
             def do_save():
+                play_save_sound()
+
                 # Hide the save button before capture so it won't appear in the screenshot
                 try:
                     save_btn.place_forget()
@@ -623,7 +625,7 @@ def main():
         tk.Button(
             button_frame, text="Exit", font=("Courier", 14, "bold"), width=16,
             bg="#05dd4c", fg="#1b2336", activebackground="#611010",
-            command=lambda: show_exit_survey_overlay_in(low_ba_frame)
+            command=lambda: [play_page_turn_sound(), show_exit_survey_overlay_in(low_ba_frame)]
         ).pack(side="left", padx=10, pady=5)
 
     # --- Fire Loss Screen ---
@@ -710,7 +712,7 @@ def main():
         tk.Button(
             button_frame, text="Exit", font=("Courier", 14, "bold"), width=16,
             bg="#05dd4c", fg="#1b2336", activebackground="#611010",
-            command=lambda: show_exit_survey_overlay_in(fire_frame)
+            command=lambda: [play_page_turn_sound(), show_exit_survey_overlay_in(fire_frame)]
         ).pack(side="left", padx=10, pady=5)
 
     # --- SPB Loss Screen ---
@@ -797,7 +799,7 @@ def main():
         tk.Button(
             button_frame, text="Exit", font=("Courier", 14, "bold"), width=16,
             bg="#05dd4c", fg="#1b2336", activebackground="#611010",
-            command=lambda: show_exit_survey_overlay_in(spb_frame)
+            command=lambda: [play_page_turn_sound(),show_exit_survey_overlay_in(spb_frame)]
         ).pack(side="left", padx=10, pady=5)
 
     # ACHIEVMENT SCREENS
@@ -2008,7 +2010,7 @@ def main():
             bg="#9c3432",
             fg="#3d0606",
             activebackground="#FFFFFF",
-            command=lambda: show_exit_survey_overlay_in(game_frame)
+            command=lambda: [play_page_turn_sound(), show_exit_survey_overlay_in(game_frame)]
         ).pack()
 
         # --- Hint button (top center) ---
@@ -2337,6 +2339,13 @@ def stop_tree_frog_sound():
             play_tree_frog_sound.channel = None
     except Exception as e:
         print("Error stopping tree frog sound:", e)
+
+def play_save_sound():
+    try:
+        sound = pygame.mixer.Sound("assets/save.wav")
+        sound.play()
+    except Exception as e:
+        print("Error playing save sound:", e)
 
 if __name__ == "__main__":
     main()
