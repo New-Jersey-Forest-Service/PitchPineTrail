@@ -15,10 +15,11 @@ Provides interactive screens for gameplay, status display, and decision making.
 import tkinter as tk
 from tkinter import messagebox
 from game_logic import Game, ACTIONS
-from PIL import Image, ImageTk
+from PIL import Image, ImageTk, ImageGrab
 import pygame
 import random
-import webbrowser  # NEW: for hyperlink
+import webbrowser
+from tkinter import filedialog
 
 def main():
     pygame.mixer.init()
@@ -442,7 +443,7 @@ def main():
 
         # --- Certificate button and overlay ---
         def show_certificate_overlay():
-            # Overlay frame positioned near the button row (adjust relx/rely as desired)
+            # Overlay frame for nameplate
             cert_overlay = tk.Frame(closing_frame, bg="#FFFFFF", bd=0)
             cert_overlay.place(relx=0.48, rely=0.05, anchor="nw")
 
@@ -467,18 +468,63 @@ def main():
                 )
                 img_label.pack()
 
-            # Single-line entry on top of the image, prefilled
+            # Name entry on top of the image
             entry = tk.Entry(cert_overlay, width=17, font=("Courier", 29, "bold"), justify="center", bd=2)
             entry.insert(0, "your name here")
-            entry.place(relx=0.59, rely=0.39, anchor="n")  # position over the name area
+            entry.place(relx=0.59, rely=0.39, anchor="n")
             entry.focus_set()
-            # Optional: select all so typing replaces immediately
             try:
                 entry.selection_range(0, tk.END)
             except Exception:
                 pass
 
-            
+            # Create Save button in the closing_frame (independent of cert_overlay)
+            save_btn = tk.Button(
+                closing_frame,
+                text="Save",
+                font=("Courier", 14, "bold"),
+                width=10,
+                bg="#d38e0f",
+                fg="#473308",
+                activebackground="#8B580A"
+            )
+            # Position anywhere you like on the screen (independent)
+            save_btn.place(relx=0.734, rely=0.23, anchor="n")  # adjust relx/rely as needed
+
+            def do_save():
+                # Hide the save button before capture so it won't appear in the screenshot
+                try:
+                    save_btn.place_forget()
+                except Exception:
+                    pass
+
+                # Prompt for save location
+                from datetime import datetime
+                default_name = datetime.now().strftime("PitchPineTrail_certificate_%Y%m%d_%H%M%S.png")
+                file_path = filedialog.asksaveasfilename(
+                    title="Save Screenshot",
+                    defaultextension=".png",
+                    initialfile=default_name,
+                    filetypes=[("PNG Image", "*.png"), ("JPEG Image", "*.jpg;*.jpeg"), ("All Files", "*.*")]
+                )
+                if not file_path:
+                    return  # user canceled
+
+                # Capture the current app window (without the Save button)
+                try:
+                    x = root.winfo_rootx()
+                    y = root.winfo_rooty()
+                    w = root.winfo_width()
+                    h = root.winfo_height()
+                    img = ImageGrab.grab(bbox=(x, y, x + w, y + h))
+                    img.save(file_path)
+                    print(f"Saved screenshot: {file_path}")
+                except Exception as e:
+                    print("Error saving screenshot:", e)
+
+            # Wire up save action
+            save_btn.config(command=do_save)
+
         # Button to open the certificate overlay (place near the Exit/Try Again buttons)
         tk.Button(
             closing_frame,
