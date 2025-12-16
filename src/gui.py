@@ -40,10 +40,12 @@ def main():
     game.prescribed_burn_temp_bg = None
     game.thin_lightly_temp_bg = None
     game.thin_heavily_temp_bg = None
-    #color and font constants
+    # Track first choice so we can remove welcome banner permanently
+    game.has_made_first_choice = False
+    # Color constants
     BG_COLOR = "#FFFFFF"    # White background
     FG_COLOR = "#000000"    # Black text
-    FONT = ("Courier New", 12, "bold")
+    
 
     # Set up the main window
     root = tk.Tk()
@@ -52,7 +54,28 @@ def main():
     root.attributes('-fullscreen', True)  #true fullscreen
     root.bind("<Escape>", lambda e: root.attributes("-fullscreen", False)) #exit fullscreen on Escape key
 
+    # Detect screen size and define scaling helpers
+    SCREEN_W = root.winfo_screenwidth()
+    SCREEN_H = root.winfo_screenheight()
 
+    # Baseline your current design to SCREEN_WxSCREEN_H
+    BASE_W = SCREEN_W
+    BASE_H = SCREEN_H
+
+    def scale_x(px):
+        return int(px * SCREEN_W / BASE_W)
+
+    def scale_y(px):
+        return int(px * SCREEN_H / BASE_H)
+    
+    # Optional: convenience scale for font sizes (tweak factor if needed)
+    def scale_font(sz):
+        return max(10, int(sz * (SCREEN_W / BASE_W + SCREEN_H / BASE_H) / 2))
+
+    # Font constants    
+    FONT = ("Courier New", scale_font(12), "bold")
+
+    # Get color code based on risk level
     def get_risk_color(risk):
         """Return color code based on risk level.
         
@@ -172,9 +195,9 @@ def main():
         try:
             img = Image.open("assets/exitsurvey.png")
             try:
-                img = img.resize((900, 494), Image.Resampling.LANCZOS)
+                img = img.resize((scale_x(900), scale_y(494)), Image.Resampling.LANCZOS)
             except Exception:
-                img = img.resize((900, 494), Image.LANCZOS)
+                img = img.resize((scale_x(900), scale_y(494)), Image.LANCZOS)
             photo = ImageTk.PhotoImage(img)
             img_label = tk.Label(overlay, image=photo, bg="#FFFFFF", bd=0)
             img_label.image = photo
@@ -185,7 +208,7 @@ def main():
                 overlay,
                 text="Exit Survey",
                 bg="#FFFFFF", fg="#000000",
-                font=("Courier", 16, "bold"), padx=12, pady=12
+                font=("Courier", scale_font(16), "bold"), padx=12, pady=12
             )
             img_label.pack()
         
@@ -193,7 +216,7 @@ def main():
         open_btn = tk.Button(
             overlay,
             text="Open Feedback Survey",
-            font=("Courier", 14, "bold"),
+            font=("Courier", scale_font(14), "bold"),
             width=22,
             bg="#d29e76",
             fg="#39220d",
@@ -203,7 +226,7 @@ def main():
         exit_btn = tk.Button(
             overlay,
             text="Exit",
-            font=("Courier", 17, "bold"),
+            font=("Courier", scale_font(17), "bold"),
             width=10,
             bg="#9c3432",
             fg="#3d0606",
@@ -239,14 +262,14 @@ def main():
 
         def show_next_zoom(index=0):
             if index < len(zoom_images):
-                img = Image.open(zoom_images[index]).resize((1920, 1080))
+                img = Image.open(zoom_images[index]).resize((SCREEN_W, SCREEN_H))
                 photo = ImageTk.PhotoImage(img)
                 img_label.config(image=photo)
                 img_label.image = photo  # Prevent garbage collection
                 root.after(15, lambda: show_next_zoom(index + 1))
             else:
                 # Show zoom_10.png and overlay the button
-                img = Image.open("assets/zoom_10.png").resize((1920, 1080))
+                img = Image.open("assets/zoom_10.png").resize((SCREEN_W, SCREEN_H))
                 photo = ImageTk.PhotoImage(img)
                 img_label.config(image=photo)
                 img_label.image = photo
@@ -257,7 +280,7 @@ def main():
                 tk.Button(
                     overlay,
                     text="Let's Play!",
-                    font=("Courier", 18, "bold"),
+                    font=("Courier", scale_font(18), "bold"),
                     width=16,
                     bg="#f7d79e",
                     fg="#663e1d",
@@ -288,7 +311,7 @@ def main():
 
     # Load and display the background image in a label
     bg_img = Image.open("assets/introscreen.png")
-    bg_img = bg_img.resize((1920, 1080))  # Or use root.winfo_screenwidth(), etc.
+    bg_img = bg_img.resize((SCREEN_W, SCREEN_H))  # Or use root.winfo_screenwidth(), etc.
     bg_photo = ImageTk.PhotoImage(bg_img)
     bg_label = tk.Label(intro_frame, image=bg_photo)
     bg_label.image = bg_photo  # Prevent garbage collection
@@ -304,7 +327,7 @@ def main():
     tk.Button(
         button_row,
         text="Begin",
-        font=("Courier", 14, "bold"),
+        font=("Courier", scale_font(14), "bold"),
         width=14,
         bg="#f7d79e",
         fg="#663e1d",
@@ -315,7 +338,7 @@ def main():
     tk.Button(
         button_row,
         text="Exit",
-        font=("Courier", 14, "bold"),
+        font=("Courier", scale_font(14), "bold"),
         width=14,
         bg="#f7d79e",
         fg="#663e1d",
@@ -368,7 +391,7 @@ def main():
         
         # Load and display the background image in a label
         bg_img = Image.open(bg_img_path)
-        bg_img = bg_img.resize((1920, 1080))
+        bg_img = bg_img.resize((SCREEN_W, SCREEN_H))
         bg_photo = ImageTk.PhotoImage(bg_img)
         bg_label = tk.Label(closing_frame, image=bg_photo)
         bg_label.image = bg_photo  # Prevent garbage collection
@@ -376,7 +399,7 @@ def main():
 
         # --- Metrics Frame (same as main game screen) ---
         metrics_frame = tk.Frame(closing_frame, bg="#FFFFFF", bd=0)
-        metrics_frame.place(relx=0.845, rely=0.73, anchor="center")
+        metrics_frame.place(relx=0.845, rely=0.72, anchor="center")
         game_status = tk.StringVar()
         summary = game.get_status_dict()
         game_status.set(
@@ -394,15 +417,15 @@ def main():
             justify="center",
             bg="#FFFFFF",
             fg=FG_COLOR,
-            font=("Courier",13, "bold")
+            font=("Courier", scale_font(13), "bold")
         )
         game_status_message.pack()
-        fire_risk_label = tk.Label(metrics_frame, wraplength=400, justify="left", padx=10, pady=0, bg="#FFFFFF", font=("Courier", 14, "bold"))
+        fire_risk_label = tk.Label(metrics_frame, wraplength=400, justify="left", padx=10, pady=0, bg="#FFFFFF", font=("Courier", scale_font(14), "bold"))
         fire_risk_label.pack()
-        spb_risk_label = tk.Label(metrics_frame, wraplength=400, justify="left", padx=10, pady=0, bg="#FFFFFF", font=("Courier", 14, "bold"))
+        spb_risk_label = tk.Label(metrics_frame, wraplength=400, justify="left", padx=10, pady=0, bg="#FFFFFF", font=("Courier", scale_font(14), "bold"))
         spb_risk_label.pack()
         fire_risk_label.config(
-            text=f"\nFire Risk: {summary['fire_risk']}",
+            text=f"\n\nFire Risk: {summary['fire_risk']}",
             fg=get_risk_color(summary['fire_risk'])
         )
         spb_risk_label.config(
@@ -423,7 +446,7 @@ def main():
         tk.Label(
             text_frame,
             text=game.get_action_summary(),
-            bg="#1b2336", fg="#05dd4c", font=("Courier New", 17, "bold"),
+            bg="#1b2336", fg="#05dd4c", font=("Courier New", scale_font(17), "bold"),
             wraplength=400, justify="left"
         ).pack()
 
@@ -431,12 +454,12 @@ def main():
         button_frame = tk.Frame(closing_frame, bg="#FFFFFF", bd=0)
         button_frame.place(relx=0.845, rely=0.91, anchor="center")
         tk.Button(
-            button_frame, text="Try Again", font=("Courier", 14, "bold"), width=15,
+            button_frame, text="Try Again", font=("Courier", scale_font(14), "bold"), width=15,
             bg="#23ac23", fg="#023a02", activebackground="#10612B",
             command=lambda: restart_game(closing_frame)
         ).pack(side="left", padx=10, pady=0)
         tk.Button(
-            button_frame, text="Exit", font=("Courier", 14, "bold"), width=15,
+            button_frame, text="Exit", font=("Courier", scale_font(14), "bold"), width=15,
             bg="#9c3432", fg="#2c0505", activebackground="#611010",
             command=lambda: [play_page_turn_sound(), show_exit_survey_overlay_in(closing_frame)]
         ).pack(side="left", padx=10, pady=0)
@@ -451,9 +474,9 @@ def main():
             try:
                 img = Image.open("assets/nameplate.png")
                 try:
-                    img = img.resize((550, 194), Image.Resampling.LANCZOS)
+                    img = img.resize((scale_x(550), scale_y(194)), Image.Resampling.LANCZOS)
                 except Exception:
-                    img = img.resize((550, 180), Image.LANCZOS)
+                    img = img.resize((scale_x(550), scale_y(194)), Image.LANCZOS)
                 photo = ImageTk.PhotoImage(img)
                 img_label = tk.Label(cert_overlay, image=photo, bg="#FFFFFF", bd=0)
                 img_label.image = photo
@@ -464,12 +487,12 @@ def main():
                     cert_overlay,
                     text="Certificate nameplate",
                     bg="#FFFFFF", fg="#000000",
-                    font=("Courier", 16, "bold"), padx=8, pady=8
+                    font=("Courier", scale_font(16), "bold"), padx=8, pady=8
                 )
                 img_label.pack()
 
             # Name entry on top of the image
-            entry = tk.Entry(cert_overlay, width=17, font=("Courier", 29, "bold"), justify="center", bd=2)
+            entry = tk.Entry(cert_overlay, width=17, font=("Courier", scale_font(29), "bold"), justify="center", bd=2)
             entry.insert(0, "your name here")
             entry.place(relx=0.59, rely=0.39, anchor="n")
             entry.focus_set()
@@ -482,7 +505,7 @@ def main():
             save_btn = tk.Button(
                 closing_frame,
                 text="Save",
-                font=("Courier", 14, "bold"),
+                font=("Courier", scale_font(14), "bold"),
                 width=10,
                 bg="#d38e0f",
                 fg="#473308",
@@ -531,7 +554,7 @@ def main():
         tk.Button(
             closing_frame,
             text="Save your successful \nmanagement certificate",
-            font=("Courier", 18, "bold"),
+            font=("Courier", scale_font(18), "bold"),
             width=25,
             bg="#d38e0f",
             fg="#473308",
@@ -553,7 +576,7 @@ def main():
 
         # Load and display the background image in a label
         bg_img = Image.open("assets/LowStocking.png")
-        bg_img = bg_img.resize((1920, 1080))
+        bg_img = bg_img.resize((SCREEN_W, SCREEN_H))
         bg_photo = ImageTk.PhotoImage(bg_img)
         bg_label = tk.Label(low_ba_frame, image=bg_photo)
         bg_label.image = bg_photo  # Prevent garbage collection
@@ -579,12 +602,12 @@ def main():
             justify="center",
             bg="#FFFFFF",
             fg=FG_COLOR,
-            font=("Courier",13, "bold")
+            font=("Courier", scale_font(13), "bold")
         )
         game_status_message.pack()
-        fire_risk_label = tk.Label(metrics_frame, wraplength=400, justify="left", padx=10, pady=0, bg="#FFFFFF", font=("Courier", 14, "bold"))
+        fire_risk_label = tk.Label(metrics_frame, wraplength=400, justify="left", padx=10, pady=0, bg="#FFFFFF", font=("Courier", scale_font(14), "bold"))
         fire_risk_label.pack()
-        spb_risk_label = tk.Label(metrics_frame, wraplength=400, justify="left", padx=10, pady=0, bg="#FFFFFF", font=("Courier", 14, "bold"))
+        spb_risk_label = tk.Label(metrics_frame, wraplength=400, justify="left", padx=10, pady=0, bg="#FFFFFF", font=("Courier", scale_font(14), "bold"))
         spb_risk_label.pack()
         fire_risk_label.config(
             text=f"\n\n\nFire Risk: {status_dict['fire_risk']}",
@@ -609,7 +632,7 @@ def main():
         tk.Label(
             text_frame,
             text="The forest's growing stock trees have been depleted! \n\nWe're supposed to be growing a forest!",
-            bg="#1b2336", fg="#05dd4c", font=("Courier New", 18, "bold"),
+            bg="#1b2336", fg="#05dd4c", font=("Courier New", scale_font(18), "bold"),
             pady=0, wraplength=400, justify="center"
         ).pack()
 
@@ -618,12 +641,12 @@ def main():
         button_frame.place(relx=0.88, rely=0.315, anchor="center")
 
         tk.Button(
-            button_frame, text="Try Again", font=("Courier", 14, "bold"), width=16,
+            button_frame, text="Try Again", font=("Courier", scale_font(14), "bold"), width=16,
             bg="#05dd4c", fg="#1b2336", activebackground="#10612B",
             command=lambda: [stop_losing_trombone_sound(), stop_wind_sound(), restart_game(low_ba_frame)]
         ).pack(side="left", padx=10, pady=5)
         tk.Button(
-            button_frame, text="Exit", font=("Courier", 14, "bold"), width=16,
+            button_frame, text="Exit", font=("Courier", scale_font(14), "bold"), width=16,
             bg="#05dd4c", fg="#1b2336", activebackground="#611010",
             command=lambda: [play_page_turn_sound(), show_exit_survey_overlay_in(low_ba_frame)]
         ).pack(side="left", padx=10, pady=5)
@@ -640,7 +663,7 @@ def main():
 
         # Load and display the background image in a label
         bg_img = Image.open("assets/LossByFire.png")
-        bg_img = bg_img.resize((1920, 1080))
+        bg_img = bg_img.resize((SCREEN_W, SCREEN_H))
         bg_photo = ImageTk.PhotoImage(bg_img)
         bg_label = tk.Label(fire_frame, image=bg_photo)
         bg_label.image = bg_photo  # Prevent garbage collection
@@ -666,12 +689,12 @@ def main():
             justify="center",
             bg="#FFFFFF",
             fg=FG_COLOR,
-            font=("Courier",13, "bold")
+            font=("Courier", scale_font(13), "bold")
         )
         game_status_message.pack()
-        fire_risk_label = tk.Label(metrics_frame, wraplength=400, justify="left", padx=10, pady=0, bg="#FFFFFF", font=("Courier", 14, "bold"))
+        fire_risk_label = tk.Label(metrics_frame, wraplength=400, justify="left", padx=10, pady=0, bg="#FFFFFF", font=("Courier", scale_font(14), "bold"))
         fire_risk_label.pack()
-        spb_risk_label = tk.Label(metrics_frame, wraplength=400, justify="left", padx=10, pady=0, bg="#FFFFFF", font=("Courier", 14, "bold"))
+        spb_risk_label = tk.Label(metrics_frame, wraplength=400, justify="left", padx=10, pady=0, bg="#FFFFFF", font=("Courier", scale_font(14), "bold"))
         spb_risk_label.pack()
         fire_risk_label.config(
             text=f"\n\n\nFire Risk: {status_dict['fire_risk']}",
@@ -696,7 +719,7 @@ def main():
         tk.Label(
             text_frame,
             text="A catastrophic wildfire has occurred!\n\nWe might get a new stand of pitch pine, but we're trying to grow a mature stand!",
-            bg="#1b2336", fg="#05dd4c", font=("Courier", 18, "bold"),
+            bg="#1b2336", fg="#05dd4c", font=("Courier", scale_font(18), "bold"),
             pady=0, wraplength=400, justify="center"
         ).pack()
 
@@ -705,12 +728,12 @@ def main():
         button_frame.place(relx=0.88, rely=0.33, anchor="center")  # Same as SPB loss
 
         tk.Button(
-            button_frame, text="Try Again", font=("Courier", 14, "bold"), width=16,
+            button_frame, text="Try Again", font=("Courier", scale_font(14), "bold"), width=16,
             bg="#05dd4c", fg="#1b2336", activebackground="#10612B",
             command=lambda: [stop_fire_sound(), restart_game(fire_frame)]
         ).pack(side="left", padx=10, pady=5)
         tk.Button(
-            button_frame, text="Exit", font=("Courier", 14, "bold"), width=16,
+            button_frame, text="Exit", font=("Courier", scale_font(14), "bold"), width=16,
             bg="#05dd4c", fg="#1b2336", activebackground="#611010",
             command=lambda: [play_page_turn_sound(), show_exit_survey_overlay_in(fire_frame)]
         ).pack(side="left", padx=10, pady=5)
@@ -727,7 +750,7 @@ def main():
 
         # Load and display the background image in a label
         bg_img = Image.open("assets/LossBySPB.png")
-        bg_img = bg_img.resize((1920, 1080))
+        bg_img = bg_img.resize((SCREEN_W, SCREEN_H))
         bg_photo = ImageTk.PhotoImage(bg_img)
         bg_label = tk.Label(spb_frame, image=bg_photo)
         bg_label.image = bg_photo  # Prevent garbage collection
@@ -753,12 +776,12 @@ def main():
             justify="center",
             bg="#FFFFFF",
             fg=FG_COLOR,
-            font=("Courier",13, "bold")
+            font=("Courier",scale_font(13), "bold")
         )
         game_status_message.pack()
-        fire_risk_label = tk.Label(metrics_frame, wraplength=400, justify="left", padx=10, pady=0, bg="#FFFFFF", font=("Courier", 14, "bold"))
+        fire_risk_label = tk.Label(metrics_frame, wraplength=400, justify="left", padx=10, pady=0, bg="#FFFFFF", font=("Courier", scale_font(14), "bold"))
         fire_risk_label.pack()
-        spb_risk_label = tk.Label(metrics_frame, wraplength=400, justify="left", padx=10, pady=0, bg="#FFFFFF", font=("Courier", 14, "bold"))
+        spb_risk_label = tk.Label(metrics_frame, wraplength=400, justify="left", padx=10, pady=0, bg="#FFFFFF", font=("Courier", scale_font(14), "bold"))
         spb_risk_label.pack()
         fire_risk_label.config(
             text=f"\n\n\nFire Risk: {status_dict['fire_risk']}",
@@ -783,7 +806,7 @@ def main():
         tk.Label(
             text_frame,
             text="A Southern Pine Beetle outbreak has devastated your stand!\n\nWe're trying to grow a healthy forest!",
-            bg="#1b2336", fg="#05dd4c", font=("Courier", 18, "bold"),
+            bg="#1b2336", fg="#05dd4c", font=("Courier", scale_font(18), "bold"),
             pady=20, wraplength=400, justify="center"
         ).pack()
 
@@ -792,12 +815,12 @@ def main():
         button_frame.place(relx=0.88, rely=0.325, anchor="center")  # Adjust as needed
 
         tk.Button(
-            button_frame, text="Try Again", font=("Courier", 14, "bold"), width=16,
+            button_frame, text="Try Again", font=("Courier", scale_font(14), "bold"), width=16,
             bg="#05dd4c", fg="#1b2336", activebackground="#10612B",
             command=lambda: [stop_spb_eating_sound(), restart_game(spb_frame)]
         ).pack(side="left", padx=10, pady=5)
         tk.Button(
-            button_frame, text="Exit", font=("Courier", 14, "bold"), width=16,
+            button_frame, text="Exit", font=("Courier", scale_font(14), "bold"), width=16,
             bg="#05dd4c", fg="#1b2336", activebackground="#611010",
             command=lambda: [play_page_turn_sound(),show_exit_survey_overlay_in(spb_frame)]
         ).pack(side="left", padx=10, pady=5)
@@ -814,7 +837,7 @@ def main():
 
         # Load and display the background image in a label
         bg_img = Image.open("assets/pinesnake.png")
-        bg_img = bg_img.resize((1920, 1080))
+        bg_img = bg_img.resize((SCREEN_W, SCREEN_H))
         bg_photo = ImageTk.PhotoImage(bg_img)
         bg_label = tk.Label(snake_frame, image=bg_photo)
         bg_label.image = bg_photo  # Prevent garbage collection
@@ -840,12 +863,12 @@ def main():
             justify="center",
             bg="#FFFFFF",
             fg=FG_COLOR,
-            font=("Courier",13, "bold")
+            font=("Courier", scale_font(13), "bold")
         )
         game_status_message.pack()
-        fire_risk_label = tk.Label(metrics_frame, wraplength=400, justify="left", padx=10, pady=0, bg="#FFFFFF", font=("Courier", 14, "bold"))
+        fire_risk_label = tk.Label(metrics_frame, wraplength=400, justify="left", padx=10, pady=0, bg="#FFFFFF", font=("Courier", scale_font(14), "bold"))
         fire_risk_label.pack()
-        spb_risk_label = tk.Label(metrics_frame, wraplength=400, justify="left", padx=10, pady=0, bg="#FFFFFF", font=("Courier", 14, "bold"))
+        spb_risk_label = tk.Label(metrics_frame, wraplength=400, justify="left", padx=10, pady=0, bg="#FFFFFF", font=("Courier", scale_font(14), "bold"))
         spb_risk_label.pack()
         fire_risk_label.config(
             text=f"\n\n\nFire Risk: {status_dict['fire_risk']}",
@@ -856,7 +879,7 @@ def main():
             fg=get_risk_color(status_dict['SPB_risk'])
         )
         narration = tk.StringVar()
-        narration.set("What will you do next?")
+        narration.set("")
         narration_label = tk.Label(
             metrics_frame, textvariable=narration, wraplength=400, justify="left",
             padx=10, pady=5, bg="#FFFFFF", fg=FG_COLOR, font=FONT
@@ -870,7 +893,7 @@ def main():
         tk.Label(
             text_frame,
             text="Congratulations! This forest is excellent northern pine snake habitat.\n\nPine snakes are utilizing the stand!",
-            bg="#1b2336", fg="#05dd4c", font=("Courier New", 18, "bold"),
+            bg="#1b2336", fg="#05dd4c", font=("Courier New", scale_font(18), "bold"),
             pady=10, wraplength=370, justify="center"
         ).pack()
 
@@ -879,7 +902,7 @@ def main():
         button_frame.place(relx=0.88, rely=0.33, anchor="center")  # Adjust relx/rely as needed
 
         tk.Button(
-            button_frame, text="Continue", font=("Courier", 16, "bold"), width=16,
+            button_frame, text="Continue", font=("Courier", scale_font(16), "bold"), width=16,
             bg="#05dd4c", fg="#1b2336", activebackground="#069134",
             command=lambda: [snake_frame.pack_forget(), show_next_queued_achievement_or_game()]
         ).pack(pady=0)
@@ -895,7 +918,7 @@ def main():
     
         # Load and display the background image in a label
         bg_img = Image.open("assets/gentian.png")
-        bg_img = bg_img.resize((1920, 1080))
+        bg_img = bg_img.resize((SCREEN_W, SCREEN_H))
         bg_photo = ImageTk.PhotoImage(bg_img)
         bg_label = tk.Label(gentian_frame, image=bg_photo)
         bg_label.image = bg_photo  # Prevent garbage collection
@@ -921,12 +944,12 @@ def main():
             justify="center",
             bg="#FFFFFF",
             fg=FG_COLOR,
-            font=("Courier",13, "bold")
+            font=("Courier", scale_font(13), "bold")
         )
         game_status_message.pack()
-        fire_risk_label = tk.Label(metrics_frame, wraplength=400, justify="left", padx=10, pady=0, bg="#FFFFFF", font=("Courier", 14, "bold"))
+        fire_risk_label = tk.Label(metrics_frame, wraplength=400, justify="left", padx=10, pady=0, bg="#FFFFFF", font=("Courier", scale_font(14), "bold"))
         fire_risk_label.pack()
-        spb_risk_label = tk.Label(metrics_frame, wraplength=400, justify="left", padx=10, pady=0, bg="#FFFFFF", font=("Courier", 14, "bold"))
+        spb_risk_label = tk.Label(metrics_frame, wraplength=400, justify="left", padx=10, pady=0, bg="#FFFFFF", font=("Courier", scale_font(14), "bold"))
         spb_risk_label.pack()
         fire_risk_label.config(
             text=f"\n\n\nFire Risk: {status_dict['fire_risk']}",
@@ -937,7 +960,7 @@ def main():
             fg=get_risk_color(status_dict['SPB_risk'])
         )
         narration = tk.StringVar()
-        narration.set("What will you do next?")
+        narration.set("")
         narration_label = tk.Label(
             metrics_frame, textvariable=narration, wraplength=400, justify="left",
             padx=10, pady=5, bg="#FFFFFF", fg=FG_COLOR, font=FONT
@@ -951,7 +974,7 @@ def main():
         tk.Label(
             text_frame,
             text="Congratulations! This forest now supports rare Pine Barrens gentian!\n\nGentian is growing in the stand!",
-            bg="#1b2336", fg="#05dd4c", font=("Courier New", 18, "bold"),
+            bg="#1b2336", fg="#05dd4c", font=("Courier New", scale_font(18), "bold"),
             pady=10, wraplength=370, justify="center"
         ).pack()
     
@@ -960,7 +983,7 @@ def main():
         button_frame.place(relx=0.88, rely=0.33, anchor="center")
     
         tk.Button(
-            button_frame, text="Continue", font=("Courier", 16, "bold"), width=16,
+            button_frame, text="Continue", font=("Courier", scale_font(16), "bold"), width=16,
             bg="#05dd4c", fg="#1b2336", activebackground="#069134",
             command=lambda: [gentian_frame.pack_forget(), show_next_queued_achievement_or_game()]
         ).pack(pady=0)
@@ -976,7 +999,7 @@ def main():
 
         # Background image
         bg_img = Image.open("assets/Tanager.png")
-        bg_img = bg_img.resize((1920, 1080))
+        bg_img = bg_img.resize((SCREEN_W, SCREEN_H))
         bg_photo = ImageTk.PhotoImage(bg_img)
         bg_label = tk.Label(tanager_frame, image=bg_photo)
         bg_label.image = bg_photo
@@ -1006,10 +1029,10 @@ def main():
         )
         game_status_message.pack()
         fire_risk_label = tk.Label(metrics_frame, wraplength=400, justify="left",
-                                   padx=10, pady=0, bg="#FFFFFF", font=("Courier", 14, "bold"))
+                                   padx=10, pady=0, bg="#FFFFFF", font=("Courier", scale_font(14), "bold"))
         fire_risk_label.pack()
         spb_risk_label = tk.Label(metrics_frame, wraplength=400, justify="left",
-                                  padx=10, pady=0, bg="#FFFFFF", font=("Courier", 14, "bold"))
+                                  padx=10, pady=0, bg="#FFFFFF", font=("Courier", scale_font(14), "bold"))
         spb_risk_label.pack()
         fire_risk_label.config(
             text=f"\n\n\nFire Risk: {status_dict['fire_risk']}",
@@ -1020,7 +1043,7 @@ def main():
             fg=get_risk_color(status_dict['SPB_risk'])
         )
         narration = tk.StringVar()
-        narration.set("What will you do next?")
+        narration.set("")
         tk.Label(
             metrics_frame, textvariable=narration, wraplength=400, justify="left",
             padx=10, pady=5, bg="#FFFFFF", fg=FG_COLOR, font=FONT
@@ -1032,7 +1055,7 @@ def main():
         tk.Label(
             text_frame,
             text="Congratulations! This forest is being visited by Summer Tanagers.\n\nThese neotropical birds are migrating through the stand!",
-            bg="#1b2336", fg="#05dd4c", font=("Courier New", 18, "bold"),
+            bg="#1b2336", fg="#05dd4c", font=("Courier New", scale_font(18), "bold"),
             pady=10, wraplength=370, justify="center"
         ).pack()
 
@@ -1040,7 +1063,7 @@ def main():
         button_frame = tk.Frame(tanager_frame, bg="#000000", bd=0)
         button_frame.place(relx=0.88, rely=0.33, anchor="center")
         tk.Button(
-            button_frame, text="Continue", font=("Courier", 16, "bold"), width=16,
+            button_frame, text="Continue", font=("Courier", scale_font(16), "bold"), width=16,
             bg="#05dd4c", fg="#1b2336", activebackground="#069134",
             command=lambda: [tanager_frame.pack_forget(), show_next_queued_achievement_or_game()]
         ).pack(pady=0)
@@ -1059,7 +1082,7 @@ def main():
 
         # Background image
         bg_img = Image.open("assets/bunting.png")
-        bg_img = bg_img.resize((1920, 1080))
+        bg_img = bg_img.resize((SCREEN_W, SCREEN_H))
         bg_photo = ImageTk.PhotoImage(bg_img)
         bg_label = tk.Label(bunting_frame, image=bg_photo)
         bg_label.image = bg_photo
@@ -1085,14 +1108,14 @@ def main():
             justify="center",
             bg="#FFFFFF",
             fg=FG_COLOR,
-            font=("Courier",13, "bold")
+            font=("Courier", scale_font(13), "bold")
         )
         game_status_message.pack()
         fire_risk_label = tk.Label(metrics_frame, wraplength=400, justify="left",
-                                   padx=10, pady=0, bg="#FFFFFF", font=("Courier", 14, "bold"))
+                                   padx=10, pady=0, bg="#FFFFFF", font=("Courier", scale_font(14), "bold"))
         fire_risk_label.pack()
         spb_risk_label = tk.Label(metrics_frame, wraplength=400, justify="left",
-                                  padx=10, pady=0, bg="#FFFFFF", font=("Courier", 14, "bold"))
+                                  padx=10, pady=0, bg="#FFFFFF", font=("Courier", scale_font(14), "bold"))
         spb_risk_label.pack()
         fire_risk_label.config(
             text=f"\n\n\nFire Risk: {status_dict['fire_risk']}",
@@ -1102,6 +1125,12 @@ def main():
             text=f"Southern Pine Beetle Risk: {status_dict['SPB_risk']}",
             fg=get_risk_color(status_dict['SPB_risk'])
         )
+        narration = tk.StringVar()
+        narration.set("")
+        tk.Label(
+            metrics_frame, textvariable=narration, wraplength=400, justify="left",
+            padx=10, pady=5, bg="#FFFFFF", fg=FG_COLOR, font=FONT
+        ).pack()
 
         # Text frame
         text_frame = tk.Frame(bunting_frame, bg="#1b2336", bd=0)
@@ -1109,7 +1138,7 @@ def main():
         tk.Label(
             text_frame,
             text="Congratulations! This forest is being visited by Indigo Buntings.\n\nThese neotropical birds are migrating through the stand!",
-            bg="#1b2336", fg="#05dd4c", font=("Courier New", 18, "bold"),
+            bg="#1b2336", fg="#05dd4c", font=("Courier New", scale_font(18), "bold"),
             pady=10, wraplength=370, justify="center"
         ).pack()
 
@@ -1117,7 +1146,7 @@ def main():
         button_frame = tk.Frame(bunting_frame, bg="#000000", bd=0)
         button_frame.place(relx=0.88, rely=0.33, anchor="center")
         tk.Button(
-            button_frame, text="Continue", font=("Courier", 16, "bold"), width=16,
+            button_frame, text="Continue", font=("Courier", scale_font(16), "bold"), width=16,
             bg="#05dd4c", fg="#1b2336", activebackground="#069134",
             command=lambda: [stop_bunting_sound(), bunting_frame.pack_forget(), show_next_queued_achievement_or_game()]
         ).pack(pady=0)
@@ -1131,8 +1160,8 @@ def main():
         frog_frame = tk.Frame(root, bg=BG_COLOR)
         frog_frame.pack(fill="both", expand=True)
 
-        img_a = Image.open("assets/treefrog.png").resize((1920, 1080))
-        img_b = Image.open("assets/treefrog_1.png").resize((1920, 1080))
+        img_a = Image.open("assets/treefrog.png").resize((SCREEN_W, SCREEN_H))
+        img_b = Image.open("assets/treefrog_1.png").resize((SCREEN_W, SCREEN_H))
         photo_a = ImageTk.PhotoImage(img_a)
         photo_b = ImageTk.PhotoImage(img_b)
 
@@ -1195,14 +1224,14 @@ def main():
             justify="center",
             bg="#FFFFFF",
             fg=FG_COLOR,
-            font=("Courier", 13, "bold")
+            font=("Courier", scale_font(13), "bold")
         )
         game_status_message.pack()
         fire_risk_label = tk.Label(metrics_frame, wraplength=400, justify="left",
-                                   padx=10, pady=0, bg="#FFFFFF", font=("Courier", 14, "bold"))
+                                   padx=10, pady=0, bg="#FFFFFF", font=("Courier", scale_font(14), "bold"))
         fire_risk_label.pack()
         spb_risk_label = tk.Label(metrics_frame, wraplength=400, justify="left",
-                                  padx=10, pady=0, bg="#FFFFFF", font=("Courier", 14, "bold"))
+                                  padx=10, pady=0, bg="#FFFFFF", font=("Courier", scale_font(14), "bold"))
         spb_risk_label.pack()
         fire_risk_label.config(
             text=f"\n\n\nFire Risk: {status_dict['fire_risk']}",
@@ -1212,6 +1241,12 @@ def main():
             text=f"Southern Pine Beetle Risk: {status_dict['SPB_risk']}",
             fg=get_risk_color(status_dict['SPB_risk'])
         )
+        narration = tk.StringVar()
+        narration.set("")
+        tk.Label(
+            metrics_frame, textvariable=narration, wraplength=400, justify="left",
+            padx=10, pady=5, bg="#FFFFFF", fg=FG_COLOR, font=FONT
+        ).pack()
 
         # Text
         text_frame = tk.Frame(frog_frame, bg="#1b2336", bd=0)
@@ -1219,7 +1254,7 @@ def main():
         tk.Label(
             text_frame,
             text="Congratulations! Pine Barrens tree frogs have colonized this forest.\n\nTree frogs are calling from the stand!",
-            bg="#1b2336", fg="#05dd4c", font=("Courier New", 18, "bold"),
+            bg="#1b2336", fg="#05dd4c", font=("Courier New", scale_font(18), "bold"),
             pady=10, wraplength=370, justify="center"
         ).pack()
 
@@ -1243,7 +1278,7 @@ def main():
         button_frame = tk.Frame(frog_frame, bg="#000000", bd=0)
         button_frame.place(relx=0.88, rely=0.33, anchor="center")
         tk.Button(
-            button_frame, text="Continue", font=("Courier", 16, "bold"), width=16,
+            button_frame, text="Continue", font=("Courier", scale_font(16), "bold"), width=16,
             bg="#05dd4c", fg="#1b2336", activebackground="#069134",
             command=on_continue
         ).pack(pady=0)
@@ -1259,7 +1294,7 @@ def main():
 
         # Background image (field guide)
         bg_img = Image.open("assets/fieldguide.png")
-        bg_img = bg_img.resize((1920, 1080))
+        bg_img = bg_img.resize((SCREEN_W, SCREEN_H))
         bg_photo = ImageTk.PhotoImage(bg_img)
         bg_label = tk.Label(fg_frame, image=bg_photo)
         bg_label.image = bg_photo
@@ -1285,14 +1320,14 @@ def main():
             justify="center",
             bg="#FFFFFF",
             fg=FG_COLOR,
-            font=("Courier",13,"bold")
+            font=("Courier", scale_font(13), "bold")
         )
         game_status_message.pack()
         fire_risk_label = tk.Label(metrics_frame, wraplength=400, justify="left",
-                                   padx=10, pady=0, bg="#FFFFFF", font=("Courier", 14, "bold"))
+                                   padx=10, pady=0, bg="#FFFFFF", font=("Courier", scale_font(14), "bold"))
         fire_risk_label.pack()
         spb_risk_label = tk.Label(metrics_frame, wraplength=400, justify="left",
-                                  padx=10, pady=0, bg="#FFFFFF", font=("Courier", 14, "bold"))
+                                  padx=10, pady=0, bg="#FFFFFF", font=("Courier", scale_font(14), "bold"))
         spb_risk_label.pack()
         fire_risk_label.config(
             text=f"\n\n\nFire Risk: {status_dict['fire_risk']}",
@@ -1303,7 +1338,7 @@ def main():
             fg=get_risk_color(status_dict['SPB_risk'])
         )
         narration = tk.StringVar()
-        narration.set("Field Guide")
+        narration.set("")
         narration_label = tk.Label(
             metrics_frame, textvariable=narration, wraplength=400, justify="left",
             padx=10, pady=5, bg="#FFFFFF", fg=FG_COLOR, font=FONT
@@ -1311,7 +1346,7 @@ def main():
         narration_label.pack()
 
         tk.Button(
-            fg_frame, text="Return to Game", font=("Courier", 18, "bold"), width=16,
+            fg_frame, text="Return to Game", font=("Courier", scale_font(18), "bold"), width=16,
             bg="#929292", fg="#000000", activebackground="#FFFFFF",
             command=lambda: [play_page_close_sound(), fg_frame.pack_forget(), show_game_screen()]
         ).place(relx=0.5, rely=0.915, anchor="center")
@@ -1325,7 +1360,7 @@ def main():
         def_frame.pack(fill="both", expand=True)
         # Load and display the definitions background image in a label
         bg_img = Image.open("assets/definitions.png")
-        bg_img = bg_img.resize((1920, 1080))
+        bg_img = bg_img.resize((SCREEN_W, SCREEN_H))
         bg_photo = ImageTk.PhotoImage(bg_img)
         bg_label = tk.Label(def_frame, image=bg_photo)
         bg_label.image = bg_photo
@@ -1351,12 +1386,12 @@ def main():
             justify="center",
             bg="#FFFFFF",
             fg=FG_COLOR,
-            font=("Courier",13, "bold")
+            font=("Courier", scale_font(13), "bold")
         )
         game_status_message.pack()
-        fire_risk_label = tk.Label(metrics_frame, wraplength=400, justify="left", padx=10, pady=0, bg="#FFFFFF", font=("Courier", 14, "bold"))
+        fire_risk_label = tk.Label(metrics_frame, wraplength=400, justify="left", padx=10, pady=0, bg="#FFFFFF", font=("Courier", scale_font(14), "bold"))
         fire_risk_label.pack()
-        spb_risk_label = tk.Label(metrics_frame, wraplength=400, justify="left", padx=10, pady=0, bg="#FFFFFF", font=("Courier", 14, "bold"))
+        spb_risk_label = tk.Label(metrics_frame, wraplength=400, justify="left", padx=10, pady=0, bg="#FFFFFF", font=("Courier", scale_font(14), "bold"))
         spb_risk_label.pack()
         fire_risk_label.config(
             text=f"\n\n\nFire Risk: {status_dict['fire_risk']}",
@@ -1367,7 +1402,7 @@ def main():
             fg=get_risk_color(status_dict['SPB_risk'])
         )
         narration = tk.StringVar()
-        narration.set("What will you do next?")
+        narration.set("")
         narration_label = tk.Label(
             metrics_frame, textvariable=narration, wraplength=400, justify="left",
             padx=10, pady=5, bg="#FFFFFF", fg=FG_COLOR, font=FONT
@@ -1376,7 +1411,7 @@ def main():
 
         # Back button
         tk.Button(
-            def_frame, text="Return to Game", font=("Courier", 18, "bold"), width=16,
+            def_frame, text="Return to Game", font=("Courier", scale_font(18), "bold"), width=16,
             bg="#e21fae", fg="#000000", activebackground="#FFFFFF",
             command=lambda: [play_page_close_sound(), def_frame.pack_forget(), show_game_screen()]
         ).place(relx=0.225, rely=0.915, anchor="center")
@@ -1399,7 +1434,7 @@ def main():
             bg_img_path = "assets/Evenagestand.png"
 
         bg_img = Image.open(bg_img_path)
-        bg_img = bg_img.resize((1920, 1080))
+        bg_img = bg_img.resize((SCREEN_W, SCREEN_H))
         bg_photo = ImageTk.PhotoImage(bg_img)
         bg_label = tk.Label(game_frame, image=bg_photo)
         bg_label.image = bg_photo
@@ -1417,17 +1452,7 @@ def main():
             show_game_screen()
             root.after(100, lambda: setattr(game, 'animation_temp_bg', None))
 
-        # --- Welcome Frame ---
-        welcome_frame = tk.Frame(game_frame, bg="#FFFFFF", bd=0)
-        welcome_frame.place(relx=0.88, rely=0.13, anchor="center")
-        status_label = tk.Label(
-            welcome_frame,
-            text="Welcome to Pitch Pine Trail! \nClick an action to begin →",
-            wraplength=600, justify="center",
-            padx=10, pady=10, bg="#1b2336", fg="#05dd4c", font=FONT
-        )
-        status_label.pack()
-
+        
         # --- Metrics Frame ---
         metrics_frame = tk.Frame(game_frame, bg="#FFFFFF", bd=0)
         metrics_frame.place(relx=0.845, rely=0.73, anchor="center")
@@ -1439,20 +1464,45 @@ def main():
             justify="center",
             bg="#FFFFFF",
             fg=FG_COLOR,
-            font=("Courier",13, "bold")
+            font=("Courier", scale_font(13), "bold")
         )
         game_status_message.pack()
-        fire_risk_label = tk.Label(metrics_frame, wraplength=400, justify="left", padx=10, pady=0, bg="#FFFFFF", font=("Courier", 14, "bold"))
+        fire_risk_label = tk.Label(metrics_frame, wraplength=400, justify="left", padx=10, pady=0, bg="#FFFFFF", font=("Courier", scale_font(14), "bold"))
         fire_risk_label.pack()
-        spb_risk_label = tk.Label(metrics_frame, wraplength=400, justify="left", padx=10, pady=0, bg="#FFFFFF", font=("Courier", 14, "bold"))
+        spb_risk_label = tk.Label(metrics_frame, wraplength=400, justify="left", padx=10, pady=0, bg="#FFFFFF", font=("Courier", scale_font(14), "bold"))
         spb_risk_label.pack()
         narration = tk.StringVar()
-        narration.set("What will you do next?")
+        narration.set("")
         narration_label = tk.Label(
             metrics_frame, textvariable=narration, wraplength=400, justify="left",
             padx=10, pady=5, bg="#FFFFFF", fg=FG_COLOR, font=FONT
         )
         narration_label.pack()
+
+        # --- Welcome / Status Frame (created AFTER metrics so it stays on top) ---
+        welcome_frame = tk.Frame(game_frame, bg="#FFFFFF", bd=0)
+        welcome_frame.place(relx=0.88, rely=0.13, anchor="center")
+        # Show welcome text only until first choice, then persistent "What will you do next?"
+        initial_text = "What will you do next?" if getattr(game, "has_made_first_choice", False) else "Welcome to Pitch Pine Trail! \nClick an action to begin →"
+        status_label = tk.Label(
+            welcome_frame,
+            text=initial_text,
+            wraplength=600, justify="center",
+            padx=10, pady=10, bg="#1b2336", fg="#05dd4c", font=FONT
+        )
+        status_label.pack()
+
+        # Helper to update the welcome/status text when first choice occurs
+        def set_post_first_choice_text():
+            try:
+                game.has_made_first_choice = True
+                status_label.config(text="What will you do next?")
+                # ensure it is visually on top
+                status_label.lift()
+                welcome_frame.lift()
+                root.update_idletasks()
+            except Exception:
+                pass
 
         # --- Button frame ---
         button_frame = tk.Frame(game_frame, bg="#1b2336")
@@ -1477,6 +1527,12 @@ def main():
             )
         
         def next_turn(action):
+            # First-choice handling: mark and update the welcome/status label
+            if not getattr(game, "has_made_first_choice", False):
+                set_post_first_choice_text()
+
+            
+            
             # Precompute PB/HT ordering flags
             burn_indices = [i for i, (_, a) in enumerate(game.action_history) if a == '4']
             heavy_indices = [i for i, (_, a) in enumerate(game.action_history) if a == '3']
@@ -1533,7 +1589,6 @@ def main():
                 game.update_stand(action)
                 event = game.simulate_event()
                 game.stand['year'] += 10
-                welcome_frame.place_forget()
                 update_status_labels()
 
                 # Loss checks first
@@ -1556,13 +1611,6 @@ def main():
                 if game.stand['year'] >= 100:
                     show_closing_screen()
                     return
-
-                # Default narration if still < 100
-                if event:
-                    narration.set(event)
-                else:
-                    narration.set("What will you do next?")
-                return
 
             #TURN ANIMATIONS
             # --- Prescribed burn after thin lightly but not thin heavily ---
@@ -1920,7 +1968,6 @@ def main():
             game.update_stand(action)
             event = game.simulate_event()
             game.stand['year'] += 10
-            welcome_frame.place_forget()
             update_status_labels()
 
             # --- Loss checks first ---
@@ -1947,7 +1994,7 @@ def main():
             if event:
                 narration.set(event)
             else:
-                narration.set("What will you do next?")
+                narration.set("")
         update_status_labels()
         for k, v in ACTIONS.items():
             if k == '1':
@@ -1963,7 +2010,7 @@ def main():
             tk.Button(
                 button_frame,
                 text=f"{k}. {v}",
-                width=22, font=("Courier", 14, "bold"),
+                width=22, font=("Courier", scale_font(14), "bold"),
                 bg="#404d6d",
                 fg="#05dd4c",
                 activebackground="#05dd4c",
@@ -2005,7 +2052,7 @@ def main():
         tk.Button(
             exit_frame,
             text="Exit",
-            font=("Courier", 17, "bold"),
+            font=("Courier", scale_font(17), "bold"),
             width=10,
             bg="#9c3432",
             fg="#3d0606",
@@ -2035,7 +2082,7 @@ def main():
         tk.Button(
             hint_button_frame,
             text="Click for a Hint",
-            font=("Courier", 12, "bold"),
+            font=("Courier", scale_font(12), "bold"),
             width=18,
             bg="#1d1a7e",
             fg="#FFFFFF",
@@ -2065,9 +2112,9 @@ def main():
             try:
                 img = Image.open(img_path)
                 try:
-                    img = img.resize((900, 350), Image.Resampling.LANCZOS)
+                    img = img.resize((scale_x(900), scale_y(350)), Image.Resampling.LANCZOS)
                 except Exception:
-                    img = img.resize((900, 350), Image.LANCZOS)
+                    img = img.resize((scale_x(900), scale_y(350)), Image.LANCZOS)
                 photo = ImageTk.PhotoImage(img)
                 img_label = tk.Label(hint_overlay, image=photo, bg="#FFFFFF", bd=0)
                 img_label.image = photo
@@ -2078,7 +2125,7 @@ def main():
                     hint_overlay,
                     text=f"Hint unavailable ({img_path})",
                     bg="#e6f2ff", fg="#000",
-                    font=("Courier", 14, "bold"), padx=10, pady=10
+                    font=("Courier", scale_font(14), "bold"), padx=10, pady=10
                 )
                 img_label.pack()
 
@@ -2095,7 +2142,7 @@ def main():
             tk.Button(
                 close_frame,
                 text="Close Hint",
-                font=("Courier", 11, "bold"),
+                font=("Courier", scale_font(11), "bold"),
                 width=12,
                 bg="#9c3432",
                 fg="#FFFFFF",
