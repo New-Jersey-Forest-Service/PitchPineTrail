@@ -40,6 +40,8 @@ def main():
     game.prescribed_burn_temp_bg = None
     game.thin_lightly_temp_bg = None
     game.thin_heavily_temp_bg = None
+    # Track first choice so we can remove welcome banner permanently
+    game.has_made_first_choice = False
     # Color constants
     BG_COLOR = "#FFFFFF"    # White background
     FG_COLOR = "#000000"    # Black text
@@ -397,7 +399,7 @@ def main():
 
         # --- Metrics Frame (same as main game screen) ---
         metrics_frame = tk.Frame(closing_frame, bg="#FFFFFF", bd=0)
-        metrics_frame.place(relx=0.845, rely=0.73, anchor="center")
+        metrics_frame.place(relx=0.845, rely=0.72, anchor="center")
         game_status = tk.StringVar()
         summary = game.get_status_dict()
         game_status.set(
@@ -423,7 +425,7 @@ def main():
         spb_risk_label = tk.Label(metrics_frame, wraplength=400, justify="left", padx=10, pady=0, bg="#FFFFFF", font=("Courier", scale_font(14), "bold"))
         spb_risk_label.pack()
         fire_risk_label.config(
-            text=f"\nFire Risk: {summary['fire_risk']}",
+            text=f"\n\nFire Risk: {summary['fire_risk']}",
             fg=get_risk_color(summary['fire_risk'])
         )
         spb_risk_label.config(
@@ -877,7 +879,7 @@ def main():
             fg=get_risk_color(status_dict['SPB_risk'])
         )
         narration = tk.StringVar()
-        narration.set("What will you do next?")
+        narration.set("")
         narration_label = tk.Label(
             metrics_frame, textvariable=narration, wraplength=400, justify="left",
             padx=10, pady=5, bg="#FFFFFF", fg=FG_COLOR, font=FONT
@@ -958,7 +960,7 @@ def main():
             fg=get_risk_color(status_dict['SPB_risk'])
         )
         narration = tk.StringVar()
-        narration.set("What will you do next?")
+        narration.set("")
         narration_label = tk.Label(
             metrics_frame, textvariable=narration, wraplength=400, justify="left",
             padx=10, pady=5, bg="#FFFFFF", fg=FG_COLOR, font=FONT
@@ -1041,7 +1043,7 @@ def main():
             fg=get_risk_color(status_dict['SPB_risk'])
         )
         narration = tk.StringVar()
-        narration.set("What will you do next?")
+        narration.set("")
         tk.Label(
             metrics_frame, textvariable=narration, wraplength=400, justify="left",
             padx=10, pady=5, bg="#FFFFFF", fg=FG_COLOR, font=FONT
@@ -1123,6 +1125,12 @@ def main():
             text=f"Southern Pine Beetle Risk: {status_dict['SPB_risk']}",
             fg=get_risk_color(status_dict['SPB_risk'])
         )
+        narration = tk.StringVar()
+        narration.set("")
+        tk.Label(
+            metrics_frame, textvariable=narration, wraplength=400, justify="left",
+            padx=10, pady=5, bg="#FFFFFF", fg=FG_COLOR, font=FONT
+        ).pack()
 
         # Text frame
         text_frame = tk.Frame(bunting_frame, bg="#1b2336", bd=0)
@@ -1233,6 +1241,12 @@ def main():
             text=f"Southern Pine Beetle Risk: {status_dict['SPB_risk']}",
             fg=get_risk_color(status_dict['SPB_risk'])
         )
+        narration = tk.StringVar()
+        narration.set("")
+        tk.Label(
+            metrics_frame, textvariable=narration, wraplength=400, justify="left",
+            padx=10, pady=5, bg="#FFFFFF", fg=FG_COLOR, font=FONT
+        ).pack()
 
         # Text
         text_frame = tk.Frame(frog_frame, bg="#1b2336", bd=0)
@@ -1324,7 +1338,7 @@ def main():
             fg=get_risk_color(status_dict['SPB_risk'])
         )
         narration = tk.StringVar()
-        narration.set("Field Guide")
+        narration.set("")
         narration_label = tk.Label(
             metrics_frame, textvariable=narration, wraplength=400, justify="left",
             padx=10, pady=5, bg="#FFFFFF", fg=FG_COLOR, font=FONT
@@ -1388,7 +1402,7 @@ def main():
             fg=get_risk_color(status_dict['SPB_risk'])
         )
         narration = tk.StringVar()
-        narration.set("What will you do next?")
+        narration.set("")
         narration_label = tk.Label(
             metrics_frame, textvariable=narration, wraplength=400, justify="left",
             padx=10, pady=5, bg="#FFFFFF", fg=FG_COLOR, font=FONT
@@ -1438,17 +1452,7 @@ def main():
             show_game_screen()
             root.after(100, lambda: setattr(game, 'animation_temp_bg', None))
 
-        # --- Welcome Frame ---
-        welcome_frame = tk.Frame(game_frame, bg="#FFFFFF", bd=0)
-        welcome_frame.place(relx=0.88, rely=0.13, anchor="center")
-        status_label = tk.Label(
-            welcome_frame,
-            text="Welcome to Pitch Pine Trail! \nClick an action to begin →",
-            wraplength=600, justify="center",
-            padx=10, pady=10, bg="#1b2336", fg="#05dd4c", font=FONT
-        )
-        status_label.pack()
-
+        
         # --- Metrics Frame ---
         metrics_frame = tk.Frame(game_frame, bg="#FFFFFF", bd=0)
         metrics_frame.place(relx=0.845, rely=0.73, anchor="center")
@@ -1468,12 +1472,37 @@ def main():
         spb_risk_label = tk.Label(metrics_frame, wraplength=400, justify="left", padx=10, pady=0, bg="#FFFFFF", font=("Courier", scale_font(14), "bold"))
         spb_risk_label.pack()
         narration = tk.StringVar()
-        narration.set("What will you do next?")
+        narration.set("")
         narration_label = tk.Label(
             metrics_frame, textvariable=narration, wraplength=400, justify="left",
             padx=10, pady=5, bg="#FFFFFF", fg=FG_COLOR, font=FONT
         )
         narration_label.pack()
+
+        # --- Welcome / Status Frame (created AFTER metrics so it stays on top) ---
+        welcome_frame = tk.Frame(game_frame, bg="#FFFFFF", bd=0)
+        welcome_frame.place(relx=0.88, rely=0.13, anchor="center")
+        # Show welcome text only until first choice, then persistent "What will you do next?"
+        initial_text = "What will you do next?" if getattr(game, "has_made_first_choice", False) else "Welcome to Pitch Pine Trail! \nClick an action to begin →"
+        status_label = tk.Label(
+            welcome_frame,
+            text=initial_text,
+            wraplength=600, justify="center",
+            padx=10, pady=10, bg="#1b2336", fg="#05dd4c", font=FONT
+        )
+        status_label.pack()
+
+        # Helper to update the welcome/status text when first choice occurs
+        def set_post_first_choice_text():
+            try:
+                game.has_made_first_choice = True
+                status_label.config(text="What will you do next?")
+                # ensure it is visually on top
+                status_label.lift()
+                welcome_frame.lift()
+                root.update_idletasks()
+            except Exception:
+                pass
 
         # --- Button frame ---
         button_frame = tk.Frame(game_frame, bg="#1b2336")
@@ -1498,6 +1527,12 @@ def main():
             )
         
         def next_turn(action):
+            # First-choice handling: mark and update the welcome/status label
+            if not getattr(game, "has_made_first_choice", False):
+                set_post_first_choice_text()
+
+            
+            
             # Precompute PB/HT ordering flags
             burn_indices = [i for i, (_, a) in enumerate(game.action_history) if a == '4']
             heavy_indices = [i for i, (_, a) in enumerate(game.action_history) if a == '3']
@@ -1554,7 +1589,6 @@ def main():
                 game.update_stand(action)
                 event = game.simulate_event()
                 game.stand['year'] += 10
-                welcome_frame.place_forget()
                 update_status_labels()
 
                 # Loss checks first
@@ -1577,13 +1611,6 @@ def main():
                 if game.stand['year'] >= 100:
                     show_closing_screen()
                     return
-
-                # Default narration if still < 100
-                if event:
-                    narration.set(event)
-                else:
-                    narration.set("What will you do next?")
-                return
 
             #TURN ANIMATIONS
             # --- Prescribed burn after thin lightly but not thin heavily ---
@@ -1941,7 +1968,6 @@ def main():
             game.update_stand(action)
             event = game.simulate_event()
             game.stand['year'] += 10
-            welcome_frame.place_forget()
             update_status_labels()
 
             # --- Loss checks first ---
@@ -1968,7 +1994,7 @@ def main():
             if event:
                 narration.set(event)
             else:
-                narration.set("What will you do next?")
+                narration.set("")
         update_status_labels()
         for k, v in ACTIONS.items():
             if k == '1':
