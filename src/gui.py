@@ -59,8 +59,8 @@ def main():
     SCREEN_H = root.winfo_screenheight()
 
     # Baseline your current design to SCREEN_WxSCREEN_H
-    BASE_W = SCREEN_W
-    BASE_H = SCREEN_H
+    BASE_W = 1920
+    BASE_H = 1080
 
     def scale_x(px):
         return int(px * SCREEN_W / BASE_W)
@@ -266,7 +266,7 @@ def main():
                 photo = ImageTk.PhotoImage(img)
                 img_label.config(image=photo)
                 img_label.image = photo  # Prevent garbage collection
-                root.after(15, lambda: show_next_zoom(index + 1))
+                root.after(10, lambda: show_next_zoom(index + 1))
             else:
                 # Show zoom_10.png and overlay the button
                 img = Image.open("assets/zoom_10.png").resize((SCREEN_W, SCREEN_H))
@@ -610,7 +610,7 @@ def main():
         spb_risk_label = tk.Label(metrics_frame, wraplength=400, justify="left", padx=10, pady=0, bg="#FFFFFF", font=("Courier", scale_font(14), "bold"))
         spb_risk_label.pack()
         fire_risk_label.config(
-            text=f"\n\n\nFire Risk: {status_dict['fire_risk']}",
+            text=f"\n\nFire Risk: {status_dict['fire_risk']}",
             fg=get_risk_color(status_dict['fire_risk'])
         )
         spb_risk_label.config(
@@ -697,7 +697,7 @@ def main():
         spb_risk_label = tk.Label(metrics_frame, wraplength=400, justify="left", padx=10, pady=0, bg="#FFFFFF", font=("Courier", scale_font(14), "bold"))
         spb_risk_label.pack()
         fire_risk_label.config(
-            text=f"\n\n\nFire Risk: {status_dict['fire_risk']}",
+            text=f"\n\nFire Risk: {status_dict['fire_risk']}",
             fg=get_risk_color(status_dict['fire_risk'])
         )
         spb_risk_label.config(
@@ -784,7 +784,7 @@ def main():
         spb_risk_label = tk.Label(metrics_frame, wraplength=400, justify="left", padx=10, pady=0, bg="#FFFFFF", font=("Courier", scale_font(14), "bold"))
         spb_risk_label.pack()
         fire_risk_label.config(
-            text=f"\n\n\nFire Risk: {status_dict['fire_risk']}",
+            text=f"\n\nFire Risk: {status_dict['fire_risk']}",
             fg=get_risk_color(status_dict['fire_risk'])
         )
         spb_risk_label.config(
@@ -871,7 +871,7 @@ def main():
         spb_risk_label = tk.Label(metrics_frame, wraplength=400, justify="left", padx=10, pady=0, bg="#FFFFFF", font=("Courier", scale_font(14), "bold"))
         spb_risk_label.pack()
         fire_risk_label.config(
-            text=f"\n\n\nFire Risk: {status_dict['fire_risk']}",
+            text=f"\n\nFire Risk: {status_dict['fire_risk']}",
             fg=get_risk_color(status_dict['fire_risk'])
         )
         spb_risk_label.config(
@@ -952,7 +952,7 @@ def main():
         spb_risk_label = tk.Label(metrics_frame, wraplength=400, justify="left", padx=10, pady=0, bg="#FFFFFF", font=("Courier", scale_font(14), "bold"))
         spb_risk_label.pack()
         fire_risk_label.config(
-            text=f"\n\n\nFire Risk: {status_dict['fire_risk']}",
+            text=f"\n\nFire Risk: {status_dict['fire_risk']}",
             fg=get_risk_color(status_dict['fire_risk'])
         )
         spb_risk_label.config(
@@ -1035,7 +1035,7 @@ def main():
                                   padx=10, pady=0, bg="#FFFFFF", font=("Courier", scale_font(14), "bold"))
         spb_risk_label.pack()
         fire_risk_label.config(
-            text=f"\n\n\nFire Risk: {status_dict['fire_risk']}",
+            text=f"\n\nFire Risk: {status_dict['fire_risk']}",
             fg=get_risk_color(status_dict['fire_risk'])
         )
         spb_risk_label.config(
@@ -1118,7 +1118,7 @@ def main():
                                   padx=10, pady=0, bg="#FFFFFF", font=("Courier", scale_font(14), "bold"))
         spb_risk_label.pack()
         fire_risk_label.config(
-            text=f"\n\n\nFire Risk: {status_dict['fire_risk']}",
+            text=f"\n\nFire Risk: {status_dict['fire_risk']}",
             fg=get_risk_color(status_dict['fire_risk'])
         )
         spb_risk_label.config(
@@ -1234,7 +1234,7 @@ def main():
                                   padx=10, pady=0, bg="#FFFFFF", font=("Courier", scale_font(14), "bold"))
         spb_risk_label.pack()
         fire_risk_label.config(
-            text=f"\n\n\nFire Risk: {status_dict['fire_risk']}",
+            text=f"\n\nFire Risk: {status_dict['fire_risk']}",
             fg=get_risk_color(status_dict['fire_risk'])
         )
         spb_risk_label.config(
@@ -1330,7 +1330,7 @@ def main():
                                   padx=10, pady=0, bg="#FFFFFF", font=("Courier", scale_font(14), "bold"))
         spb_risk_label.pack()
         fire_risk_label.config(
-            text=f"\n\n\nFire Risk: {status_dict['fire_risk']}",
+            text=f"\n\nFire Risk: {status_dict['fire_risk']}",
             fg=get_risk_color(status_dict['fire_risk'])
         )
         spb_risk_label.config(
@@ -1394,7 +1394,7 @@ def main():
         spb_risk_label = tk.Label(metrics_frame, wraplength=400, justify="left", padx=10, pady=0, bg="#FFFFFF", font=("Courier", scale_font(14), "bold"))
         spb_risk_label.pack()
         fire_risk_label.config(
-            text=f"\n\n\nFire Risk: {status_dict['fire_risk']}",
+            text=f"\n\nFire Risk: {status_dict['fire_risk']}",
             fg=get_risk_color(status_dict['fire_risk'])
         )
         spb_risk_label.config(
@@ -1518,7 +1518,7 @@ def main():
                 f"\nCrowning Index: {status_dict['CI']:.1f}"
             )
             fire_risk_label.config(
-                text=f"\n\n\nFire Risk: {status_dict['fire_risk']}",
+                text=f"\n\nFire Risk: {status_dict['fire_risk']}",
                 fg=get_risk_color(status_dict['fire_risk'])
             )
             spb_risk_label.config(
