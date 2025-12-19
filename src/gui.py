@@ -70,7 +70,7 @@ def main():
     
     # Optional: convenience scale for font sizes (tweak factor if needed)
     def scale_font(sz):
-        return max(10, int(sz * (SCREEN_W / BASE_W + SCREEN_H / BASE_H) / 2))
+        return max(1, int(sz * (SCREEN_W / BASE_W + SCREEN_H / BASE_H) / 2))
 
     # Font constants    
     FONT = ("Courier New", scale_font(12), "bold")
@@ -633,7 +633,7 @@ def main():
             text_frame,
             text="The forest's growing stock trees have been depleted! \n\nWe're supposed to be growing a forest!",
             bg="#1b2336", fg="#05dd4c", font=("Courier New", scale_font(18), "bold"),
-            pady=0, wraplength=400, justify="center"
+            pady=0, wraplength=scale_x(400), justify="center"
         ).pack()
 
         # --- Button Frame ---
@@ -720,7 +720,7 @@ def main():
             text_frame,
             text="A catastrophic wildfire has occurred!\n\nWe might get a new stand of pitch pine, but we're trying to grow a mature stand!",
             bg="#1b2336", fg="#05dd4c", font=("Courier", scale_font(18), "bold"),
-            pady=0, wraplength=400, justify="center"
+            pady=0, wraplength=scale_x(400), justify="center"
         ).pack()
 
         # --- Button Frame ---
@@ -807,7 +807,7 @@ def main():
             text_frame,
             text="A Southern Pine Beetle outbreak has devastated your stand!\n\nWe're trying to grow a healthy forest!",
             bg="#1b2336", fg="#05dd4c", font=("Courier", scale_font(18), "bold"),
-            pady=20, wraplength=400, justify="center"
+            pady=20, wraplength=scale_x(400), justify="center"
         ).pack()
 
         # --- Button Frame ---
@@ -894,7 +894,7 @@ def main():
             text_frame,
             text="Congratulations! This forest is excellent northern pine snake habitat.\n\nPine snakes are utilizing the stand!",
             bg="#1b2336", fg="#05dd4c", font=("Courier New", scale_font(18), "bold"),
-            pady=10, wraplength=370, justify="center"
+            pady=10, wraplength=scale_x(370), justify="center"
         ).pack()
 
         # --- Button Frame ---
@@ -975,7 +975,7 @@ def main():
             text_frame,
             text="Congratulations! This forest now supports rare Pine Barrens gentian!\n\nGentian is growing in the stand!",
             bg="#1b2336", fg="#05dd4c", font=("Courier New", scale_font(18), "bold"),
-            pady=10, wraplength=370, justify="center"
+            pady=10, wraplength=scale_x(370), justify="center"
         ).pack()
     
         # --- Button Frame ---
@@ -1056,7 +1056,7 @@ def main():
             text_frame,
             text="Congratulations! This forest is being visited by Summer Tanagers.\n\nThese neotropical birds are migrating through the stand!",
             bg="#1b2336", fg="#05dd4c", font=("Courier New", scale_font(18), "bold"),
-            pady=10, wraplength=370, justify="center"
+            pady=10, wraplength=scale_x(370), justify="center"
         ).pack()
 
         # Button frame
@@ -1139,7 +1139,7 @@ def main():
             text_frame,
             text="Congratulations! This forest is being visited by Indigo Buntings.\n\nThese neotropical birds are migrating through the stand!",
             bg="#1b2336", fg="#05dd4c", font=("Courier New", scale_font(18), "bold"),
-            pady=10, wraplength=370, justify="center"
+            pady=10, wraplength=scale_x(370), justify="center"
         ).pack()
 
         # Button frame
@@ -1255,7 +1255,7 @@ def main():
             text_frame,
             text="Congratulations! Pine Barrens tree frogs have colonized this forest.\n\nTree frogs are calling from the stand!",
             bg="#1b2336", fg="#05dd4c", font=("Courier New", scale_font(18), "bold"),
-            pady=10, wraplength=370, justify="center"
+            pady=10, wraplength=scale_x(370), justify="center"
         ).pack()
 
         # Continue button stops blinking, cancels callback, and returns
