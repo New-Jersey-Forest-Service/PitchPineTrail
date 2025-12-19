@@ -176,7 +176,7 @@ def main():
         btn = tk.Button(
             overlay,
             text="Definitions",
-            font=FONT,
+            font=("Courier New", scale_font(13), "bold"),
             width=14,
             bg="#444466",
             fg=FG_COLOR,
@@ -294,7 +294,7 @@ def main():
                 definitions_button = tk.Button(
                     definitions_frame,
                     text="Click for Definitions",
-                    font=FONT,
+                    font=("Courier New", scale_font(12), "bold"),
                     width=23,
                     bg="#000000",
                     fg="#ffffff",
@@ -399,7 +399,7 @@ def main():
 
         # --- Metrics Frame (same as main game screen) ---
         metrics_frame = tk.Frame(closing_frame, bg="#FFFFFF", bd=0)
-        metrics_frame.place(relx=0.845, rely=0.72, anchor="center")
+        metrics_frame.place(relx=0.841, rely=0.72, anchor="center")
         game_status = tk.StringVar()
         summary = game.get_status_dict()
         game_status.set(
@@ -417,12 +417,12 @@ def main():
             justify="center",
             bg="#FFFFFF",
             fg=FG_COLOR,
-            font=("Courier", scale_font(13), "bold")
+            font=FONT
         )
         game_status_message.pack()
-        fire_risk_label = tk.Label(metrics_frame, wraplength=400, justify="left", padx=10, pady=0, bg="#FFFFFF", font=("Courier", scale_font(14), "bold"))
+        fire_risk_label = tk.Label(metrics_frame, wraplength=scale_x(400), justify="left", padx=10, pady=0, bg="#FFFFFF", font=("Courier", scale_font(14), "bold"))
         fire_risk_label.pack()
-        spb_risk_label = tk.Label(metrics_frame, wraplength=400, justify="left", padx=10, pady=0, bg="#FFFFFF", font=("Courier", scale_font(14), "bold"))
+        spb_risk_label = tk.Label(metrics_frame, wraplength=scale_x(400), justify="left", padx=10, pady=0, bg="#FFFFFF", font=("Courier", scale_font(14), "bold"))
         spb_risk_label.pack()
         fire_risk_label.config(
             text=f"\n\nFire Risk: {summary['fire_risk']}",
@@ -435,8 +435,8 @@ def main():
         narration = tk.StringVar()
         narration.set("Thank you for playing Pitch Pine Trail!")
         narration_label = tk.Label(
-            metrics_frame, textvariable=narration, wraplength=400, justify="left",
-            padx=10, pady=5, bg="#FFFFFF", fg=FG_COLOR, font=FONT
+            metrics_frame, textvariable=narration, wraplength=scale_x(400), justify="left",
+            padx=10, pady=5, bg="#FFFFFF", fg=FG_COLOR, font=("Courier New", scale_font(10), "bold")
         )
         narration_label.pack()
 
@@ -447,7 +447,7 @@ def main():
             text_frame,
             text=game.get_action_summary(),
             bg="#1b2336", fg="#05dd4c", font=("Courier New", scale_font(17), "bold"),
-            wraplength=400, justify="left"
+            wraplength=scale_x(400), justify="left"
         ).pack()
 
         # --- Button Frame ---
@@ -584,7 +584,7 @@ def main():
 
         # --- Metrics Frame ---
         metrics_frame = tk.Frame(low_ba_frame, bg="#FFFFFF", bd=0)
-        metrics_frame.place(relx=0.845, rely=0.73, anchor="center")
+        metrics_frame.place(relx=0.841, rely=0.73, anchor="center")
         game_status = tk.StringVar()
         status_dict = game.get_status_dict()
         game_status.set(
@@ -602,12 +602,12 @@ def main():
             justify="center",
             bg="#FFFFFF",
             fg=FG_COLOR,
-            font=("Courier", scale_font(13), "bold")
+            font=FONT
         )
         game_status_message.pack()
-        fire_risk_label = tk.Label(metrics_frame, wraplength=400, justify="left", padx=10, pady=0, bg="#FFFFFF", font=("Courier", scale_font(14), "bold"))
+        fire_risk_label = tk.Label(metrics_frame, wraplength=scale_x(400), justify="left", padx=10, pady=0, bg="#FFFFFF", font=("Courier", scale_font(14), "bold"))
         fire_risk_label.pack()
-        spb_risk_label = tk.Label(metrics_frame, wraplength=400, justify="left", padx=10, pady=0, bg="#FFFFFF", font=("Courier", scale_font(14), "bold"))
+        spb_risk_label = tk.Label(metrics_frame, wraplength=scale_x(400), justify="left", padx=10, pady=0, bg="#FFFFFF", font=("Courier", scale_font(14), "bold"))
         spb_risk_label.pack()
         fire_risk_label.config(
             text=f"\n\nFire Risk: {status_dict['fire_risk']}",
@@ -620,7 +620,7 @@ def main():
         narration = tk.StringVar()
         narration.set("Better luck next time!")
         narration_label = tk.Label(
-            metrics_frame, textvariable=narration, wraplength=400, justify="left",
+            metrics_frame, textvariable=narration, wraplength=scale_x(400), justify="left",
             padx=10, pady=5, bg="#FFFFFF", fg=FG_COLOR, font=FONT
         )
         narration_label.pack()
@@ -671,7 +671,7 @@ def main():
 
         # --- Metrics Frame (copied from main game screen) ---
         metrics_frame = tk.Frame(fire_frame, bg="#FFFFFF", bd=0)
-        metrics_frame.place(relx=0.845, rely=0.73, anchor="center")
+        metrics_frame.place(relx=0.841, rely=0.73, anchor="center")
         game_status = tk.StringVar()
         status_dict = game.get_status_dict()
         game_status.set(
@@ -689,12 +689,12 @@ def main():
             justify="center",
             bg="#FFFFFF",
             fg=FG_COLOR,
-            font=("Courier", scale_font(13), "bold")
+            font=FONT
         )
         game_status_message.pack()
-        fire_risk_label = tk.Label(metrics_frame, wraplength=400, justify="left", padx=10, pady=0, bg="#FFFFFF", font=("Courier", scale_font(14), "bold"))
+        fire_risk_label = tk.Label(metrics_frame, wraplength=scale_x(400), justify="left", padx=10, pady=0, bg="#FFFFFF", font=("Courier", scale_font(14), "bold"))
         fire_risk_label.pack()
-        spb_risk_label = tk.Label(metrics_frame, wraplength=400, justify="left", padx=10, pady=0, bg="#FFFFFF", font=("Courier", scale_font(14), "bold"))
+        spb_risk_label = tk.Label(metrics_frame, wraplength=scale_x(400), justify="left", padx=10, pady=0, bg="#FFFFFF", font=("Courier", scale_font(14), "bold"))
         spb_risk_label.pack()
         fire_risk_label.config(
             text=f"\n\nFire Risk: {status_dict['fire_risk']}",
@@ -707,7 +707,7 @@ def main():
         narration = tk.StringVar()
         narration.set("Better luck next time!")
         narration_label = tk.Label(
-            metrics_frame, textvariable=narration, wraplength=400, justify="left",
+            metrics_frame, textvariable=narration, wraplength=scale_x(400), justify="left",
             padx=10, pady=5, bg="#FFFFFF", fg=FG_COLOR, font=FONT
         )
         narration_label.pack()
@@ -758,7 +758,7 @@ def main():
 
         # --- Metrics Frame (copied from main game screen) ---
         metrics_frame = tk.Frame(spb_frame, bg="#FFFFFF", bd=0)
-        metrics_frame.place(relx=0.845, rely=0.73, anchor="center")
+        metrics_frame.place(relx=0.841, rely=0.73, anchor="center")
         game_status = tk.StringVar()
         status_dict = game.get_status_dict()
         game_status.set(
@@ -776,12 +776,12 @@ def main():
             justify="center",
             bg="#FFFFFF",
             fg=FG_COLOR,
-            font=("Courier",scale_font(13), "bold")
+            font=FONT
         )
         game_status_message.pack()
-        fire_risk_label = tk.Label(metrics_frame, wraplength=400, justify="left", padx=10, pady=0, bg="#FFFFFF", font=("Courier", scale_font(14), "bold"))
+        fire_risk_label = tk.Label(metrics_frame, wraplength=scale_x(400), justify="left", padx=10, pady=0, bg="#FFFFFF", font=("Courier", scale_font(14), "bold"))
         fire_risk_label.pack()
-        spb_risk_label = tk.Label(metrics_frame, wraplength=400, justify="left", padx=10, pady=0, bg="#FFFFFF", font=("Courier", scale_font(14), "bold"))
+        spb_risk_label = tk.Label(metrics_frame, wraplength=scale_x(400), justify="left", padx=10, pady=0, bg="#FFFFFF", font=("Courier", scale_font(14), "bold"))
         spb_risk_label.pack()
         fire_risk_label.config(
             text=f"\n\nFire Risk: {status_dict['fire_risk']}",
@@ -794,7 +794,7 @@ def main():
         narration = tk.StringVar()
         narration.set("Better luck next time!")
         narration_label = tk.Label(
-            metrics_frame, textvariable=narration, wraplength=400, justify="left",
+            metrics_frame, textvariable=narration, wraplength=scale_x(400), justify="left",
             padx=10, pady=5, bg="#FFFFFF", fg=FG_COLOR, font=FONT
         )
         narration_label.pack()
@@ -845,7 +845,7 @@ def main():
 
         # --- Metrics Frame (copied from main game screen) ---
         metrics_frame = tk.Frame(snake_frame, bg="#FFFFFF", bd=0)
-        metrics_frame.place(relx=0.845, rely=0.73, anchor="center")
+        metrics_frame.place(relx=0.841, rely=0.73, anchor="center")
         game_status = tk.StringVar()
         status_dict = game.get_status_dict()
         game_status.set(
@@ -863,12 +863,12 @@ def main():
             justify="center",
             bg="#FFFFFF",
             fg=FG_COLOR,
-            font=("Courier", scale_font(13), "bold")
+            font=FONT
         )
         game_status_message.pack()
-        fire_risk_label = tk.Label(metrics_frame, wraplength=400, justify="left", padx=10, pady=0, bg="#FFFFFF", font=("Courier", scale_font(14), "bold"))
+        fire_risk_label = tk.Label(metrics_frame, wraplength=scale_x(400), justify="left", padx=10, pady=0, bg="#FFFFFF", font=("Courier", scale_font(14), "bold"))
         fire_risk_label.pack()
-        spb_risk_label = tk.Label(metrics_frame, wraplength=400, justify="left", padx=10, pady=0, bg="#FFFFFF", font=("Courier", scale_font(14), "bold"))
+        spb_risk_label = tk.Label(metrics_frame, wraplength=scale_x(400), justify="left", padx=10, pady=0, bg="#FFFFFF", font=("Courier", scale_font(14), "bold"))
         spb_risk_label.pack()
         fire_risk_label.config(
             text=f"\n\nFire Risk: {status_dict['fire_risk']}",
@@ -881,7 +881,7 @@ def main():
         narration = tk.StringVar()
         narration.set("")
         narration_label = tk.Label(
-            metrics_frame, textvariable=narration, wraplength=400, justify="left",
+            metrics_frame, textvariable=narration, wraplength=scale_x(400), justify="left",
             padx=10, pady=5, bg="#FFFFFF", fg=FG_COLOR, font=FONT
         )
         narration_label.pack()
@@ -926,7 +926,7 @@ def main():
     
         # --- Metrics Frame (copied from main game screen) ---
         metrics_frame = tk.Frame(gentian_frame, bg="#FFFFFF", bd=0)
-        metrics_frame.place(relx=0.845, rely=0.73, anchor="center")
+        metrics_frame.place(relx=0.841, rely=0.73, anchor="center")
         game_status = tk.StringVar()
         status_dict = game.get_status_dict()
         game_status.set(
@@ -944,12 +944,12 @@ def main():
             justify="center",
             bg="#FFFFFF",
             fg=FG_COLOR,
-            font=("Courier", scale_font(13), "bold")
+            font=FONT
         )
         game_status_message.pack()
-        fire_risk_label = tk.Label(metrics_frame, wraplength=400, justify="left", padx=10, pady=0, bg="#FFFFFF", font=("Courier", scale_font(14), "bold"))
+        fire_risk_label = tk.Label(metrics_frame, wraplength=scale_x(400), justify="left", padx=10, pady=0, bg="#FFFFFF", font=("Courier", scale_font(14), "bold"))
         fire_risk_label.pack()
-        spb_risk_label = tk.Label(metrics_frame, wraplength=400, justify="left", padx=10, pady=0, bg="#FFFFFF", font=("Courier", scale_font(14), "bold"))
+        spb_risk_label = tk.Label(metrics_frame, wraplength=scale_x(400), justify="left", padx=10, pady=0, bg="#FFFFFF", font=("Courier", scale_font(14), "bold"))
         spb_risk_label.pack()
         fire_risk_label.config(
             text=f"\n\nFire Risk: {status_dict['fire_risk']}",
@@ -962,7 +962,7 @@ def main():
         narration = tk.StringVar()
         narration.set("")
         narration_label = tk.Label(
-            metrics_frame, textvariable=narration, wraplength=400, justify="left",
+            metrics_frame, textvariable=narration, wraplength=scale_x(400), justify="left",
             padx=10, pady=5, bg="#FFFFFF", fg=FG_COLOR, font=FONT
         )
         narration_label.pack()
@@ -1007,7 +1007,7 @@ def main():
 
         # Metrics (copied pattern)
         metrics_frame = tk.Frame(tanager_frame, bg="#FFFFFF", bd=0)
-        metrics_frame.place(relx=0.845, rely=0.73, anchor="center")
+        metrics_frame.place(relx=0.841, rely=0.73, anchor="center")
         game_status = tk.StringVar()
         status_dict = game.get_status_dict()
         game_status.set(
@@ -1025,13 +1025,13 @@ def main():
             justify="center",
             bg="#FFFFFF",
             fg=FG_COLOR,
-            font=("Courier",13, "bold")
+            font=FONT
         )
         game_status_message.pack()
-        fire_risk_label = tk.Label(metrics_frame, wraplength=400, justify="left",
+        fire_risk_label = tk.Label(metrics_frame, wraplength=scale_x(400), justify="left",
                                    padx=10, pady=0, bg="#FFFFFF", font=("Courier", scale_font(14), "bold"))
         fire_risk_label.pack()
-        spb_risk_label = tk.Label(metrics_frame, wraplength=400, justify="left",
+        spb_risk_label = tk.Label(metrics_frame, wraplength=scale_x(400), justify="left",
                                   padx=10, pady=0, bg="#FFFFFF", font=("Courier", scale_font(14), "bold"))
         spb_risk_label.pack()
         fire_risk_label.config(
@@ -1045,7 +1045,7 @@ def main():
         narration = tk.StringVar()
         narration.set("")
         tk.Label(
-            metrics_frame, textvariable=narration, wraplength=400, justify="left",
+            metrics_frame, textvariable=narration, wraplength=scale_x(400), justify="left",
             padx=10, pady=5, bg="#FFFFFF", fg=FG_COLOR, font=FONT
         ).pack()
 
@@ -1090,7 +1090,7 @@ def main():
 
         # Metrics (copied pattern)
         metrics_frame = tk.Frame(bunting_frame, bg="#FFFFFF", bd=0)
-        metrics_frame.place(relx=0.845, rely=0.73, anchor="center")
+        metrics_frame.place(relx=0.841, rely=0.73, anchor="center")
         game_status = tk.StringVar()
         status_dict = game.get_status_dict()
         game_status.set(
@@ -1108,13 +1108,13 @@ def main():
             justify="center",
             bg="#FFFFFF",
             fg=FG_COLOR,
-            font=("Courier", scale_font(13), "bold")
+            font=FONT
         )
         game_status_message.pack()
-        fire_risk_label = tk.Label(metrics_frame, wraplength=400, justify="left",
+        fire_risk_label = tk.Label(metrics_frame, wraplength=scale_x(400), justify="left",
                                    padx=10, pady=0, bg="#FFFFFF", font=("Courier", scale_font(14), "bold"))
         fire_risk_label.pack()
-        spb_risk_label = tk.Label(metrics_frame, wraplength=400, justify="left",
+        spb_risk_label = tk.Label(metrics_frame, wraplength=scale_x(400), justify="left",
                                   padx=10, pady=0, bg="#FFFFFF", font=("Courier", scale_font(14), "bold"))
         spb_risk_label.pack()
         fire_risk_label.config(
@@ -1128,7 +1128,7 @@ def main():
         narration = tk.StringVar()
         narration.set("")
         tk.Label(
-            metrics_frame, textvariable=narration, wraplength=400, justify="left",
+            metrics_frame, textvariable=narration, wraplength=scale_x(400), justify="left",
             padx=10, pady=5, bg="#FFFFFF", fg=FG_COLOR, font=FONT
         ).pack()
 
@@ -1206,7 +1206,7 @@ def main():
 
         # --- Metrics (unchanged) ---
         metrics_frame = tk.Frame(frog_frame, bg="#FFFFFF", bd=0)
-        metrics_frame.place(relx=0.845, rely=0.73, anchor="center")
+        metrics_frame.place(relx=0.841, rely=0.73, anchor="center")
         game_status = tk.StringVar()
         status_dict = game.get_status_dict()
         game_status.set(
@@ -1224,13 +1224,13 @@ def main():
             justify="center",
             bg="#FFFFFF",
             fg=FG_COLOR,
-            font=("Courier", scale_font(13), "bold")
+            font=FONT
         )
         game_status_message.pack()
-        fire_risk_label = tk.Label(metrics_frame, wraplength=400, justify="left",
+        fire_risk_label = tk.Label(metrics_frame, wraplength=scale_x(400), justify="left",
                                    padx=10, pady=0, bg="#FFFFFF", font=("Courier", scale_font(14), "bold"))
         fire_risk_label.pack()
-        spb_risk_label = tk.Label(metrics_frame, wraplength=400, justify="left",
+        spb_risk_label = tk.Label(metrics_frame, wraplength=scale_x(400), justify="left",
                                   padx=10, pady=0, bg="#FFFFFF", font=("Courier", scale_font(14), "bold"))
         spb_risk_label.pack()
         fire_risk_label.config(
@@ -1244,7 +1244,7 @@ def main():
         narration = tk.StringVar()
         narration.set("")
         tk.Label(
-            metrics_frame, textvariable=narration, wraplength=400, justify="left",
+            metrics_frame, textvariable=narration, wraplength=scale_x(400), justify="left",
             padx=10, pady=5, bg="#FFFFFF", fg=FG_COLOR, font=FONT
         ).pack()
 
@@ -1302,7 +1302,7 @@ def main():
 
         # Metrics (same as definitions)
         metrics_frame = tk.Frame(fg_frame, bg="#FFFFFF", bd=0)
-        metrics_frame.place(relx=0.845, rely=0.73, anchor="center")
+        metrics_frame.place(relx=0.841, rely=0.73, anchor="center")
         game_status = tk.StringVar()
         status_dict = game.get_status_dict()
         game_status.set(
@@ -1320,13 +1320,13 @@ def main():
             justify="center",
             bg="#FFFFFF",
             fg=FG_COLOR,
-            font=("Courier", scale_font(13), "bold")
+            font=FONT
         )
         game_status_message.pack()
-        fire_risk_label = tk.Label(metrics_frame, wraplength=400, justify="left",
+        fire_risk_label = tk.Label(metrics_frame, wraplength=scale_x(400), justify="left",
                                    padx=10, pady=0, bg="#FFFFFF", font=("Courier", scale_font(14), "bold"))
         fire_risk_label.pack()
-        spb_risk_label = tk.Label(metrics_frame, wraplength=400, justify="left",
+        spb_risk_label = tk.Label(metrics_frame, wraplength=scale_x(400), justify="left",
                                   padx=10, pady=0, bg="#FFFFFF", font=("Courier", scale_font(14), "bold"))
         spb_risk_label.pack()
         fire_risk_label.config(
@@ -1340,7 +1340,7 @@ def main():
         narration = tk.StringVar()
         narration.set("")
         narration_label = tk.Label(
-            metrics_frame, textvariable=narration, wraplength=400, justify="left",
+            metrics_frame, textvariable=narration, wraplength=scale_x(400), justify="left",
             padx=10, pady=5, bg="#FFFFFF", fg=FG_COLOR, font=FONT
         )
         narration_label.pack()
@@ -1368,7 +1368,7 @@ def main():
 
         # --- Metrics Frame (copied from show_game_screen) ---
         metrics_frame = tk.Frame(def_frame, bg="#FFFFFF", bd=0)
-        metrics_frame.place(relx=0.845, rely=0.73, anchor="center")
+        metrics_frame.place(relx=0.841, rely=0.73, anchor="center")
         game_status = tk.StringVar()
         status_dict = game.get_status_dict()
         game_status.set(
@@ -1386,12 +1386,12 @@ def main():
             justify="center",
             bg="#FFFFFF",
             fg=FG_COLOR,
-            font=("Courier", scale_font(13), "bold")
+            font=FONT
         )
         game_status_message.pack()
-        fire_risk_label = tk.Label(metrics_frame, wraplength=400, justify="left", padx=10, pady=0, bg="#FFFFFF", font=("Courier", scale_font(14), "bold"))
+        fire_risk_label = tk.Label(metrics_frame, wraplength=scale_x(400), justify="left", padx=10, pady=0, bg="#FFFFFF", font=("Courier", scale_font(14), "bold"))
         fire_risk_label.pack()
-        spb_risk_label = tk.Label(metrics_frame, wraplength=400, justify="left", padx=10, pady=0, bg="#FFFFFF", font=("Courier", scale_font(14), "bold"))
+        spb_risk_label = tk.Label(metrics_frame, wraplength=scale_x(400), justify="left", padx=10, pady=0, bg="#FFFFFF", font=("Courier", scale_font(14), "bold"))
         spb_risk_label.pack()
         fire_risk_label.config(
             text=f"\n\nFire Risk: {status_dict['fire_risk']}",
@@ -1404,7 +1404,7 @@ def main():
         narration = tk.StringVar()
         narration.set("")
         narration_label = tk.Label(
-            metrics_frame, textvariable=narration, wraplength=400, justify="left",
+            metrics_frame, textvariable=narration, wraplength=scale_x(400), justify="left",
             padx=10, pady=5, bg="#FFFFFF", fg=FG_COLOR, font=FONT
         )
         narration_label.pack()
@@ -1455,7 +1455,7 @@ def main():
         
         # --- Metrics Frame ---
         metrics_frame = tk.Frame(game_frame, bg="#FFFFFF", bd=0)
-        metrics_frame.place(relx=0.845, rely=0.73, anchor="center")
+        metrics_frame.place(relx=0.841, rely=0.73, anchor="center")
         game_status = tk.StringVar()
         game_status_message = tk.Message(
             metrics_frame,
@@ -1464,17 +1464,17 @@ def main():
             justify="center",
             bg="#FFFFFF",
             fg=FG_COLOR,
-            font=("Courier", scale_font(13), "bold")
+            font=FONT
         )
         game_status_message.pack()
-        fire_risk_label = tk.Label(metrics_frame, wraplength=400, justify="left", padx=10, pady=0, bg="#FFFFFF", font=("Courier", scale_font(14), "bold"))
+        fire_risk_label = tk.Label(metrics_frame, wraplength=scale_x(400), justify="left", padx=10, pady=0, bg="#FFFFFF", font=("Courier", scale_font(14), "bold"))
         fire_risk_label.pack()
-        spb_risk_label = tk.Label(metrics_frame, wraplength=400, justify="left", padx=10, pady=0, bg="#FFFFFF", font=("Courier", scale_font(14), "bold"))
+        spb_risk_label = tk.Label(metrics_frame, wraplength=scale_x(400), justify="left", padx=10, pady=0, bg="#FFFFFF", font=("Courier", scale_font(14), "bold"))
         spb_risk_label.pack()
         narration = tk.StringVar()
         narration.set("")
         narration_label = tk.Label(
-            metrics_frame, textvariable=narration, wraplength=400, justify="left",
+            metrics_frame, textvariable=narration, wraplength=scale_x(400), justify="left",
             padx=10, pady=5, bg="#FFFFFF", fg=FG_COLOR, font=FONT
         )
         narration_label.pack()
@@ -1487,8 +1487,8 @@ def main():
         status_label = tk.Label(
             welcome_frame,
             text=initial_text,
-            wraplength=600, justify="center",
-            padx=10, pady=10, bg="#1b2336", fg="#05dd4c", font=FONT
+            wraplength=scale_x(600), justify="center",
+            padx=10, pady=10, bg="#1b2336", fg="#05dd4c", font=("Courier New", scale_font(14), "bold")
         )
         status_label.pack()
 
