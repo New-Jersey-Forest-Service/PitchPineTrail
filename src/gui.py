@@ -45,7 +45,11 @@ def main():
     # Color constants
     BG_COLOR = "#FFFFFF"    # White background
     FG_COLOR = "#000000"    # Black text
-    
+    game.summer_tanager_screen_shown = False
+    game.tree_frog_screen_shown = False
+    game.gentian_screen_shown = False
+    game.indigo_bunting_screen_shown = False
+    game.turkey_beard_screen_shown = False
 
     # Set up the main window
     root = tk.Tk()
@@ -120,6 +124,20 @@ def main():
         game.prescribed_burn_temp_bg = None
         game.thin_lightly_temp_bg = None
         game.thin_heavily_temp_bg = None
+
+        # Ensure all achievement/colonization GUI flags are cleared so popups & medals reset
+        game.pine_snake_achieved = False
+        game.gentian_achieved = False
+        game.summer_tanager_achieved = False
+        game.tree_frog_achieved = False
+        game.indigo_bunting_achieved = False
+        game.turkey_beard_achieved = False
+
+        game.summer_tanager_screen_shown = False
+        game.tree_frog_screen_shown = False
+        game.gentian_screen_shown = False
+        game.indigo_bunting_screen_shown = False
+        game.turkey_beard_screen_shown = False
 
         # Rebuild UI
         for widget in root.winfo_children():
@@ -364,6 +382,7 @@ def main():
         ach_tan   = getattr(game, 'summer_tanager_achieved', False) or getattr(game, 'summer_tanager_colonized', False)
         ach_frog  = getattr(game, 'tree_frog_achieved', False) or getattr(game, 'pine_barrens_tree_frog_colonized', False)
         ach_bunt   = getattr(game, 'indigo_bunting_achieved', False) or getattr(game, 'indigo_bunting_colonized', False)
+        ach_turkey = getattr(game, 'turkey_beard_achieved', False) or getattr(game, 'turkey_beard_colonized', False)
 
 
         # Choose background image (build filename based on achievements)
@@ -382,6 +401,7 @@ def main():
             ("tanager", ach_tan),
             ("frog",    ach_frog),
             ("bunting", ach_bunt),
+            ("turkey",  ach_turkey),
         ]
         medals = "-".join(name for name, present in ordered if present)
         if medals:
@@ -988,6 +1008,80 @@ def main():
             command=lambda: [gentian_frame.pack_forget(), show_next_queued_achievement_or_game()]
         ).pack(pady=0)
     
+    # --- Turkey Beard Screen ---
+    def show_turkey_beard_screen():
+        """Display the screen for Turkey Beard achievement."""
+        play_gentian_sound()
+        for widget in root.winfo_children():
+            widget.pack_forget()
+        turkey_frame = tk.Frame(root, bg=BG_COLOR)
+        turkey_frame.pack(fill="both", expand=True)
+
+        # Background image
+        bg_img = Image.open("assets/turkeybeard.png")
+        bg_img = bg_img.resize((SCREEN_W, SCREEN_H))
+        bg_photo = ImageTk.PhotoImage(bg_img)
+        bg_label = tk.Label(turkey_frame, image=bg_photo)
+        bg_label.image = bg_photo
+        bg_label.place(relx=0, rely=0, relwidth=1, relheight=1)
+
+        # Metrics (copied pattern)
+        metrics_frame = tk.Frame(turkey_frame, bg="#FFFFFF", bd=0)
+        metrics_frame.place(relx=0.841, rely=0.73, anchor="center")
+        game_status = tk.StringVar()
+        status_dict = game.get_status_dict()
+        game_status.set(
+            f"Year: {status_dict['year']}\n"
+            f"\nBasal Area (BA): {status_dict['BA']:.1f} sqft/acre\n"
+            f"\nTrees Per Acre (TPA): {status_dict['TPA']}\n"
+            f"\nQuadratic Mean Diameter (QMD): {status_dict['QMD']:.1f} inches\n"
+            f"\nCarbon per Acre: {status_dict['carbon']:.1f} Metric Tons/acre\n"
+            f"\nCrowning Index: {status_dict['CI']:.1f}"
+        )
+        game_status_message = tk.Message(
+            metrics_frame,
+            textvariable=game_status,
+            width=450,
+            justify="center",
+            bg="#FFFFFF",
+            fg=FG_COLOR,
+            font=FONT
+        )
+        game_status_message.pack()
+        fire_risk_label = tk.Label(metrics_frame, wraplength=scale_x(400), justify="left",
+                                   padx=10, pady=0, bg="#FFFFFF", font=("Courier", scale_font(14), "bold"))
+        fire_risk_label.pack()
+        spb_risk_label = tk.Label(metrics_frame, wraplength=scale_x(400), justify="left",
+                                  padx=10, pady=0, bg="#FFFFFF", font=("Courier", scale_font(14), "bold"))
+        spb_risk_label.pack()
+        fire_risk_label.config(
+            text=f"\n\nFire Risk: {status_dict['fire_risk']}",
+            fg=get_risk_color(status_dict['fire_risk'])
+        )
+        spb_risk_label.config(
+            text=f"Southern Pine Beetle Risk: {status_dict['SPB_risk']}",
+            fg=get_risk_color(status_dict['SPB_risk'])
+        )
+
+        # Text frame
+        text_frame = tk.Frame(turkey_frame, bg="#1b2336", bd=0)
+        text_frame.place(relx=0.88, rely=0.2, anchor="center")
+        tk.Label(
+            text_frame,
+            text="Congratulations! Turkey Beard is now growing in this stand!\n\nYou earned the Turkey Beard achievement!",
+            bg="#1b2336", fg="#05dd4c", font=("Courier New", scale_font(18), "bold"),
+            pady=10, wraplength=scale_x(370), justify="center"
+        ).pack()
+
+        # Button frame
+        button_frame = tk.Frame(turkey_frame, bg="#000000", bd=0)
+        button_frame.place(relx=0.88, rely=0.33, anchor="center")
+        tk.Button(
+            button_frame, text="Continue", font=("Courier", scale_font(16), "bold"), width=16,
+            bg="#05dd4c", fg="#1b2336", activebackground="#069134",
+            command=lambda: [turkey_frame.pack_forget(), show_next_queued_achievement_or_game()]
+        ).pack(pady=0)
+    
     # --- Summer Tanager Screen ---
     def show_summer_tanager_screen():
         """Display the screen for Summer Tanager visitation."""
@@ -1554,6 +1648,7 @@ def main():
             tanager_before = getattr(game, 'summer_tanager_colonized', False)
             bunting_before = getattr(game, 'indigo_bunting_colonized', False)
             tree_frog_before = getattr(game, 'pine_barrens_tree_frog_colonized', False)
+            turkey_before = getattr(game, 'turkey_beard_achieved', False)
             
 
             # queue all achievements earned THIS turn; show first if any.
@@ -1566,6 +1661,8 @@ def main():
                              and not getattr(game, 'indigo_bunting_screen_shown', False))
                 new_frog  = (not tree_frog_before and getattr(game, 'pine_barrens_tree_frog_colonized', False)
                              and not getattr(game, 'tree_frog_screen_shown', False))
+                new_turkey = (not turkey_before and getattr(game, 'turkey_beard_achieved', False)
+                              and not getattr(game, 'turkey_beard_screen_shown', False))
 
                 queue = []
                 # Order here defines popup order within the turn; adjust if desired
@@ -1574,6 +1671,7 @@ def main():
                 if new_tan:   queue.append('tanager')
                 if new_bun:   queue.append('bunting')
                 if new_frog:  queue.append('frog')
+                if new_turkey: queue.append('turkey')
 
                 if queue:
                     game.current_bg_img = final_bg_img       # persist this turn’s final scene
@@ -2182,6 +2280,11 @@ def main():
                 game.tree_frog_screen_shown = True
                 game.tree_frog_achieved = True
                 show_tree_frog_screen()
+                return
+            if code == 'turkey':
+                game.turkey_beard_screen_shown = True
+                game.turkey_beard_achieved = True
+                show_turkey_beard_screen()
                 return
         # No more queued achievements
         if game.stand['year'] >= 100:

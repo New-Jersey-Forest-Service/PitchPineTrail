@@ -68,6 +68,7 @@ class Game:
         self.summer_tanager_achieved = False
         self.tree_frog_achieved = False
         self.indigo_bunting_achieved = False
+        self.turkey_beard_achieved = False
         # One-time popup guards
         self.summer_tanager_screen_shown = False
         self.tree_frog_screen_shown = False
@@ -109,6 +110,7 @@ class Game:
         self.summer_tanager_achieved = False
         self.tree_frog_achieved = False
         self.indigo_bunting_achieved = False
+        self.turkey_beard_achieved = False
         # One-time popup guards
         self.summer_tanager_screen_shown = False
         self.tree_frog_screen_shown = False
@@ -224,7 +226,12 @@ class Game:
             if random.random() < 0.2:
                 self.gentian_colonized = True
 
-        # Step 13: Summer Tanager logic (0.4 probability once conditions met)
+        # Step 13: Turkey Beard achievement (50% chance when prescribed burn and BA < 60)
+        if action == '4' and ba_next < 60 and not self.turkey_beard_achieved:
+            if random.random() < 0.5:
+                self.turkey_beard_achieved = True
+
+        # Step 14: Summer Tanager logic (0.4 probability once conditions met)
         if (not self.summer_tanager_colonized
             and self.suitable_tanager_ba_reached
             and len(self.action_history) >= 2
@@ -233,7 +240,7 @@ class Game:
             if random.random() < 0.4:
                 self.summer_tanager_colonized = True
 
-        # Step 14Indigo Bunting logic (0.4 probability once conditions met)
+        # Step 15Indigo Bunting logic (0.4 probability once conditions met)
         if (not self.indigo_bunting_colonized
             and self.suitable_bunting_ba_reached
             and len(self.action_history) >= 2
@@ -242,7 +249,7 @@ class Game:
             if random.random() < 0.4:
                 self.indigo_bunting_colonized = True
 
-        # Step 15: Pine Barrens tree frog logic
+        # Step 16: Pine Barrens tree frog logic
         # Colonize after sequence: heavy thin ('3') -> prescribed burn ('4') -> >=2 consecutive '1's
         if not self.pine_barrens_tree_frog_colonized:
             # Include current action in the sequence check (since we append after logic)
@@ -354,6 +361,9 @@ class Game:
 
         if self.pine_barrens_tree_frog_colonized:
             summary += "\nPine Barrens tree frog has colonized this stand!\n"
+
+        if self.turkey_beard_achieved:
+            summary += "\nTurkey Beard is now growing in this stand!\n"
 
         return summary
 
