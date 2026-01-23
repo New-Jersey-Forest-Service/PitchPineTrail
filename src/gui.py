@@ -389,9 +389,9 @@ def main():
         status = game.get_status_dict()  # ensure we have current risks
         fire_high = status.get('fire_risk') == 'High'
         spb_high = status.get('SPB_risk') == 'High'
-        if qmd < 20 or fire_high or spb_high:
+        if qmd < 15 or fire_high or spb_high:
             base = "bad"
-        elif 20 <= qmd < 23:
+        elif 15 <= qmd < 20.5:
             base = "okay"
         else:
             base = "good"
@@ -583,27 +583,27 @@ def main():
         ).place(relx=0.5, rely=0.07, anchor="nw")
 
     #LOSING SCREEN
-    # --- Low Basal Area Screen ---
-    def show_low_ba_screen():
-        """Display the game over screen for low basal area condition."""
+    # --- Low TPA Screen ---
+    def show_low_tpa_screen():
+        """Display the game over screen for low TPA condition."""
         stop_forest_sound()
         play_losing_trombone_sound()
         play_wind_sound()  # <-- Play wind sound at the same time
         for widget in root.winfo_children():
             widget.pack_forget()
-        low_ba_frame = tk.Frame(root, bg=BG_COLOR)
-        low_ba_frame.pack(fill="both", expand=True)
+        low_tpa_frame = tk.Frame(root, bg=BG_COLOR)
+        low_tpa_frame.pack(fill="both", expand=True)
 
         # Load and display the background image in a label
         bg_img = Image.open("assets/LowStocking.png")
         bg_img = bg_img.resize((SCREEN_W, SCREEN_H))
         bg_photo = ImageTk.PhotoImage(bg_img)
-        bg_label = tk.Label(low_ba_frame, image=bg_photo)
+        bg_label = tk.Label(low_tpa_frame, image=bg_photo)
         bg_label.image = bg_photo  # Prevent garbage collection
         bg_label.place(relx=0, rely=0, relwidth=1, relheight=1)
 
         # --- Metrics Frame ---
-        metrics_frame = tk.Frame(low_ba_frame, bg="#FFFFFF", bd=0)
+        metrics_frame = tk.Frame(low_tpa_frame, bg="#FFFFFF", bd=0)
         metrics_frame.place(relx=0.841, rely=0.73, anchor="center")
         game_status = tk.StringVar()
         status_dict = game.get_status_dict()
@@ -646,7 +646,7 @@ def main():
         narration_label.pack()
 
         # --- Text Frame ---
-        text_frame = tk.Frame(low_ba_frame, bg="#1b2336", bd=0)
+        text_frame = tk.Frame(low_tpa_frame, bg="#1b2336", bd=0)
         text_frame.place(relx=0.88, rely=0.19, anchor="center")
 
         tk.Label(
@@ -657,18 +657,18 @@ def main():
         ).pack()
 
         # --- Button Frame ---
-        button_frame = tk.Frame(low_ba_frame, bg="#1b2336", bd=0)
+        button_frame = tk.Frame(low_tpa_frame, bg="#1b2336", bd=0)
         button_frame.place(relx=0.88, rely=0.315, anchor="center")
 
         tk.Button(
             button_frame, text="Try Again", font=("Courier", scale_font(14), "bold"), width=16,
             bg="#05dd4c", fg="#1b2336", activebackground="#10612B",
-            command=lambda: [stop_losing_trombone_sound(), stop_wind_sound(), restart_game(low_ba_frame)]
+            command=lambda: [stop_losing_trombone_sound(), stop_wind_sound(), restart_game(low_tpa_frame)]
         ).pack(side="left", padx=10, pady=5)
         tk.Button(
             button_frame, text="Exit", font=("Courier", scale_font(14), "bold"), width=16,
             bg="#05dd4c", fg="#1b2336", activebackground="#611010",
-            command=lambda: [play_page_turn_sound(), show_exit_survey_overlay_in(low_ba_frame)]
+            command=lambda: [play_page_turn_sound(), show_exit_survey_overlay_in(low_tpa_frame)]
         ).pack(side="left", padx=10, pady=5)
 
     # --- Fire Loss Screen ---
@@ -1690,8 +1690,8 @@ def main():
                 update_status_labels()
 
                 # Loss checks first
-                if game.is_low_ba_game_over():
-                    show_low_ba_screen()
+                if game.is_low_tpa_game_over():
+                    show_low_tpa_screen()
                     return
                 if getattr(game.stand, 'catastrophic_wildfire', False) or game.stand.get('catastrophic_wildfire', False):
                     show_fire_loss_screen()
@@ -2069,8 +2069,8 @@ def main():
             update_status_labels()
 
             # --- Loss checks first ---
-            if game.is_low_ba_game_over():
-                show_low_ba_screen()
+            if game.is_low_tpa_game_over():
+                show_low_tpa_screen()
                 return
             if getattr(game.stand, 'catastrophic_wildfire', False) or game.stand.get('catastrophic_wildfire', False):
                 show_fire_loss_screen()

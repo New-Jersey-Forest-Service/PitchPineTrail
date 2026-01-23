@@ -52,8 +52,9 @@ class Game:
             'catastrophic_wildfire': False
         }
 
-        self.low_ba_count = 0   # Track consecutive low BA cycles
-        self.action_history = []  # Add this line
+        # Track consecutive low TPA cycles (used for game-over)
+        self.low_tpa_count = 0
+        self.action_history = []
         # Colonization state (always defined)
         self.pine_snakes_colonized = False
         self.gentian_colonized = False
@@ -69,6 +70,9 @@ class Game:
         self.tree_frog_achieved = False
         self.indigo_bunting_achieved = False
         self.turkey_beard_achieved = False
+        # Recruitment scheduling: pending additions (applied next cycle) and handled thresholds
+        self.recruitment_pending = []        # list of dicts: {'threshold': int, 'ba_at_detection': float}
+        self.recruitment_handled = set()     # thresholds already scheduled until BA recovers above threshold+margin
         # One-time popup guards
         self.summer_tanager_screen_shown = False
         self.tree_frog_screen_shown = False
@@ -94,8 +98,9 @@ class Game:
             'catastrophic_wildfire': False
         }
 
-        self.low_ba_count = 0   # Track consecutive low BA cycles
-        self.action_history = []  # Add this line
+        # Track consecutive low TPA cycles (used for game-over)
+        self.low_tpa_count = 0
+        self.action_history = []
         # Colonization state (always defined)
         self.pine_snakes_colonized = False
         self.gentian_colonized = False
@@ -111,6 +116,9 @@ class Game:
         self.tree_frog_achieved = False
         self.indigo_bunting_achieved = False
         self.turkey_beard_achieved = False
+        # Recruitment scheduling: pending additions (applied next cycle) and handled thresholds
+        self.recruitment_pending = []        # list of dicts: {'threshold': int, 'ba_at_detection': float}
+        self.recruitment_handled = set()     # thresholds already scheduled until BA recovers above threshold+margin
         # One-time popup guards
         self.summer_tanager_screen_shown = False
         self.tree_frog_screen_shown = False
@@ -155,6 +163,49 @@ class Game:
         # Step 1: Apply management effects
         tpa_next = apply_management_tpa(self.stand['TPA'], action)
         qmd_next = grow_qmd(self.stand['QMD'], action)
+
+        # --- Apply any pending recruitment scheduled last cycle ---
+        # Each pending entry was queued when BA dropped below a threshold; now we add many small trees
+        # (increase TPA) and reduce QMD (small-diameter recruits). Magnitude scales roughly with
+        # log10(threshold / observed_BA) so lower BA => larger recruitment effect.
+        if self.recruitment_pending:
+            # allow early cancellation: if current BA has recovered above threshold+margin,
+            # cancel any pending entries for that threshold (so a rebound before application cancels the one-time add)
+            curr_ba = self.stand.get('BA', 0.0)
+            filtered = []
+            for e in self.recruitment_pending:
+                thr = e.get('threshold')
+                if thr is not None and curr_ba > (thr + 5):
+                    # cancel this scheduled recruitment and clear handled marker so future drops can re-schedule
+                    self.recruitment_handled.discard(thr)
+                    continue
+                filtered.append(e)
+            self.recruitment_pending = filtered
+
+            # base additions per threshold (keep your current tuning)
+            base_add = {70: 10, 20: 30, 5: 110}
+            # Decrement the delay counter for each pending entry; apply only when cycles_remaining <= 0
+            for entry in self.recruitment_pending:
+                entry['cycles_remaining'] = entry.get('cycles_remaining', 2) - 1
+
+            to_apply = [e for e in self.recruitment_pending if e.get('cycles_remaining', 0) <= 0]
+            remaining = [e for e in self.recruitment_pending if e.get('cycles_remaining', 0) > 0]
+
+            for entry in to_apply:
+                thr = entry.get('threshold', 70)
+                ba_ref = max(0.1, entry.get('ba_at_detection', self.stand['BA']))
+                # severity grows with log ratio; ensure non-negative
+                severity = max(0.0, math.log10(thr / ba_ref))
+                if severity <= 0:
+                    continue
+                add_tpa = int(base_add.get(thr, 80) * (1.0 + severity))
+                # QMD reduction factor: stronger drop that scales with severity and recruits
+                # scale by severity and recruit count (clamped)
+                qmd_drop_frac = min(0.75, 0.08 * (1.0 + severity) + 0.0007 * add_tpa)
+                tpa_next = max(1, int(tpa_next + add_tpa))
+                qmd_next = max(2.0, qmd_next * (1.0 - qmd_drop_frac))
+            # keep any entries still waiting
+            self.recruitment_pending = remaining
 
         # Step 2: Enforce Reineke limit
         max_tpa = max_tpa_reineke(qmd_next)
@@ -205,16 +256,35 @@ class Game:
         self.stand['fire_risk'] = fire_risk
         self.stand['SPB_risk'] = spb_risk
 
+        # --- Schedule recruitment if BA dropped under thresholds (delayed one cycle) ---
+        # Thresholds (from highest to lowest). When BA falls below a threshold and it hasn't been
+        # recently handled, schedule an addition for the next cycle.
+        thresholds = [70, 50, 30]
+        for thr in thresholds:
+            if ba_next < thr and thr not in self.recruitment_handled:
+                # schedule for application after 2 cycles using the BA observed now
+                self.recruitment_pending.append({
+                    'threshold': thr,
+                    'ba_at_detection': ba_next,
+                    'cycles_remaining': 2
+                })
+                self.recruitment_handled.add(thr)
+            # clear handled flag if BA recovers above thr + margin so future drops can schedule again
+            elif ba_next > (thr + 5) and thr in self.recruitment_handled:
+                self.recruitment_handled.discard(thr)
+                # also remove any pending entries for this threshold (cancel scheduled addition)
+                self.recruitment_pending = [e for e in self.recruitment_pending if e.get('threshold') != thr]
+
         # Step 9: record if BA ever in 30–45 window for summer tanager colonization
-        if 30 <= ba_next <= 45:
+        if 30 <= ba_next <= 50:
             self.suitable_tanager_ba_reached = True
             self.suitable_bunting_ba_reached = True
 
-        # Step 10: Track low BA for game-over
-        if ba_next < 35:
-            self.low_ba_count += 1
+        # Step 10: Track low TPA for game-over
+        if tpa_next < 20:
+            self.low_tpa_count += 1
         else:
-            self.low_ba_count = 0
+            self.low_tpa_count = 0
 
         # Step 11: Pine snake logic
         if (45 <= ba_next <= 70) and not self.pine_snakes_colonized:
@@ -271,9 +341,9 @@ class Game:
 
         
 
-    def is_low_ba_game_over(self):
-        """Check if game should end due to consecutive low BA conditions."""
-        return self.low_ba_count >= 2
+    def is_low_tpa_game_over(self):
+        """Check if game should end due to consecutive low TPA conditions."""
+        return getattr(self, 'low_tpa_count', 0) >= 2
 
     def simulate_event(self):
         """
