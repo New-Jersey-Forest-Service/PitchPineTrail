@@ -183,7 +183,7 @@ class Game:
             self.recruitment_pending = filtered
 
             # base additions per threshold (keep your current tuning)
-            base_add = {70: 10, 20: 30, 5: 110}
+            base_add = {70: 10, 30: 30, 20: 110}
             # Decrement the delay counter for each pending entry; apply only when cycles_remaining <= 0
             for entry in self.recruitment_pending:
                 entry['cycles_remaining'] = entry.get('cycles_remaining', 2) - 1
@@ -259,7 +259,7 @@ class Game:
         # --- Schedule recruitment if BA dropped under thresholds (delayed one cycle) ---
         # Thresholds (from highest to lowest). When BA falls below a threshold and it hasn't been
         # recently handled, schedule an addition for the next cycle.
-        thresholds = [70, 50, 30]
+        thresholds = [70, 30, 20]
         for thr in thresholds:
             if ba_next < thr and thr not in self.recruitment_handled:
                 # schedule for application after 2 cycles using the BA observed now
