@@ -275,7 +275,7 @@ class Game:
                 # also remove any pending entries for this threshold (cancel scheduled addition)
                 self.recruitment_pending = [e for e in self.recruitment_pending if e.get('threshold') != thr]
 
-        # Step 9: record if BA ever in 30–45 window for summer tanager colonization
+        # Step 9: record if BA ever in 30–50 window for summer tanager colonization
         if 30 <= ba_next <= 50:
             self.suitable_tanager_ba_reached = True
             self.suitable_bunting_ba_reached = True
