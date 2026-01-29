@@ -389,9 +389,9 @@ def main():
         status = game.get_status_dict()  # ensure we have current risks
         fire_high = status.get('fire_risk') == 'High'
         spb_high = status.get('SPB_risk') == 'High'
-        if qmd < 15 or fire_high or spb_high:
+        if qmd < 13 or fire_high or spb_high:
             base = "bad"
-        elif 15 <= qmd < 20.5:
+        elif 13 <= qmd < 15:
             base = "okay"
         else:
             base = "good"

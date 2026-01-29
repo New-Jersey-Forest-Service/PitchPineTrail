@@ -183,7 +183,7 @@ class Game:
             self.recruitment_pending = filtered
 
             # base additions per threshold (keep your current tuning)
-            base_add = {70: 10, 30: 30, 20: 110}
+            base_add = {70: 5, 50: 30, 40: 50, 30: 70}
             # Decrement the delay counter for each pending entry; apply only when cycles_remaining <= 0
             for entry in self.recruitment_pending:
                 entry['cycles_remaining'] = entry.get('cycles_remaining', 2) - 1
@@ -201,7 +201,7 @@ class Game:
                 add_tpa = int(base_add.get(thr, 80) * (1.0 + severity))
                 # QMD reduction factor: stronger drop that scales with severity and recruits
                 # scale by severity and recruit count (clamped)
-                qmd_drop_frac = min(0.75, 0.08 * (1.0 + severity) + 0.0007 * add_tpa)
+                qmd_drop_frac = min(0.90, 0.12 * (1.0 + severity) + 0.0012 * add_tpa)
                 tpa_next = max(1, int(tpa_next + add_tpa))
                 qmd_next = max(2.0, qmd_next * (1.0 - qmd_drop_frac))
             # keep any entries still waiting
@@ -259,7 +259,7 @@ class Game:
         # --- Schedule recruitment if BA dropped under thresholds (delayed one cycle) ---
         # Thresholds (from highest to lowest). When BA falls below a threshold and it hasn't been
         # recently handled, schedule an addition for the next cycle.
-        thresholds = [70, 30, 20]
+        thresholds = [70, 50, 40, 30]
         for thr in thresholds:
             if ba_next < thr and thr not in self.recruitment_handled:
                 # schedule for application after 2 cycles using the BA observed now
@@ -281,7 +281,7 @@ class Game:
             self.suitable_bunting_ba_reached = True
 
         # Step 10: Track low TPA for game-over
-        if tpa_next < 20:
+        if tpa_next <= 20:
             self.low_tpa_count += 1
         else:
             self.low_tpa_count = 0
@@ -342,8 +342,8 @@ class Game:
         
 
     def is_low_tpa_game_over(self):
-        """Check if game should end due to consecutive low TPA conditions."""
-        return getattr(self, 'low_tpa_count', 0) >= 2
+        """Check if game should end due to one-time (rather than consecutive low TPA conditions. change 1 to 2 for consecutive low conditions"""
+        return getattr(self, 'low_tpa_count', 0) >= 1
 
     def simulate_event(self):
         """
