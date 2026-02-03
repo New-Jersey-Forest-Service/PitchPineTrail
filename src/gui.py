@@ -383,6 +383,7 @@ def main():
         ach_frog  = getattr(game, 'tree_frog_achieved', False) or getattr(game, 'pine_barrens_tree_frog_colonized', False)
         ach_bunt   = getattr(game, 'indigo_bunting_achieved', False) or getattr(game, 'indigo_bunting_colonized', False)
         ach_turkey = getattr(game, 'turkey_beard_achieved', False) or getattr(game, 'turkey_beard_colonized', False)
+        ach_short = getattr(game, 'short_achieved', False) or getattr(game, 'short_colonized', False)
 
 
         # Choose background image (build filename based on achievements)
@@ -402,6 +403,7 @@ def main():
             ("frog",    ach_frog),
             ("bunting", ach_bunt),
             ("turkey",  ach_turkey),
+            ("short",   ach_short),
         ]
         medals = "-".join(name for name, present in ordered if present)
         if medals:
@@ -1007,6 +1009,80 @@ def main():
             bg="#05dd4c", fg="#1b2336", activebackground="#069134",
             command=lambda: [gentian_frame.pack_forget(), show_next_queued_achievement_or_game()]
         ).pack(pady=0)
+
+    # --- Shortleaf Pine Screen ---
+    def show_shortleaf_screen():
+        """Display the screen for Shortleaf pine establishment."""
+        play_gentian_sound()
+        for widget in root.winfo_children():
+            widget.pack_forget()
+        short_frame = tk.Frame(root, bg=BG_COLOR)
+        short_frame.pack(fill="both", expand=True)
+
+        # Background image
+        bg_img = Image.open("assets/shortleaf.png")
+        bg_img = bg_img.resize((SCREEN_W, SCREEN_H))
+        bg_photo = ImageTk.PhotoImage(bg_img)
+        bg_label = tk.Label(short_frame, image=bg_photo)
+        bg_label.image = bg_photo
+        bg_label.place(relx=0, rely=0, relwidth=1, relheight=1)
+
+        # Metrics (copied pattern)
+        metrics_frame = tk.Frame(short_frame, bg="#FFFFFF", bd=0)
+        metrics_frame.place(relx=0.841, rely=0.73, anchor="center")
+        game_status = tk.StringVar()
+        status_dict = game.get_status_dict()
+        game_status.set(
+            f"Year: {status_dict['year']}\n"
+            f"\nBasal Area (BA): {status_dict['BA']:.1f} sqft/acre\n"
+            f"\nTrees Per Acre (TPA): {status_dict['TPA']}\n"
+            f"\nQuadratic Mean Diameter (QMD): {status_dict['QMD']:.1f} inches\n"
+            f"\nCarbon per Acre: {status_dict['carbon']:.1f} Metric Tons/acre\n"
+            f"\nCrowning Index: {status_dict['CI']:.1f}"
+        )
+        game_status_message = tk.Message(
+            metrics_frame,
+            textvariable=game_status,
+            width=450,
+            justify="center",
+            bg="#FFFFFF",
+            fg=FG_COLOR,
+            font=FONT
+        )
+        game_status_message.pack()
+        fire_risk_label = tk.Label(metrics_frame, wraplength=scale_x(400), justify="left", padx=10, pady=0, bg="#FFFFFF", font=("Courier", scale_font(14), "bold"))
+        fire_risk_label.pack()
+        spb_risk_label = tk.Label(metrics_frame, wraplength=scale_x(400), justify="left", padx=10, pady=0, bg="#FFFFFF", font=("Courier", scale_font(14), "bold"))
+        spb_risk_label.pack()
+        fire_risk_label.config(
+            text=f"\n\nFire Risk: {status_dict['fire_risk']}",
+            fg=get_risk_color(status_dict['fire_risk'])
+        )
+        spb_risk_label.config(
+            text=f"Southern Pine Beetle Risk: {status_dict['SPB_risk']}",
+            fg=get_risk_color(status_dict['SPB_risk'])
+        )
+
+        # --- Text Frame ---
+        text_frame = tk.Frame(short_frame, bg="#1b2336", bd=0)
+        text_frame.place(relx=0.88, rely=0.2, anchor="center")
+
+        tk.Label(
+            text_frame,
+            text="Congratulations! You created sunny spots in your forest & received funding to plant seedlings... \n\nYou earned the Shortleaf Pine achievement!",
+            bg="#1b2336", fg="#05dd4c", font=("Courier New", scale_font(16), "bold"),
+            pady=10, wraplength=scale_x(370), justify="center"
+        ).pack()
+
+        # --- Button Frame ---
+        button_frame = tk.Frame(short_frame, bg="#000000", bd=0)
+        button_frame.place(relx=0.88, rely=0.33, anchor="center")
+
+        tk.Button(
+            button_frame, text="Continue", font=("Courier", scale_font(16), "bold"), width=16,
+            bg="#05dd4c", fg="#1b2336", activebackground="#069134",
+            command=lambda: [short_frame.pack_forget(), show_next_queued_achievement_or_game()]
+        ).pack(pady=0)
     
     # --- Turkey Beard Screen ---
     def show_turkey_beard_screen():
@@ -1443,7 +1519,7 @@ def main():
             fg_frame, text="Return to Game", font=("Courier", scale_font(18), "bold"), width=16,
             bg="#929292", fg="#000000", activebackground="#FFFFFF",
             command=lambda: [play_page_close_sound(), fg_frame.pack_forget(), show_game_screen()]
-        ).place(relx=0.5, rely=0.915, anchor="center")
+        ).place(relx=0.6, rely=0.915, anchor="center")
 
     # --- Definitions Screen ---
     def show_definitions_screen():
@@ -1649,7 +1725,7 @@ def main():
             bunting_before = getattr(game, 'indigo_bunting_colonized', False)
             tree_frog_before = getattr(game, 'pine_barrens_tree_frog_colonized', False)
             turkey_before = getattr(game, 'turkey_beard_achieved', False)
-            
+            short_before = getattr(game, 'short_colonized', False)
 
             # queue all achievements earned THIS turn; show first if any.
             def queue_achievements_and_show(final_bg_img):
@@ -1663,6 +1739,8 @@ def main():
                              and not getattr(game, 'tree_frog_screen_shown', False))
                 new_turkey = (not turkey_before and getattr(game, 'turkey_beard_achieved', False)
                               and not getattr(game, 'turkey_beard_screen_shown', False))
+                new_short = (not short_before and getattr(game, 'short_colonized', False)
+                             and not getattr(game, 'short_screen_shown', False))
 
                 queue = []
                 # Order here defines popup order within the turn; adjust if desired
@@ -1672,6 +1750,7 @@ def main():
                 if new_bun:   queue.append('bunting')
                 if new_frog:  queue.append('frog')
                 if new_turkey: queue.append('turkey')
+                if new_short: queue.append('short')
 
                 if queue:
                     game.current_bg_img = final_bg_img       # persist this turn’s final scene
@@ -2286,6 +2365,12 @@ def main():
                 game.turkey_beard_achieved = True
                 show_turkey_beard_screen()
                 return
+            if code == 'short':
+                game.short_screen_shown = True
+                game.short_achieved = True
+                show_shortleaf_screen()
+                return
+            
         # No more queued achievements
         if game.stand['year'] >= 100:
             show_closing_screen()
@@ -2293,7 +2378,7 @@ def main():
             show_game_screen()
 
     # Start the main event loop
-    #show_gentian_screen()  # <-- TEMP: Jump directly to screen for testing
+    #show_shortleaf_screen()  # <-- TEMP: Jump directly to screen for testing
     root.mainloop()
 
 #DEFINING SOUND FUNCTIONS

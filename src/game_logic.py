@@ -63,12 +63,14 @@ class Game:
         self.suitable_bunting_ba_reached = False
         self.indigo_bunting_colonized = False
         self.pine_barrens_tree_frog_colonized = False
+        self.short_colonized = False
         # Achievement (persistent trophies)
         self.pine_snake_achieved = False
         self.gentian_achieved = False
         self.summer_tanager_achieved = False
         self.tree_frog_achieved = False
         self.indigo_bunting_achieved = False
+        self.short_achieved = False
         self.turkey_beard_achieved = False
         # Recruitment scheduling: pending additions (applied next cycle) and handled thresholds
         self.recruitment_pending = []        # list of dicts: {'threshold': int, 'ba_at_detection': float}
@@ -78,6 +80,7 @@ class Game:
         self.tree_frog_screen_shown = False
         self.gentian_screen_shown = False
         self.indigo_bunting_screen_shown = False
+        self.short_screen_shown = False
 
     def reset_game(self):
         """Reset the game to initial conditions."""
@@ -109,12 +112,14 @@ class Game:
         self.pine_barrens_tree_frog_colonized = False
         self.suitable_bunting_ba_reached = False
         self.indigo_bunting_colonized = False
+        self.short_colonized = False
         # Achievement (persistent trophies)
         self.pine_snake_achieved = False
         self.gentian_achieved = False
         self.summer_tanager_achieved = False
         self.tree_frog_achieved = False
         self.indigo_bunting_achieved = False
+        self.short_achieved = False
         self.turkey_beard_achieved = False
         # Recruitment scheduling: pending additions (applied next cycle) and handled thresholds
         self.recruitment_pending = []        # list of dicts: {'threshold': int, 'ba_at_detection': float}
@@ -124,6 +129,7 @@ class Game:
         self.tree_frog_screen_shown = False
         self.gentian_screen_shown = False
         self.indigo_bunting_screen_shown = False
+        self.short_screen_shown = False
         
     def update_stand(self, action):
         """
@@ -319,7 +325,13 @@ class Game:
             if random.random() < 0.4:
                 self.indigo_bunting_colonized = True
 
-        # Step 16: Pine Barrens tree frog logic
+        # Step 16: Shortleaf pine ("short") logic - mimics pine snake but 20% chance
+        if (45 <= ba_next <= 70) and not getattr(self, 'short_colonized', False):
+            if random.random() < 0.2:
+                self.short_colonized = True
+                self.short_achieved = True
+
+        # Step 17: Pine Barrens tree frog logic
         # Colonize after sequence: heavy thin ('3') -> prescribed burn ('4') -> >=2 consecutive '1's
         if not self.pine_barrens_tree_frog_colonized:
             # Include current action in the sequence check (since we append after logic)
@@ -419,6 +431,8 @@ class Game:
 
         if self.pine_snakes_colonized:
             summary += "\nPine snakes are utilizing this stand!\n"
+        if getattr(self, 'short_colonized', False):
+            summary += "\nShortleaf pine has established in this stand!\n"
             
         if self.gentian_colonized:
             summary += "\nGentian is now growing in this stand!\n"
