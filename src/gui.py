@@ -18,6 +18,9 @@ from game_logic import Game, ACTIONS
 from PIL import Image, ImageTk, ImageGrab
 import pygame
 import random
+import matplotlib
+from matplotlib.figure import Figure
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import webbrowser
 from tkinter import filedialog
 
@@ -188,21 +191,7 @@ def main():
         # Let the caller populate the overlay
         overlay_builder(overlay)
         return canvas  
-
-    def add_definitions_button(overlay):
-        """Add a definitions button to the bottom right of the overlay."""
-        btn = tk.Button(
-            overlay,
-            text="Definitions",
-            font=("Courier New", scale_font(13), "bold"),
-            width=14,
-            bg="#444466",
-            fg=FG_COLOR,
-            activebackground="#333355",
-            command=show_definitions_screen
-        )
-        btn.place(relx=1.0, rely=1.0, anchor="se", x=-20, y=-20)  # 20px from bottom right
-
+    
     def show_exit_survey_overlay_in(parent):
         """Show the exit survey overlay centered over the given parent frame."""
          # Create centered overlay frame
@@ -365,6 +354,7 @@ def main():
     ).pack(side="left", padx=5)
 
     # --- Main Game Screen Functions ---
+    # ---WINNING SCREEN---
     def show_closing_screen():
         play_trumpet_win_sound()
         for widget in root.winfo_children():
@@ -472,7 +462,16 @@ def main():
             wraplength=scale_x(400), justify="left"
         ).pack()
 
-        # --- Button Frame ---
+        # --- Analyze Button (separate frame for independent placement) ---
+        analyze_frame = tk.Frame(closing_frame, bg="#FFFFFF", bd=0)
+        analyze_frame.place(relx=0.6, rely=0.91, anchor="center")
+        tk.Button(
+            analyze_frame, text="Analyze My Management", font=("Courier", scale_font(17), "bold"), width=22,
+            bg="#1b2336", fg="#b5c3d8", activebackground="#8B580A",
+            command=lambda: show_analysis_lab(closing_frame)
+        ).pack()
+
+        # --- Button Frame (Try Again / Exit) ---
         button_frame = tk.Frame(closing_frame, bg="#FFFFFF", bd=0)
         button_frame.place(relx=0.845, rely=0.91, anchor="center")
         tk.Button(
@@ -658,7 +657,16 @@ def main():
             pady=0, wraplength=scale_x(400), justify="center"
         ).pack()
 
-        # --- Button Frame ---
+        # --- Analyze Button (separate frame for independent placement) ---
+        analyze_frame = tk.Frame(low_tpa_frame, bg="#FFFFFF", bd=0)
+        analyze_frame.place(relx=0.6, rely=0.91, anchor="center")
+        tk.Button(
+            analyze_frame, text="Analyze My Management", font=("Courier", scale_font(17), "bold"), width=22,
+            bg="#1b2336", fg="#b5c3d8", activebackground="#8B580A",
+            command=lambda: show_analysis_lab(low_tpa_frame)
+        ).pack()
+
+        # --- Button Frame (Try Again / Exit) ---
         button_frame = tk.Frame(low_tpa_frame, bg="#1b2336", bd=0)
         button_frame.place(relx=0.88, rely=0.315, anchor="center")
 
@@ -745,7 +753,16 @@ def main():
             pady=0, wraplength=scale_x(400), justify="center"
         ).pack()
 
-        # --- Button Frame ---
+        # --- Analyze Button (separate frame for independent placement) ---
+        analyze_frame = tk.Frame(fire_frame, bg="#FFFFFF", bd=0)
+        analyze_frame.place(relx=0.6, rely=0.91, anchor="center")
+        tk.Button(
+            analyze_frame, text="Analyze My Management", font=("Courier", scale_font(17), "bold"), width=22,
+            bg="#1b2336", fg="#b5c3d8", activebackground="#8B580A",
+            command=lambda: show_analysis_lab(fire_frame)
+        ).pack()
+
+        # --- Button Frame (Try Again / Exit) ---
         button_frame = tk.Frame(fire_frame, bg="#1b2336", bd=0)
         button_frame.place(relx=0.88, rely=0.33, anchor="center")  # Same as SPB loss
 
@@ -813,13 +830,7 @@ def main():
             text=f"Southern Pine Beetle Risk: {status_dict['SPB_risk']}",
             fg=get_risk_color(status_dict['SPB_risk'])
         )
-        narration = tk.StringVar()
-        narration.set("Better luck next time!")
-        narration_label = tk.Label(
-            metrics_frame, textvariable=narration, wraplength=scale_x(400), justify="left",
-            padx=10, pady=5, bg="#FFFFFF", fg=FG_COLOR, font=FONT
-        )
-        narration_label.pack()
+    
 
         # --- Text Frame ---
         text_frame = tk.Frame(spb_frame, bg="#1b2336", bd=0)
@@ -832,7 +843,16 @@ def main():
             pady=20, wraplength=scale_x(400), justify="center"
         ).pack()
 
-        # --- Button Frame ---
+        # --- Analyze Button (separate frame for independent placement) ---
+        analyze_frame = tk.Frame(spb_frame, bg="#FFFFFF", bd=0)
+        analyze_frame.place(relx=0.6, rely=0.91, anchor="center")
+        tk.Button(
+            analyze_frame, text="Analyze My Management", font=("Courier", scale_font(17), "bold"), width=22,
+            bg="#1b2336", fg="#b5c3d8", activebackground="#8B580A",
+            command=lambda: show_analysis_lab(spb_frame)
+        ).pack()
+
+        # --- Button Frame (Try Again / Exit) ---
         button_frame = tk.Frame(spb_frame, bg="#1b2336", bd=0)
         button_frame.place(relx=0.88, rely=0.325, anchor="center")  # Adjust as needed
 
@@ -846,6 +866,238 @@ def main():
             bg="#05dd4c", fg="#1b2336", activebackground="#611010",
             command=lambda: [play_page_turn_sound(),show_exit_survey_overlay_in(spb_frame)]
         ).pack(side="left", padx=10, pady=5)
+
+    # --- Analysis Lab Screen ---
+    def show_analysis_lab(prev_frame):
+        """Show the analysis_lab screen using analyze.png and the game's action summary.
+
+        prev_frame: the frame to return to when the player clicks 'Return to Game'.
+        """
+        # Hide current UI
+        for widget in root.winfo_children():
+            widget.pack_forget()
+
+        analysis_frame = tk.Frame(root, bg=BG_COLOR)
+        analysis_frame.pack(fill="both", expand=True)
+
+        # Background image
+        try:
+            img = Image.open("assets/analyze.png")
+            try:
+                img = img.resize((SCREEN_W, SCREEN_H), Image.Resampling.LANCZOS)
+            except Exception:
+                img = img.resize((SCREEN_W, SCREEN_H), Image.LANCZOS)
+            photo = ImageTk.PhotoImage(img)
+            bg_label = tk.Label(analysis_frame, image=photo)
+            bg_label.image = photo
+            bg_label.place(relx=0, rely=0, relwidth=1, relheight=1)
+        except Exception:
+            pass
+
+        # Show action summary similarly to closing screen
+        # --- Decadal DataFrame display (top of analysis screen) ---
+        try:
+            df = game.get_decadal_dataframe(10)
+            try:
+                df_text = df.to_string()
+            except Exception:
+                # fallback if DataFrame formatting fails
+                df_text = str(df)
+        except Exception as e:
+            df_text = f"Decadal data unavailable: {e}"
+
+        df_frame = tk.Frame(analysis_frame, bg="#2c404b", bd=0)
+        df_frame.place(relx=0.15, rely=0.13, anchor="nw")
+        # Scrolled Text widget (monospace) for table display
+        # Commented out scrollbars for previewing layout without them
+        # vscroll = tk.Scrollbar(df_frame, orient="vertical")
+        # hscroll = tk.Scrollbar(df_frame, orient="horizontal")
+        df_text_widget = tk.Text(
+            df_frame,
+            width=57,
+            height=15,
+            wrap="none",
+            font=("Courier New", max(8, scale_font(15))),
+            bg="#2c404b",
+            fg="#05dd4c",
+            insertbackground="#05dd4c",
+            selectbackground="#30515a",
+            bd=0,
+            relief="flat"
+        )
+        # vscroll.config(command=df_text_widget.yview)
+        # hscroll.config(command=df_text_widget.xview)
+        # df_text_widget.config(yscrollcommand=vscroll.set, xscrollcommand=hscroll.set)
+        # Keep the text widget placed in the grid; comment out scrollbar placement
+        df_text_widget.grid(row=0, column=0, sticky="nsew")
+        # vscroll.grid(row=0, column=1, sticky="ns")
+        # hscroll.grid(row=1, column=0, sticky="ew")
+        df_frame.grid_rowconfigure(0, weight=1)
+        df_frame.grid_columnconfigure(0, weight=1)
+        df_text_widget.insert("1.0", df_text)
+        # Ensure text stays the desired color when widget is disabled on all Tk builds
+        df_text_widget.tag_add("df_color", "1.0", "end")
+        df_text_widget.tag_config("df_color", foreground="#05dd4c")
+
+        # --- action summary ---
+        text_frame = tk.Frame(analysis_frame, bg="#1b2336", bd=0)
+        text_frame.place(relx=0.88, rely=0.223, anchor="center")
+        tk.Label(
+            text_frame,
+            text=game.get_action_summary(),
+            bg="#1b2336", fg="#05dd4c", font=("Courier New", scale_font(17), "bold"),
+            wraplength=scale_x(400), justify="left"
+        ).pack()
+
+        # Return button
+        button_frame = tk.Frame(analysis_frame, bg="#FFFFFF", bd=0)
+        button_frame.place(relx=0.46, rely=0.58, anchor="center")
+        tk.Button(
+            button_frame, text="Return to Game", font=("Courier", scale_font(14), "bold"), width=18,
+            bg="#23ac23", fg="#023a02", activebackground="#10612B",
+            command=lambda: [analysis_frame.pack_forget(), prev_frame.pack(fill="both", expand=True)]
+        ).pack()
+
+        # --- Variable buttons (stacked) to plot each metric vs Year ---
+        try:
+            from matplotlib.figure import Figure
+            from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+        except Exception:
+            Figure = None
+            FigureCanvasTkAgg = None
+
+        vars_list = ['QMD', 'TPA', 'BA', 'carbon', 'CI', 'fire_risk', 'SPB_risk']
+        buttons_frame = tk.Frame(analysis_frame, bg="#1b2336", bd=0)
+        buttons_frame.place(relx=0.88, rely=0.48, anchor="n")
+
+        # Keep track of the currently shown graph overlay so we only have one at a time
+        current_graph = {"frame": None}
+
+        def show_variable_plot(var):
+            if Figure is None or FigureCanvasTkAgg is None:
+                try:
+                    messagebox.showerror("Plot error", "matplotlib not available")
+                except Exception:
+                    pass
+                return
+
+            try:
+                # Use the current df if available, otherwise request fresh data
+                try:
+                    plot_df = df.copy()
+                except Exception:
+                    plot_df = game.get_decadal_dataframe(10)
+
+                # remove spacer row if present
+                if '' in plot_df.index:
+                    plot_df = plot_df.loc[plot_df.index != '']
+                if plot_df.empty:
+                    messagebox.showinfo("No data", "No decadal data available to plot.")
+                    return
+
+                years = []
+                for y in plot_df.index:
+                    try:
+                        years.append(int(y))
+                    except Exception:
+                        try:
+                            years.append(int(str(y)))
+                        except Exception:
+                            years.append(None)
+
+                vals = plot_df[var].tolist() if var in plot_df.columns else []
+
+                # Handle categorical risk variables by mapping to numeric scale
+                if var in ('fire_risk', 'SPB_risk'):
+                    mapping = {'Low': 1, 'Moderate': 2, 'High': 3}
+                    y_vals = [mapping.get(v, float('nan')) for v in vals]
+                    y_ticks = [1, 2, 3]
+                    y_ticklabels = ['Low', 'Moderate', 'High']
+                else:
+                    y_vals = []
+                    for v in vals:
+                        try:
+                            y_vals.append(float(v))
+                        except Exception:
+                            y_vals.append(float('nan'))
+
+                # If a graph is already open, close it before opening a new one
+                try:
+                    if current_graph.get("frame") and current_graph["frame"].winfo_exists():
+                        current_graph["frame"].destroy()
+                except Exception:
+                    pass
+
+                # Overlay frame placed to cover the data frame area
+                graph_frame = tk.Frame(analysis_frame, bg="#FFFFFF", bd=0)
+                graph_frame.place(relx=0.15, rely=0.13, anchor="nw")
+                current_graph["frame"] = graph_frame
+
+                # Figure/axis styling to match the app theme
+                fig = Figure(figsize=(7, 4.5), dpi=100, facecolor='#2c404b')
+                ax = fig.add_subplot(111)
+                ax.set_facecolor('#1b2336')
+                # Plot line and marker colors
+                ax.plot(years, y_vals, marker='o', linestyle='-', color='#05dd4c',
+                        markerfacecolor='#05dd4c', markeredgecolor='#1b2336')
+                ax.set_xlabel('Year', color='#b5c3d8')
+                ax.set_title(var, color='#b5c3d8')
+                ax.tick_params(colors='#b5c3d8')
+                # Make spines match theme
+                for spine in ax.spines.values():
+                    spine.set_color('#2c404b')
+                if var in ('fire_risk', 'SPB_risk'):
+                    ax.set_yticks(y_ticks)
+                    ax.set_yticklabels(y_ticklabels, color='#b5c3d8')
+
+                canvas = FigureCanvasTkAgg(fig, master=graph_frame)
+                canvas.draw()
+                canvas.get_tk_widget().pack(fill='both', expand=True)
+
+                # Close button for the graph overlay
+                def close_graph():
+                    try:
+                        if current_graph.get("frame") and current_graph["frame"].winfo_exists():
+                            current_graph["frame"].destroy()
+                    finally:
+                        current_graph["frame"] = None
+
+                tk.Button(graph_frame, text="Close Graph", font=("Courier", scale_font(11), "bold"),
+                          bg="#1b2336", fg="#b5c3d8", command=close_graph).place(relx=0.02, rely=0.02)
+                graph_frame.lift()
+            except Exception as e:
+                try:
+                    messagebox.showerror("Plot error", str(e))
+                except Exception:
+                    pass
+
+        for var in vars_list:
+            tk.Button(
+                buttons_frame,
+                text=var,
+                width=18,
+                font=("Courier", scale_font(12), "bold"),
+                bg="#05dd4c",
+                fg="#1b2336",
+                activebackground="#228a44",
+                command=lambda v=var: show_variable_plot(v)
+            ).pack(pady=4)
+
+        # --- Definitions Button Frame (same placement as main screen) ---
+        definitions_frame = tk.Frame(analysis_frame, bg="#FFFFFF")
+        definitions_frame.place(relx=0.05, rely=0.96, anchor="sw")
+        definitions_button = tk.Button(
+            definitions_frame,
+            text="Click for Definitions",
+            font=("Courier New", scale_font(12), "bold"),
+            width=23,
+            bg="#000000",
+            fg="#ffffff",
+            activebackground="#FFE208",
+            command=lambda: show_analysis_definitions(prev_frame)
+        )
+        definitions_button.pack()
+
 
     # ACHIEVMENT SCREENS
     # --- Pine Snake Screen ---
@@ -1584,6 +1836,47 @@ def main():
             def_frame, text="Return to Game", font=("Courier", scale_font(18), "bold"), width=16,
             bg="#e21fae", fg="#000000", activebackground="#FFFFFF",
             command=lambda: [play_page_close_sound(), def_frame.pack_forget(), show_game_screen()]
+        ).place(relx=0.225, rely=0.915, anchor="center")
+
+    # --- definitions screen for analysis lab ---
+    def show_analysis_definitions(prev_frame):
+        """Definitions screen variant for the Analysis Lab.
+
+        Uses `assets/analyze_definitions.png` as background and does not show
+        any game metrics. `prev_frame` is packed back when the user returns.
+        """
+        play_page_turn_sound()
+        for widget in root.winfo_children():
+            widget.pack_forget()
+        def_frame = tk.Frame(root, bg=BG_COLOR)
+        def_frame.pack(fill="both", expand=True)
+
+        # Load and display the definitions background image in a label
+        try:
+            bg_img = Image.open("assets/analyze_definitions.png")
+            bg_img = bg_img.resize((SCREEN_W, SCREEN_H))
+            bg_photo = ImageTk.PhotoImage(bg_img)
+            bg_label = tk.Label(def_frame, image=bg_photo)
+            bg_label.image = bg_photo
+            bg_label.place(relx=0, rely=0, relwidth=1, relheight=1)
+        except Exception:
+            pass
+
+        # --- action summary (same as Analysis Lab) ---
+        text_frame = tk.Frame(def_frame, bg="#1b2336", bd=0)
+        text_frame.place(relx=0.88, rely=0.223, anchor="center")
+        tk.Label(
+            text_frame,
+            text=game.get_action_summary(),
+            bg="#1b2336", fg="#05dd4c", font=("Courier New", scale_font(17), "bold"),
+            wraplength=scale_x(400), justify="left"
+        ).pack()
+
+        # Return button: go back to the Analysis Lab screen
+        tk.Button(
+            def_frame, text="Return to Analysis", font=("Courier", scale_font(18), "bold"), width=19,
+            bg="#e21fae", fg="#000000", activebackground="#FFFFFF",
+            command=lambda: [play_page_close_sound(), def_frame.pack_forget(), show_analysis_lab(prev_frame)]
         ).place(relx=0.225, rely=0.915, anchor="center")
 
     def show_game_screen():

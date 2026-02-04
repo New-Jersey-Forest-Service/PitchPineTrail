@@ -15,6 +15,8 @@ with different management strategies and random events.
 
 import random
 import math
+from copy import deepcopy
+import pandas as pd
 
 ACTIONS = {
     '1': 'Do nothing',
@@ -34,7 +36,7 @@ class Game:
     """
     
     def __init__(self):
-        """Initialize a new game with default forest stand values."""
+        """Initialize a new game with default forest stand values.""" 
         qmd = 5.5
         tpa = 650
         ba = round(0.005454 * tpa * (qmd ** 2), 1)
@@ -81,6 +83,10 @@ class Game:
         self.gentian_screen_shown = False
         self.indigo_bunting_screen_shown = False
         self.short_screen_shown = False
+
+        # History: snapshot of stand state after each update_stand call
+        # Each entry: dict with keys 'year','QMD','TPA','BA','carbon','CI','fire_risk','SPB_risk','events'
+        self.history = []
 
     def reset_game(self):
         """Reset the game to initial conditions."""
@@ -130,7 +136,10 @@ class Game:
         self.gentian_screen_shown = False
         self.indigo_bunting_screen_shown = False
         self.short_screen_shown = False
-        
+
+        # Clear runtime history
+        self.history = []
+
     def update_stand(self, action):
         """
         Update forest stand characteristics using Reineke-based growth and Crowning Index logic.
@@ -351,7 +360,20 @@ class Game:
         # After updating the stand/year, record the action:
         self.action_history.append((self.stand['year'], action))
 
-        
+        # --- Snapshot current stand into history for later analysis/plotting ---
+        snapshot = {
+            'year': int(self.stand.get('year', 0)),
+            'QMD': float(self.stand.get('QMD', 0.0)),
+            'TPA': int(round(self.stand.get('TPA', 0))),
+            'BA': float(self.stand.get('BA', 0.0)),
+            'carbon': float(self.stand.get('carbon', 0.0)),
+            'CI': float(self.stand.get('CI', 0.0)),
+            'fire_risk': self.stand.get('fire_risk'),
+            'SPB_risk': self.stand.get('SPB_risk'),
+            # store a deep copy of events up to this year
+            'events': deepcopy(self.stand.get('events', []))
+        }
+        self.history.append(snapshot)
 
     def is_low_tpa_game_over(self):
         """Check if game should end due to one-time (rather than consecutive low TPA conditions. change 1 to 2 for consecutive low conditions"""
@@ -457,3 +479,82 @@ class Game:
             action_name = ACTIONS.get(str(action), str(action))
             lines.append(f"Year {year}: {action_name}")
         return "\n".join(lines) if lines else "No actions taken."
+
+    def get_decadal_dataframe(self, interval=10):
+        """
+        Return a pandas DataFrame containing snapshots at every `interval` years.
+        - Rows: years (one row per decadal year)
+        - Columns: variables ['Year','QMD','TPA','BA','carbon','CI','fire_risk','SPB_risk','events']
+        If pandas is not available this will raise ImportError.
+        """
+        # Ensure we have history; include current stand if not already present
+        if not self.history:
+            # create a single-row snapshot from current stand
+            current = {
+                'year': int(self.stand.get('year', 0)),
+                'QMD': float(self.stand.get('QMD', 0.0)),
+                'TPA': int(round(self.stand.get('TPA', 0))),
+                'BA': float(self.stand.get('BA', 0.0)),
+                'carbon': float(self.stand.get('carbon', 0.0)),
+                'CI': float(self.stand.get('CI', 0.0)),
+                'fire_risk': self.stand.get('fire_risk'),
+                'SPB_risk': self.stand.get('SPB_risk'),
+            }
+            snaps = [current]
+        else:
+            snaps = self.history.copy()
+            # also ensure current stand is represented (avoid duplicate years)
+            curr_year = int(self.stand.get('year', 0))
+            if not any(s['year'] == curr_year for s in snaps):
+                snaps.append({
+                    'year': curr_year,
+                    'QMD': float(self.stand.get('QMD', 0.0)),
+                    'TPA': int(round(self.stand.get('TPA', 0))),
+                    'BA': float(self.stand.get('BA', 0.0)),
+                    'carbon': float(self.stand.get('carbon', 0.0)),
+                    'CI': float(self.stand.get('CI', 0.0)),
+                    'fire_risk': self.stand.get('fire_risk'),
+                    'SPB_risk': self.stand.get('SPB_risk'),
+                })
+
+        # Build dict year->snapshot (prefer latest snapshot for duplicate years)
+        year_map = {}
+        for s in snaps:
+            year_map[int(s['year'])] = s
+        years = sorted(y for y in year_map.keys() if (interval == 1 or (y % interval == 0)))
+
+        # If no decadal years found, return empty dataframe with expected columns
+        columns = ['Year', 'QMD', 'TPA', 'BA', 'carbon', 'CI', 'Fire risk', 'SPB risk']
+        if not years:
+            return pd.DataFrame(columns=columns)
+
+        rows = []
+        for y in years:
+            s = year_map.get(y, {})
+            row = {
+                'Year': int(y),
+                'QMD': s.get('QMD'),
+                'TPA': s.get('TPA'),
+                'BA': s.get('BA'),
+                'carbon': s.get('carbon'),
+                'CI': s.get('CI'),
+                'Fire risk': s.get('fire_risk'),
+                'SPB risk': s.get('SPB_risk'),
+            }
+            rows.append(row)
+
+        df = pd.DataFrame(rows, columns=columns)
+
+        # Use Year as the row index so printed rows show years instead of 0..N-1
+        df = df.set_index('Year')
+
+        # Insert a blank row between the column names and the data for visual spacing.
+        # Create an empty row with empty strings so to_string shows a blank line.
+        #empty_row = pd.DataFrame([['' for _ in df.columns]], columns=df.columns, index=[''])
+        #df = pd.concat([empty_row, df])
+
+        df.index.name = 'Year'
+
+        
+
+        return df
