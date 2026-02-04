@@ -908,10 +908,6 @@ def main():
 
         df_frame = tk.Frame(analysis_frame, bg="#2c404b", bd=0)
         df_frame.place(relx=0.15, rely=0.13, anchor="nw")
-        # Scrolled Text widget (monospace) for table display
-        # Commented out scrollbars for previewing layout without them
-        # vscroll = tk.Scrollbar(df_frame, orient="vertical")
-        # hscroll = tk.Scrollbar(df_frame, orient="horizontal")
         df_text_widget = tk.Text(
             df_frame,
             width=57,
@@ -925,13 +921,7 @@ def main():
             bd=0,
             relief="flat"
         )
-        # vscroll.config(command=df_text_widget.yview)
-        # hscroll.config(command=df_text_widget.xview)
-        # df_text_widget.config(yscrollcommand=vscroll.set, xscrollcommand=hscroll.set)
-        # Keep the text widget placed in the grid; comment out scrollbar placement
         df_text_widget.grid(row=0, column=0, sticky="nsew")
-        # vscroll.grid(row=0, column=1, sticky="ns")
-        # hscroll.grid(row=1, column=0, sticky="ew")
         df_frame.grid_rowconfigure(0, weight=1)
         df_frame.grid_columnconfigure(0, weight=1)
         df_text_widget.insert("1.0", df_text)
@@ -968,7 +958,7 @@ def main():
 
         vars_list = ['QMD', 'TPA', 'BA', 'carbon', 'CI', 'fire_risk', 'SPB_risk']
         buttons_frame = tk.Frame(analysis_frame, bg="#1b2336", bd=0)
-        buttons_frame.place(relx=0.88, rely=0.48, anchor="n")
+        buttons_frame.place(relx=0.88, rely=0.72, anchor="n")
 
         # Keep track of the currently shown graph overlay so we only have one at a time
         current_graph = {"frame": None}
@@ -1043,12 +1033,43 @@ def main():
                 ax.set_xlabel('Year', color='#b5c3d8')
                 ax.set_title(var, color='#b5c3d8')
                 ax.tick_params(colors='#b5c3d8')
+                # Force x-axis to always span Years 1-100 with ticks every 10 years
+                try:
+                    ax.set_xlim(0, 100)
+                    xt = list(range(10, 101, 10))
+                    ax.set_xticks(xt)
+                    ax.set_xticklabels([str(x) for x in xt], color='#b5c3d8')
+                except Exception:
+                    # If anything goes wrong setting ticks, ignore and continue
+                    pass
                 # Make spines match theme
                 for spine in ax.spines.values():
                     spine.set_color('#2c404b')
                 if var in ('fire_risk', 'SPB_risk'):
                     ax.set_yticks(y_ticks)
                     ax.set_yticklabels(y_ticklabels, color='#b5c3d8')
+
+                # Per-variable y-axis labels and fixed limits
+                try:
+                    y_axis_configs = {
+                        'QMD': ("Quadratic Mean Diameter (inches)", 0, 25),
+                        'TPA': ("Trees per Acre", 0, 650),
+                        'BA': ("Basal Area (sq ft/acre)", 0, 150),
+                        'carbon': ("Carbon (Metric Tons/acre)", 0, 25),
+                        'CI': ("Crowning Index (mph)", 0, 50),
+                    }
+                    if var in y_axis_configs:
+                        y_label, y_min, y_max = y_axis_configs[var]
+                        ax.set_ylabel(y_label, color='#b5c3d8')
+                        if y_min is not None and y_max is not None:
+                            try:
+                                ax.set_ylim(y_min, y_max)
+                            except Exception:
+                                pass
+                    else:
+                        ax.set_ylabel(var, color='#b5c3d8')
+                except Exception:
+                    pass
 
                 canvas = FigureCanvasTkAgg(fig, master=graph_frame)
                 canvas.draw()

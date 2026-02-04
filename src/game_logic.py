@@ -524,7 +524,7 @@ class Game:
         years = sorted(y for y in year_map.keys() if (interval == 1 or (y % interval == 0)))
 
         # If no decadal years found, return empty dataframe with expected columns
-        columns = ['Year', 'QMD', 'TPA', 'BA', 'carbon', 'CI', 'Fire risk', 'SPB risk']
+        columns = ['Year', 'QMD', 'TPA', 'BA', 'Carbon', 'CI', 'Fire risk', 'SPB risk']
         if not years:
             return pd.DataFrame(columns=columns)
 
@@ -536,7 +536,7 @@ class Game:
                 'QMD': s.get('QMD'),
                 'TPA': s.get('TPA'),
                 'BA': s.get('BA'),
-                'carbon': s.get('carbon'),
+                'Carbon': s.get('carbon'),
                 'CI': s.get('CI'),
                 'Fire risk': s.get('fire_risk'),
                 'SPB risk': s.get('SPB_risk'),
