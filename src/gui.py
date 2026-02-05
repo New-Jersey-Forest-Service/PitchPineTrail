@@ -18,6 +18,9 @@ from game_logic import Game, ACTIONS
 from PIL import Image, ImageTk, ImageGrab
 import pygame
 import random
+import matplotlib
+from matplotlib.figure import Figure
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import webbrowser
 from tkinter import filedialog
 
@@ -188,21 +191,7 @@ def main():
         # Let the caller populate the overlay
         overlay_builder(overlay)
         return canvas  
-
-    def add_definitions_button(overlay):
-        """Add a definitions button to the bottom right of the overlay."""
-        btn = tk.Button(
-            overlay,
-            text="Definitions",
-            font=("Courier New", scale_font(13), "bold"),
-            width=14,
-            bg="#444466",
-            fg=FG_COLOR,
-            activebackground="#333355",
-            command=show_definitions_screen
-        )
-        btn.place(relx=1.0, rely=1.0, anchor="se", x=-20, y=-20)  # 20px from bottom right
-
+    
     def show_exit_survey_overlay_in(parent):
         """Show the exit survey overlay centered over the given parent frame."""
          # Create centered overlay frame
@@ -365,6 +354,7 @@ def main():
     ).pack(side="left", padx=5)
 
     # --- Main Game Screen Functions ---
+    # ---WINNING SCREEN---
     def show_closing_screen():
         play_trumpet_win_sound()
         for widget in root.winfo_children():
@@ -472,7 +462,16 @@ def main():
             wraplength=scale_x(400), justify="left"
         ).pack()
 
-        # --- Button Frame ---
+        # --- Analyze Button (separate frame for independent placement) ---
+        analyze_frame = tk.Frame(closing_frame, bg="#FFFFFF", bd=0)
+        analyze_frame.place(relx=0.6, rely=0.91, anchor="center")
+        tk.Button(
+            analyze_frame, text="Analyze My Management", font=("Courier", scale_font(17), "bold"), width=22,
+            bg="#1b2336", fg="#b5c3d8", activebackground="#8B580A",
+            command=lambda: [play_computer_startup(), show_analysis_lab(closing_frame)]
+        ).pack()
+
+        # --- Button Frame (Try Again / Exit) ---
         button_frame = tk.Frame(closing_frame, bg="#FFFFFF", bd=0)
         button_frame.place(relx=0.845, rely=0.91, anchor="center")
         tk.Button(
@@ -658,7 +657,16 @@ def main():
             pady=0, wraplength=scale_x(400), justify="center"
         ).pack()
 
-        # --- Button Frame ---
+        # --- Analyze Button (separate frame for independent placement) ---
+        analyze_frame = tk.Frame(low_tpa_frame, bg="#FFFFFF", bd=0)
+        analyze_frame.place(relx=0.6, rely=0.91, anchor="center")
+        tk.Button(
+            analyze_frame, text="Analyze My Management", font=("Courier", scale_font(17), "bold"), width=22,
+            bg="#1b2336", fg="#b5c3d8", activebackground="#8B580A",
+            command=lambda: [play_computer_startup(), show_analysis_lab(low_tpa_frame)]
+        ).pack()
+
+        # --- Button Frame (Try Again / Exit) ---
         button_frame = tk.Frame(low_tpa_frame, bg="#1b2336", bd=0)
         button_frame.place(relx=0.88, rely=0.315, anchor="center")
 
@@ -745,7 +753,16 @@ def main():
             pady=0, wraplength=scale_x(400), justify="center"
         ).pack()
 
-        # --- Button Frame ---
+        # --- Analyze Button (separate frame for independent placement) ---
+        analyze_frame = tk.Frame(fire_frame, bg="#FFFFFF", bd=0)
+        analyze_frame.place(relx=0.6, rely=0.91, anchor="center")
+        tk.Button(
+            analyze_frame, text="Analyze My Management", font=("Courier", scale_font(17), "bold"), width=22,
+            bg="#1b2336", fg="#b5c3d8", activebackground="#8B580A",
+            command=lambda: [play_computer_startup(), show_analysis_lab(fire_frame)]
+        ).pack()
+
+        # --- Button Frame (Try Again / Exit) ---
         button_frame = tk.Frame(fire_frame, bg="#1b2336", bd=0)
         button_frame.place(relx=0.88, rely=0.33, anchor="center")  # Same as SPB loss
 
@@ -813,13 +830,7 @@ def main():
             text=f"Southern Pine Beetle Risk: {status_dict['SPB_risk']}",
             fg=get_risk_color(status_dict['SPB_risk'])
         )
-        narration = tk.StringVar()
-        narration.set("Better luck next time!")
-        narration_label = tk.Label(
-            metrics_frame, textvariable=narration, wraplength=scale_x(400), justify="left",
-            padx=10, pady=5, bg="#FFFFFF", fg=FG_COLOR, font=FONT
-        )
-        narration_label.pack()
+    
 
         # --- Text Frame ---
         text_frame = tk.Frame(spb_frame, bg="#1b2336", bd=0)
@@ -832,7 +843,16 @@ def main():
             pady=20, wraplength=scale_x(400), justify="center"
         ).pack()
 
-        # --- Button Frame ---
+        # --- Analyze Button (separate frame for independent placement) ---
+        analyze_frame = tk.Frame(spb_frame, bg="#FFFFFF", bd=0)
+        analyze_frame.place(relx=0.6, rely=0.91, anchor="center")
+        tk.Button(
+            analyze_frame, text="Analyze My Management", font=("Courier", scale_font(17), "bold"), width=22,
+            bg="#1b2336", fg="#b5c3d8", activebackground="#8B580A",
+            command=lambda: [play_computer_startup(), show_analysis_lab(spb_frame)]
+        ).pack()
+
+        # --- Button Frame (Try Again / Exit) ---
         button_frame = tk.Frame(spb_frame, bg="#1b2336", bd=0)
         button_frame.place(relx=0.88, rely=0.325, anchor="center")  # Adjust as needed
 
@@ -846,6 +866,439 @@ def main():
             bg="#05dd4c", fg="#1b2336", activebackground="#611010",
             command=lambda: [play_page_turn_sound(),show_exit_survey_overlay_in(spb_frame)]
         ).pack(side="left", padx=10, pady=5)
+
+    # --- Analysis Lab Screen ---
+    def show_analysis_lab(prev_frame):
+        """Show the analysis_lab screen using analyze.png and the game's action summary.
+
+        prev_frame: the frame to return to when the player clicks 'Return to Game'.
+        """
+        # Hide current UI
+        for widget in root.winfo_children():
+            widget.pack_forget()
+
+        # Stop any losing/foreground forest sounds so analysis audio can play cleanly
+        try:
+            stop_losing_trombone_sound()
+        except Exception:
+            pass
+        try:
+            stop_forest_sound()
+        except Exception:
+            pass
+        try:
+            stop_wind_sound()
+        except Exception:
+            pass
+        try:
+            stop_spb_eating_sound()
+        except Exception:
+            pass
+
+        analysis_frame = tk.Frame(root, bg=BG_COLOR)
+        analysis_frame.pack(fill="both", expand=True)
+
+        # Background image
+        try:
+            img = Image.open("assets/analyze.png")
+            try:
+                img = img.resize((SCREEN_W, SCREEN_H), Image.Resampling.LANCZOS)
+            except Exception:
+                img = img.resize((SCREEN_W, SCREEN_H), Image.LANCZOS)
+            photo = ImageTk.PhotoImage(img)
+            bg_label = tk.Label(analysis_frame, image=photo)
+            bg_label.image = photo
+            bg_label.place(relx=0, rely=0, relwidth=1, relheight=1)
+        except Exception:
+            pass
+
+        # Start analysis lab ambient sound
+        try:
+            play_analysis_lab_sound()
+        except Exception:
+            pass
+
+        # Show action summary similarly to closing screen
+        # --- Decadal DataFrame display (top of analysis screen) ---
+        try:
+            df = game.get_decadal_dataframe(10)
+            try:
+                df_text = df.to_string()
+            except Exception:
+                # fallback if DataFrame formatting fails
+                df_text = str(df)
+        except Exception as e:
+            df_text = f"Decadal data unavailable: {e}"
+
+        df_frame = tk.Frame(analysis_frame, bg="#2c404b", bd=0)
+        df_frame.place(relx=0.15, rely=0.13, anchor="nw")
+        df_text_widget = tk.Text(
+            df_frame,
+            width=62,
+            height=15,
+            wrap="none",
+            font=("Courier New", max(8, scale_font(15))),
+            bg="#2c404b",
+            fg="#05dd4c",
+            insertbackground="#05dd4c",
+            selectbackground="#30515a",
+            bd=0,
+            relief="flat"
+        )
+        df_text_widget.grid(row=0, column=0, sticky="nsew")
+        df_frame.grid_rowconfigure(0, weight=1)
+        df_frame.grid_columnconfigure(0, weight=1)
+        df_text_widget.insert("1.0", df_text)
+        # Ensure text stays the desired color when widget is disabled on all Tk builds
+        df_text_widget.tag_add("df_color", "1.0", "end")
+        df_text_widget.tag_config("df_color", foreground="#05dd4c")
+
+        # --- action summary ---
+        text_frame = tk.Frame(analysis_frame, bg="#1b2336", bd=0)
+        text_frame.place(relx=0.88, rely=0.223, anchor="center")
+        tk.Label(
+            text_frame,
+            text=game.get_action_summary(),
+            bg="#1b2336", fg="#05dd4c", font=("Courier New", scale_font(17), "bold"),
+            wraplength=scale_x(400), justify="left"
+        ).pack()
+
+        # --- achievements (separate frame under action summary) ---
+        try:
+            achievements = game.get_achievements_list()
+        except Exception:
+            achievements = []
+
+        ach_frame = tk.Frame(analysis_frame, bg="#1b2336", bd=0)
+        ach_frame.place(relx=0.81, rely=0.44, anchor="nw")
+        
+        ach_text = tk.Text(
+            ach_frame,
+            width=30,
+            height=13,
+            wrap="word",
+            font=("Courier New", max(8, scale_font(13)), "bold"),
+            bg="#1b2336",
+            fg="#05dd4c",
+            insertbackground="#05dd4c",
+            bd=0,
+            relief="flat"
+        )
+        ach_text.pack()
+        if achievements:
+            # group achievements by year so the year label appears once
+            grouped = {}
+            for year, name in achievements:
+                grouped.setdefault(year, []).append(name)
+            for year in sorted(grouped.keys()):
+                ach_text.insert("end", f"Year {year}:\n")
+                for name in grouped[year]:
+                    ach_text.insert("end", f"   {name}\n")
+        else:
+            ach_text.insert("end", "No achievements.\n")
+        ach_text.config(state="disabled")
+
+        # Return button
+        button_frame = tk.Frame(analysis_frame, bg="#fff3dd", bd=0)
+        button_frame.place(relx=0.48, rely=0.68, anchor="center")
+        tk.Button(
+            button_frame, text="Return to Game", font=("Courier", scale_font(13), "bold"), width=16,
+            bg="#fff3dd", fg="#37384e", activebackground="#9b917f",
+            command=lambda: [play_computer_shutdown(), stop_analysis_lab_sound(), analysis_frame.pack_forget(), prev_frame.pack(fill="both", expand=True)]
+        ).pack()
+
+        # --- Save Data button (own frame) ---
+        save_frame = tk.Frame(analysis_frame, bg="#2c404b", bd=0)
+        save_frame.place(relx=0.35, rely=0.47, anchor="center")
+
+        def do_save_dataframe():
+            try:
+                play_save_sound()
+            except Exception:
+                pass
+            try:
+                from datetime import datetime
+                default_name = datetime.now().strftime("PitchPineTrail_data_%Y%m%d_%H%M%S.csv")
+                file_path = filedialog.asksaveasfilename(
+                    title="Save decadal data as CSV",
+                    defaultextension=".csv",
+                    initialfile=default_name,
+                    filetypes=[("CSV (comma-separated)", "*.csv"), ("All files", "*.*")]
+                )
+                if not file_path:
+                    return
+                try:
+                    # use df captured from earlier in this function
+                    # add an Actions column mapping game.action_history to each saved year
+                    try:
+                        save_df = df.copy()
+                        # build mapping year -> list of action names
+                        actions_map = {}
+                        for y, a in getattr(game, 'action_history', []):
+                            try:
+                                name = ACTIONS.get(str(a), str(a))
+                            except Exception:
+                                name = str(a)
+                            actions_map.setdefault(int(y), []).append(name)
+
+                        def _index_to_year(idx):
+                            # df index may contain 'Start' or integers
+                            try:
+                                if str(idx).lower() == 'start':
+                                    return -1
+                            except Exception:
+                                pass
+                            try:
+                                return int(idx)
+                            except Exception:
+                                return idx
+
+                        actions_col = []
+                        for idx in save_df.index:
+                            yr = _index_to_year(idx)
+                            acts = actions_map.get(yr, [])
+                            actions_col.append('; '.join(acts) if acts else '')
+
+                        save_df['Actions'] = actions_col
+                        save_df.to_csv(file_path, index=True)
+                    except Exception:
+                        # fallback: try saving original df
+                        df.to_csv(file_path, index=True)
+                    try:
+                        messagebox.showinfo("Saved", f"Data saved to:\n{file_path}")
+                    except Exception:
+                        print(f"Saved data to: {file_path}")
+                except Exception as e:
+                    try:
+                        messagebox.showerror("Save error", f"Could not save CSV: {e}")
+                    except Exception:
+                        print("Save error:", e)
+            except Exception as e:
+                print("Unexpected error during save:", e)
+
+        save_btn = tk.Button(
+            save_frame,
+            text="Save Data",
+            font=("Courier", scale_font(13), "bold"),
+            width=12,
+            bg="#2c404b",  # navy
+            fg="#05dd4c",  # lime green
+            activebackground="#152a35",
+            command=do_save_dataframe
+        )
+        save_btn.pack()
+
+        # --- Variable buttons (stacked) to plot each metric vs Year ---
+        try:
+            from matplotlib.figure import Figure
+            from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+        except Exception:
+            Figure = None
+            FigureCanvasTkAgg = None
+
+        vars_list = ['QMD', 'TPA', 'BA', 'carbon', 'CI', 'fire_risk', 'SPB_risk']
+        # Per-variable display titles for plots (allows button name to differ from graph title)
+        graph_titles = {
+            'QMD': "Quadratic Mean Diameter over time ",
+            'TPA': "Trees per Acre over time",
+            'BA': "Basal Area over time",
+            'carbon': "Carbon in Metric Tons/acre over time",
+            'CI': "Crowning Index over time",
+            'fire_risk': "Fire Risk over time",
+            'SPB_risk': "SPB Risk over time",
+        }
+        # Per-variable button labels (customize what each graph button displays)
+        graph_button_labels = {
+            'QMD': 'QMD',
+            'TPA': 'TPA',
+            'BA': 'BA',
+            'carbon': 'Carbon',
+            'CI': 'CI',
+            'fire_risk': 'Fire Risk',
+            'SPB_risk': 'SPB Risk',
+        }
+        buttons_frame = tk.Frame(analysis_frame, bg="#1b2336", bd=0)
+        buttons_frame.place(relx=0.88, rely=0.72, anchor="n")
+
+        # Keep track of the currently shown graph overlay so we only have one at a time
+        current_graph = {"frame": None}
+
+        def show_variable_plot(var):
+            if Figure is None or FigureCanvasTkAgg is None:
+                try:
+                    messagebox.showerror("Plot error", "matplotlib not available")
+                except Exception:
+                    pass
+                return
+
+            try:
+                # Use the current df if available, otherwise request fresh data
+                try:
+                    plot_df = df.copy()
+                except Exception:
+                    plot_df = game.get_decadal_dataframe(10)
+
+                # remove spacer row if present
+                if '' in plot_df.index:
+                    plot_df = plot_df.loc[plot_df.index != '']
+                if plot_df.empty:
+                    messagebox.showinfo("No data", "No decadal data available to plot.")
+                    return
+
+                # Build numeric x positions for plotting. Keep DataFrame index labels (e.g. 'Start')
+                x_positions = []
+                for y in plot_df.index:
+                    try:
+                        if str(y).lower() == 'start':
+                            x_positions.append(-1)
+                        else:
+                            x_positions.append(int(y))
+                    except Exception:
+                        try:
+                            x_positions.append(int(str(y)))
+                        except Exception:
+                            x_positions.append(None)
+
+                # Map GUI variable keys to DataFrame column names (DataFrame uses some different labels)
+                col_map = {'carbon': 'Carbon', 'fire_risk': 'Fire risk', 'SPB_risk': 'SPB risk'}
+                col = col_map.get(var, var)
+                vals = plot_df[col].tolist() if col in plot_df.columns else []
+
+                # Handle categorical risk variables by mapping to numeric scale
+                if var in ('fire_risk', 'SPB_risk'):
+                    mapping = {'Low': 1, 'Moderate': 2, 'High': 3}
+                    y_vals = [mapping.get(v, float('nan')) for v in vals]
+                    y_ticks = [1, 2, 3]
+                    y_ticklabels = ['Low', 'Moderate', 'High']
+                else:
+                    y_vals = []
+                    for v in vals:
+                        try:
+                            y_vals.append(float(v))
+                        except Exception:
+                            y_vals.append(float('nan'))
+
+                # If a graph is already open, close it before opening a new one
+                try:
+                    if current_graph.get("frame") and current_graph["frame"].winfo_exists():
+                        current_graph["frame"].destroy()
+                except Exception:
+                    pass
+
+                # Overlay frame placed to cover the data frame area
+                graph_frame = tk.Frame(analysis_frame, bg="#FFFFFF", bd=0)
+                graph_frame.place(relx=0.15, rely=0.13, anchor="nw")
+                current_graph["frame"] = graph_frame
+
+                # Figure/axis styling to match the app theme
+                fig = Figure(figsize=(7, 4.5), dpi=100, facecolor='#2c404b')
+                ax = fig.add_subplot(111)
+                ax.set_facecolor('#1b2336')
+                # For categorical risk variables show colored bars; otherwise plot line+markers
+                if var in ('fire_risk', 'SPB_risk'):
+                    # Map risk labels to colors and draw bars at x positions
+                    color_map = {'Low': '#228B22', 'Moderate': '#FFA600', 'High': '#B22222'}
+                    bar_colors = [color_map.get(v, '#b5c3d8') for v in vals]
+                    # Use a modest width so bars are visible across decadal spacing
+                    bar_width = 6 if max(x_positions or [0]) - min(x_positions or [0]) > 20 else 0.6
+                    ax.bar(x_positions, y_vals, width=bar_width, color=bar_colors, edgecolor='#1b2336')
+                else:
+                    ax.plot(x_positions, y_vals, marker='o', linestyle='-', color='#05dd4c',
+                            markerfacecolor='#05dd4c', markeredgecolor='#1b2336')
+                ax.set_xlabel('Year', color='#b5c3d8')
+                ax.set_title(graph_titles.get(var, var), color='#b5c3d8')
+                ax.tick_params(colors='#b5c3d8')
+                # Force x-axis to always span Years 1-100 with ticks every 10 years
+                try:
+                    # Expand x-axis to include the starting snapshot at Year -1
+                    ax.set_xlim(-10, 100)
+                    xt = [-10] + list(range(0, 101, 10))
+                    ax.set_xticks(xt)
+                    # Remove the word 'Start' from axis labels per user request (leave blank for -1)
+                    xt_labels = [''] + [str(x) for x in range(0, 101, 10)]
+                    ax.set_xticklabels(xt_labels, color='#b5c3d8')
+                except Exception:
+                    # If anything goes wrong setting ticks, ignore and continue
+                    pass
+                # Make spines match theme
+                for spine in ax.spines.values():
+                    spine.set_color('#2c404b')
+                if var in ('fire_risk', 'SPB_risk'):
+                    ax.set_yticks(y_ticks)
+                    ax.set_yticklabels(y_ticklabels, color='#b5c3d8')
+
+                # Per-variable y-axis labels and fixed limits
+                try:
+                    y_axis_configs = {
+                        'QMD': ("Quadratic Mean Diameter (inches)", 0, 25),
+                        'TPA': ("Trees per Acre", 0, 650),
+                        'BA': ("Basal Area (sq ft/acre)", 0, 150),
+                        'carbon': ("Carbon (Metric Tons/acre)", 0, 25),
+                        'CI': ("Crowning Index (mph)", 0, 50),
+                        'fire_risk': ("", None, None),
+                        'SPB_risk': ("", None, None),
+                    }
+                    if var in y_axis_configs:
+                        y_label, y_min, y_max = y_axis_configs[var]
+                        ax.set_ylabel(y_label, color='#b5c3d8')
+                        if y_min is not None and y_max is not None:
+                            try:
+                                ax.set_ylim(y_min, y_max)
+                            except Exception:
+                                pass
+                    else:
+                        ax.set_ylabel(var, color='#b5c3d8')
+                except Exception:
+                    pass
+
+                canvas = FigureCanvasTkAgg(fig, master=graph_frame)
+                canvas.draw()
+                canvas.get_tk_widget().pack(fill='both', expand=True)
+
+                # Close button for the graph overlay
+                def close_graph():
+                    try:
+                        if current_graph.get("frame") and current_graph["frame"].winfo_exists():
+                            current_graph["frame"].destroy()
+                    finally:
+                        current_graph["frame"] = None
+
+                tk.Button(graph_frame, text="Close Graph", font=("Courier", scale_font(11), "bold"),
+                          bg="#1b2336", fg="#b5c3d8", command=close_graph).place(relx=0.02, rely=0.02)
+                graph_frame.lift()
+            except Exception as e:
+                try:
+                    messagebox.showerror("Plot error", str(e))
+                except Exception:
+                    pass
+
+        for var in vars_list:
+                tk.Button(
+                buttons_frame,
+                text=graph_button_labels.get(var, var),
+                width=18,
+                font=("Courier", scale_font(12), "bold"),
+                bg="#05dd4c",
+                fg="#1b2336",
+                activebackground="#228a44",
+                command=lambda v=var: show_variable_plot(v)
+            ).pack(pady=4)
+
+        # --- Definitions Button Frame (same placement as main screen) ---
+        definitions_frame = tk.Frame(analysis_frame, bg="#FFFFFF")
+        definitions_frame.place(relx=0.05, rely=0.96, anchor="sw")
+        definitions_button = tk.Button(
+            definitions_frame,
+            text="Click for Definitions",
+            font=("Courier New", scale_font(12), "bold"),
+            width=23,
+            bg="#000000",
+            fg="#ffffff",
+            activebackground="#FFE208",
+            command=lambda: show_analysis_definitions(prev_frame)
+        )
+        definitions_button.pack()
+
 
     # ACHIEVMENT SCREENS
     # --- Pine Snake Screen ---
@@ -1584,6 +2037,47 @@ def main():
             def_frame, text="Return to Game", font=("Courier", scale_font(18), "bold"), width=16,
             bg="#e21fae", fg="#000000", activebackground="#FFFFFF",
             command=lambda: [play_page_close_sound(), def_frame.pack_forget(), show_game_screen()]
+        ).place(relx=0.225, rely=0.915, anchor="center")
+
+    # --- definitions screen for analysis lab ---
+    def show_analysis_definitions(prev_frame):
+        """Definitions screen variant for the Analysis Lab.
+
+        Uses `assets/analyze_definitions.png` as background and does not show
+        any game metrics. `prev_frame` is packed back when the user returns.
+        """
+        play_page_turn_sound()
+        for widget in root.winfo_children():
+            widget.pack_forget()
+        def_frame = tk.Frame(root, bg=BG_COLOR)
+        def_frame.pack(fill="both", expand=True)
+
+        # Load and display the definitions background image in a label
+        try:
+            bg_img = Image.open("assets/analyze_definitions.png")
+            bg_img = bg_img.resize((SCREEN_W, SCREEN_H))
+            bg_photo = ImageTk.PhotoImage(bg_img)
+            bg_label = tk.Label(def_frame, image=bg_photo)
+            bg_label.image = bg_photo
+            bg_label.place(relx=0, rely=0, relwidth=1, relheight=1)
+        except Exception:
+            pass
+
+        # --- action summary (same as Analysis Lab) ---
+        text_frame = tk.Frame(def_frame, bg="#1b2336", bd=0)
+        text_frame.place(relx=0.88, rely=0.223, anchor="center")
+        tk.Label(
+            text_frame,
+            text=game.get_action_summary(),
+            bg="#1b2336", fg="#05dd4c", font=("Courier New", scale_font(17), "bold"),
+            wraplength=scale_x(400), justify="left"
+        ).pack()
+
+        # Return button: go back to the Analysis Lab screen
+        tk.Button(
+            def_frame, text="Return to Analysis", font=("Courier", scale_font(18), "bold"), width=19,
+            bg="#e21fae", fg="#000000", activebackground="#FFFFFF",
+            command=lambda: [play_page_close_sound(), def_frame.pack_forget(), show_analysis_lab(prev_frame)]
         ).place(relx=0.225, rely=0.915, anchor="center")
 
     def show_game_screen():
@@ -2341,36 +2835,64 @@ def main():
             code = q.pop(0)
             if code == 'snake':
                 game.pine_snake_achieved = True
+                try:
+                    game.add_achievement('Pine snake', game.stand.get('year', 0))
+                except Exception:
+                    pass
                 show_pine_snake_screen()
                 return
             if code == 'gentian':
                 game.gentian_screen_shown = True
                 game.gentian_achieved = True
+                try:
+                    game.add_achievement('Gentian', game.stand.get('year', 0))
+                except Exception:
+                    pass
                 show_gentian_screen()
                 return
             if code == 'tanager':
                 game.summer_tanager_screen_shown = True
                 game.summer_tanager_achieved = True
+                try:
+                    game.add_achievement('Summer Tanager', game.stand.get('year', 0))
+                except Exception:
+                    pass
                 show_summer_tanager_screen()
                 return
             if code == 'bunting':
                 game.indigo_bunting_screen_shown = True
                 game.indigo_bunting_achieved = True
+                try:
+                    game.add_achievement('Indigo Bunting', game.stand.get('year', 0))
+                except Exception:
+                    pass
                 show_indigo_bunting_screen()
                 return
             if code == 'frog':
                 game.tree_frog_screen_shown = True
                 game.tree_frog_achieved = True
+                try:
+                    game.add_achievement('Pine Barrens tree frog', game.stand.get('year', 0))
+                except Exception:
+                    pass
                 show_tree_frog_screen()
                 return
             if code == 'turkey':
                 game.turkey_beard_screen_shown = True
                 game.turkey_beard_achieved = True
+                try:
+                    game.add_achievement('Turkey Beard', game.stand.get('year', 0))
+                except Exception:
+                    pass
                 show_turkey_beard_screen()
                 return
             if code == 'short':
                 game.short_screen_shown = True
                 game.short_achieved = True
+                try:
+                    game.add_achievement('Shortleaf pine', game.stand.get('year', 0))
+                except Exception:
+                    pass
                 show_shortleaf_screen()
                 return
             
@@ -2584,6 +3106,36 @@ def play_save_sound():
         sound.play()
     except Exception as e:
         print("Error playing save sound:", e)
+
+def play_computer_startup():
+    try:
+        sound = pygame.mixer.Sound("assets/computer_startup.wav")
+        sound.play()
+    except Exception as e:
+        print("Error playing computer startup sound:", e)
+
+def play_computer_shutdown():
+    try:
+        sound = pygame.mixer.Sound("assets/computer_shutdown.wav")
+        sound.play()
+    except Exception as e:
+        print("Error playing computer shutdown sound:", e)
+
+def play_analysis_lab_sound():
+    try:
+        # loop analysis ambience until stopped
+        play_analysis_lab_sound.sound = pygame.mixer.Sound("assets/analysis_lab.wav")
+        play_analysis_lab_sound.channel = play_analysis_lab_sound.sound.play(loops=-1)
+    except Exception as e:
+        print("Error playing analysis lab sound:", e)
+
+def stop_analysis_lab_sound():
+    try:
+        if hasattr(play_analysis_lab_sound, "channel") and play_analysis_lab_sound.channel is not None:
+            play_analysis_lab_sound.channel.stop()
+            play_analysis_lab_sound.channel = None
+    except Exception as e:
+        print("Error stopping analysis lab sound:", e)
 
 if __name__ == "__main__":
     main()
