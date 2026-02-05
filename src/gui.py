@@ -1029,7 +1029,41 @@ def main():
                     return
                 try:
                     # use df captured from earlier in this function
-                    df.to_csv(file_path, index=True)
+                    # add an Actions column mapping game.action_history to each saved year
+                    try:
+                        save_df = df.copy()
+                        # build mapping year -> list of action names
+                        actions_map = {}
+                        for y, a in getattr(game, 'action_history', []):
+                            try:
+                                name = ACTIONS.get(str(a), str(a))
+                            except Exception:
+                                name = str(a)
+                            actions_map.setdefault(int(y), []).append(name)
+
+                        def _index_to_year(idx):
+                            # df index may contain 'Start' or integers
+                            try:
+                                if str(idx).lower() == 'start':
+                                    return -1
+                            except Exception:
+                                pass
+                            try:
+                                return int(idx)
+                            except Exception:
+                                return idx
+
+                        actions_col = []
+                        for idx in save_df.index:
+                            yr = _index_to_year(idx)
+                            acts = actions_map.get(yr, [])
+                            actions_col.append('; '.join(acts) if acts else '')
+
+                        save_df['Actions'] = actions_col
+                        save_df.to_csv(file_path, index=True)
+                    except Exception:
+                        # fallback: try saving original df
+                        df.to_csv(file_path, index=True)
                     try:
                         messagebox.showinfo("Saved", f"Data saved to:\n{file_path}")
                     except Exception:
