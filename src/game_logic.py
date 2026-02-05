@@ -53,6 +53,8 @@ class Game:
             'events': [],
             'catastrophic_wildfire': False
         }
+        # Preserve the initial starting conditions so we can show them as Year -1
+        self.initial_stand = deepcopy(self.stand)
 
         # Track consecutive low TPA cycles (used for game-over)
         self.low_tpa_count = 0
@@ -74,6 +76,8 @@ class Game:
         self.indigo_bunting_achieved = False
         self.short_achieved = False
         self.turkey_beard_achieved = False
+        # History of achievements: list of tuples (year, name)
+        self.achievements_history = []
         # Recruitment scheduling: pending additions (applied next cycle) and handled thresholds
         self.recruitment_pending = []        # list of dicts: {'threshold': int, 'ba_at_detection': float}
         self.recruitment_handled = set()     # thresholds already scheduled until BA recovers above threshold+margin
@@ -106,6 +110,8 @@ class Game:
             'events': [],
             'catastrophic_wildfire': False
         }
+        # Preserve the initial starting conditions so we can show them as Year -1
+        self.initial_stand = deepcopy(self.stand)
 
         # Track consecutive low TPA cycles (used for game-over)
         self.low_tpa_count = 0
@@ -127,6 +133,8 @@ class Game:
         self.indigo_bunting_achieved = False
         self.short_achieved = False
         self.turkey_beard_achieved = False
+        # History of achievements: list of tuples (year, name)
+        self.achievements_history = []
         # Recruitment scheduling: pending additions (applied next cycle) and handled thresholds
         self.recruitment_pending = []        # list of dicts: {'threshold': int, 'ba_at_detection': float}
         self.recruitment_handled = set()     # thresholds already scheduled until BA recovers above threshold+margin
@@ -180,6 +188,8 @@ class Game:
         qmd_next = grow_qmd(self.stand['QMD'], action)
 
         # --- Apply any pending recruitment scheduled last cycle ---
+        # Track carbon added by recruitment (TPA increases should raise carbon)
+        recruited_carbon_increase = 0.0
         # Each pending entry was queued when BA dropped below a threshold; now we add many small trees
         # (increase TPA) and reduce QMD (small-diameter recruits). Magnitude scales roughly with
         # log10(threshold / observed_BA) so lower BA => larger recruitment effect.
@@ -219,6 +229,11 @@ class Game:
                 qmd_drop_frac = min(0.90, 0.12 * (1.0 + severity) + 0.0012 * add_tpa)
                 tpa_next = max(1, int(tpa_next + add_tpa))
                 qmd_next = max(2.0, qmd_next * (1.0 - qmd_drop_frac))
+                # Carbon increase due to recruitment: small per-tree increment scaled by severity
+                # (units: MT per acre). Tune `carbon_per_tree` if needed.
+                carbon_per_tree = 0.02
+                carb_inc = add_tpa * carbon_per_tree * (1.0 + severity)
+                recruited_carbon_increase += carb_inc
             # keep any entries still waiting
             self.recruitment_pending = remaining
 
@@ -239,6 +254,8 @@ class Game:
             carbon *= 0.88
         elif action == '4':
             carbon *= 0.90
+        # Add carbon contributed by recruitment (TPA increases)
+        carbon += recruited_carbon_increase
         carbon = min(max(carbon, 0), 40)
 
         # Step 5: Crowning Index logic
@@ -305,16 +322,29 @@ class Game:
         if (45 <= ba_next <= 70) and not self.pine_snakes_colonized:
             if random.random() < 0.3:
                 self.pine_snakes_colonized = True
+                # record achievement event
+                try:
+                    self.add_achievement('Pine snake', self.stand.get('year', 0))
+                except Exception:
+                    pass
 
         # Step 12: Gentian logic (only after prescribed burn)
         if action == '4' and not self.gentian_colonized:
             if random.random() < 0.2:
                 self.gentian_colonized = True
+                try:
+                    self.add_achievement('Gentian', self.stand.get('year', 0))
+                except Exception:
+                    pass
 
         # Step 13: Turkey Beard achievement (50% chance when prescribed burn and BA < 60)
         if action == '4' and ba_next < 60 and not self.turkey_beard_achieved:
             if random.random() < 0.5:
                 self.turkey_beard_achieved = True
+                try:
+                    self.add_achievement('Turkey Beard', self.stand.get('year', 0))
+                except Exception:
+                    pass
 
         # Step 14: Summer Tanager logic (0.4 probability once conditions met)
         if (not self.summer_tanager_colonized
@@ -324,6 +354,10 @@ class Game:
             and self.action_history[-2][1] == '1'):
             if random.random() < 0.4:
                 self.summer_tanager_colonized = True
+                try:
+                    self.add_achievement('Summer Tanager', self.stand.get('year', 0))
+                except Exception:
+                    pass
 
         # Step 15Indigo Bunting logic (0.4 probability once conditions met)
         if (not self.indigo_bunting_colonized
@@ -333,12 +367,20 @@ class Game:
             and self.action_history[-2][1] == '1'):
             if random.random() < 0.4:
                 self.indigo_bunting_colonized = True
+                try:
+                    self.add_achievement('Indigo Bunting', self.stand.get('year', 0))
+                except Exception:
+                    pass
 
         # Step 16: Shortleaf pine ("short") logic - mimics pine snake but 20% chance
         if (45 <= ba_next <= 70) and not getattr(self, 'short_colonized', False):
             if random.random() < 0.2:
                 self.short_colonized = True
                 self.short_achieved = True
+                try:
+                    self.add_achievement('Shortleaf pine', self.stand.get('year', 0))
+                except Exception:
+                    pass
 
         # Step 17: Pine Barrens tree frog logic
         # Colonize after sequence: heavy thin ('3') -> prescribed burn ('4') -> >=2 consecutive '1's
@@ -356,6 +398,10 @@ class Game:
                 if trailing_no_mgmt >= 2 and i >= 1 and actions[i] == '4' and actions[i - 1] == '3':
                     if random.random() < 0.8:  # 80% chance to colonize
                         self.pine_barrens_tree_frog_colonized = True
+                        try:
+                            self.add_achievement('Pine Barrens tree frog', self.stand.get('year', 0))
+                        except Exception:
+                            pass
 
         # After updating the stand/year, record the action:
         self.action_history.append((self.stand['year'], action))
@@ -473,6 +519,25 @@ class Game:
 
         return summary
 
+    def add_achievement(self, name, year=None):
+        """Record an achievement with the year it occurred.
+
+        Avoid duplicates: if the same achievement already recorded, do nothing.
+        """
+        try:
+            yr = int(year) if year is not None else int(self.stand.get('year', 0))
+        except Exception:
+            yr = self.stand.get('year', 0)
+        # avoid duplicates
+        for y, n in self.achievements_history:
+            if n == name:
+                return
+        self.achievements_history.append((yr, name))
+
+    def get_achievements_list(self):
+        """Return achievements history as list of (year,name), sorted by year."""
+        return sorted(self.achievements_history, key=lambda x: x[0])
+
     def get_action_summary(self):
         lines = []
         for year, action in self.action_history:
@@ -517,11 +582,30 @@ class Game:
                     'SPB_risk': self.stand.get('SPB_risk'),
                 })
 
+        # Ensure the initial starting conditions are included as Year -1
+        try:
+            init = getattr(self, 'initial_stand', None)
+            if init is not None:
+                if not any(s.get('year') == -1 for s in snaps):
+                    snaps.append({
+                        'year': -1,
+                        'QMD': float(init.get('QMD', 0.0)),
+                        'TPA': int(round(init.get('TPA', 0))),
+                        'BA': float(init.get('BA', 0.0)),
+                        'carbon': float(init.get('carbon', 0.0)),
+                        'CI': float(init.get('CI', 0.0)),
+                        'fire_risk': init.get('fire_risk'),
+                        'SPB_risk': init.get('SPB_risk'),
+                    })
+        except Exception:
+            pass
+
         # Build dict year->snapshot (prefer latest snapshot for duplicate years)
         year_map = {}
         for s in snaps:
             year_map[int(s['year'])] = s
-        years = sorted(y for y in year_map.keys() if (interval == 1 or (y % interval == 0)))
+        # Always include the initial snapshot at Year -1; otherwise include decadal years
+        years = sorted(y for y in year_map.keys() if (y == -1) or (interval == 1) or (y % interval == 0))
 
         # If no decadal years found, return empty dataframe with expected columns
         columns = ['Year', 'QMD', 'TPA', 'BA', 'Carbon', 'CI', 'Fire risk', 'SPB risk']
@@ -531,8 +615,10 @@ class Game:
         rows = []
         for y in years:
             s = year_map.get(y, {})
+            # Label the initial snapshot (year -1) as 'Start' for display
+            year_label = 'Start' if int(y) == -1 else int(y)
             row = {
-                'Year': int(y),
+                'Year': year_label,
                 'QMD': s.get('QMD'),
                 'TPA': s.get('TPA'),
                 'BA': s.get('BA'),
