@@ -347,11 +347,13 @@ class Game:
                     pass
 
         # Step 14: Summer Tanager logic (0.4 probability once conditions met)
+        # Include the current action when checking for two consecutive 'Do nothing' ('1')
+        actions = [a for (_, a) in self.action_history] + [action]
         if (not self.summer_tanager_colonized
             and self.suitable_tanager_ba_reached
-            and len(self.action_history) >= 2
-            and self.action_history[-1][1] == '1'
-            and self.action_history[-2][1] == '1'):
+            and len(actions) >= 2
+            and actions[-1] == '1'
+            and actions[-2] == '1'):
             if random.random() < 0.4:
                 self.summer_tanager_colonized = True
                 try:
@@ -359,12 +361,14 @@ class Game:
                 except Exception:
                     pass
 
-        # Step 15Indigo Bunting logic (0.4 probability once conditions met)
+        # Step 15: Indigo Bunting logic (0.4 probability once conditions met)
+        # Include the current action when checking for two consecutive 'Do nothing' ('1')
+        actions = [a for (_, a) in self.action_history] + [action]
         if (not self.indigo_bunting_colonized
             and self.suitable_bunting_ba_reached
-            and len(self.action_history) >= 2
-            and self.action_history[-1][1] == '1'
-            and self.action_history[-2][1] == '1'):
+            and len(actions) >= 2
+            and actions[-1] == '1'
+            and actions[-2] == '1'):
             if random.random() < 0.4:
                 self.indigo_bunting_colonized = True
                 try:

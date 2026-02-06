@@ -24,6 +24,10 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import webbrowser
 from tkinter import filedialog
 
+# Track which ambient/looping sounds are currently active so we can pause/restore
+# when switching to modal screens like the analysis lab.
+SOUND_STATE = {}
+
 def main():
     pygame.mixer.init()
 
@@ -877,6 +881,10 @@ def main():
         for widget in root.winfo_children():
             widget.pack_forget()
 
+        # Snapshot which ambient/looping sounds are currently active so we can
+        # resume them when the player returns to the previous screen.
+        prev_sounds = SOUND_STATE.copy()
+
         # Stop any losing/foreground forest sounds so analysis audio can play cleanly
         try:
             stop_losing_trombone_sound()
@@ -998,13 +1006,41 @@ def main():
             ach_text.insert("end", "No achievements.\n")
         ach_text.config(state="disabled")
 
-        # Return button
+        # Return button (restore previous ambient sounds on return)
         button_frame = tk.Frame(analysis_frame, bg="#fff3dd", bd=0)
         button_frame.place(relx=0.48, rely=0.68, anchor="center")
+
+        def return_to_prev():
+            try:
+                play_computer_shutdown()
+            except Exception:
+                pass
+            try:
+                stop_analysis_lab_sound()
+            except Exception:
+                pass
+            # Restore previously-active ambient sounds
+            try:
+                # music channel: possible values 'forest', 'fire', 'trombone'
+                music = prev_sounds.get('music')
+                if music == 'forest':
+                    play_forest_sound()
+                elif music == 'fire':
+                    play_fire_sound()
+                if prev_sounds.get('wind'):
+                    play_wind_sound()
+                if prev_sounds.get('spb'):
+                    play_spb_eating_sound()
+            except Exception:
+                pass
+
+            analysis_frame.pack_forget()
+            prev_frame.pack(fill="both", expand=True)
+
         tk.Button(
             button_frame, text="Return to Game", font=("Courier", scale_font(13), "bold"), width=16,
             bg="#fff3dd", fg="#37384e", activebackground="#9b917f",
-            command=lambda: [play_computer_shutdown(), stop_analysis_lab_sound(), analysis_frame.pack_forget(), prev_frame.pack(fill="both", expand=True)]
+            command=return_to_prev
         ).pack()
 
         # --- Save Data button (own frame) ---
@@ -2911,21 +2947,33 @@ def play_forest_sound():
     try:
         pygame.mixer.music.load("assets/forest_sound.wav")
         pygame.mixer.music.play(-1)  # -1 means loop forever
+        SOUND_STATE['music'] = 'forest'
     except Exception as e:
         print("Error playing sound:", e)
 
 def stop_forest_sound():
     pygame.mixer.music.stop()
+    try:
+        if SOUND_STATE.get('music') == 'forest':
+            SOUND_STATE.pop('music', None)
+    except Exception:
+        pass
 
 def play_fire_sound():
     try:
         pygame.mixer.music.load("assets/fire.wav")
         pygame.mixer.music.play(-1)  # Loop forever
+        SOUND_STATE['music'] = 'fire'
     except Exception as e:
         print("Error playing fire sound:", e)
 
 def stop_fire_sound():
     pygame.mixer.music.stop()
+    try:
+        if SOUND_STATE.get('music') == 'fire':
+            SOUND_STATE.pop('music', None)
+    except Exception:
+        pass
 
 def play_trumpet_win_sound():
     try:
@@ -2941,11 +2989,17 @@ def play_losing_trombone_sound():
     try:
         pygame.mixer.music.load("assets/losing_trombone.wav")
         pygame.mixer.music.play()
+        SOUND_STATE['music'] = 'trombone'
     except Exception as e:
         print("Error playing trombone sound:", e)
 
 def stop_losing_trombone_sound():
     pygame.mixer.music.stop()
+    try:
+        if SOUND_STATE.get('music') == 'trombone':
+            SOUND_STATE.pop('music', None)
+    except Exception:
+        pass
 
 def play_pine_snake_sound():
     try:
@@ -2959,6 +3013,7 @@ def play_spb_eating_sound():
         # Store the sound and channel so we can stop it later
         play_spb_eating_sound.sound = pygame.mixer.Sound("assets/SPB_eating.wav")
         play_spb_eating_sound.channel = play_spb_eating_sound.sound.play(loops=-1)  # Loop forever
+        SOUND_STATE['spb'] = True
     except Exception as e:
         print("Error playing SPB eating sound:", e)
 
@@ -2966,6 +3021,10 @@ def stop_spb_eating_sound():
     try:
         if hasattr(play_spb_eating_sound, "channel") and play_spb_eating_sound.channel is not None:
             play_spb_eating_sound.channel.stop()
+        try:
+            SOUND_STATE.pop('spb', None)
+        except Exception:
+            pass
     except Exception as e:
         print("Error stopping SPB eating sound:", e)
 
@@ -2994,6 +3053,7 @@ def play_wind_sound():
     try:
         sound = pygame.mixer.Sound("assets/wind.wav")
         play_wind_sound.channel = sound.play(loops=-1)
+        SOUND_STATE['wind'] = True
     except Exception as e:
         print("Error playing wind sound:", e)
 
@@ -3001,6 +3061,10 @@ def stop_wind_sound():
     try:
         if hasattr(play_wind_sound, "channel") and play_wind_sound.channel is not None:
             play_wind_sound.channel.stop()
+        try:
+            SOUND_STATE.pop('wind', None)
+        except Exception:
+            pass
     except Exception as e:
         print("Error stopping wind sound:", e)
 
@@ -3073,6 +3137,7 @@ def play_bunting_sound():
         # store channel so we can stop it on Continue
         play_bunting_sound.sound = sound
         play_bunting_sound.channel = sound.play()
+        SOUND_STATE['bunting'] = True
     except Exception as e:
         print("Error playing bunting sound:", e)
 
@@ -3080,6 +3145,10 @@ def stop_bunting_sound():
     try:
         if hasattr(play_bunting_sound, "channel") and play_bunting_sound.channel is not None:
             play_bunting_sound.channel.stop()
+        try:
+            SOUND_STATE.pop('bunting', None)
+        except Exception:
+            pass
     except Exception as e:
         print("Error stopping bunting sound:", e)
 
@@ -3089,6 +3158,7 @@ def play_tree_frog_sound():
         # store channel so we can stop it later
         play_tree_frog_sound.sound = sound
         play_tree_frog_sound.channel = sound.play(loops=-1)
+        SOUND_STATE['tree_frog'] = True
     except Exception as e:
         print("Error playing tree frog sound:", e)
 
@@ -3097,6 +3167,10 @@ def stop_tree_frog_sound():
         if hasattr(play_tree_frog_sound, "channel") and play_tree_frog_sound.channel is not None:
             play_tree_frog_sound.channel.stop()
             play_tree_frog_sound.channel = None
+        try:
+            SOUND_STATE.pop('tree_frog', None)
+        except Exception:
+            pass
     except Exception as e:
         print("Error stopping tree frog sound:", e)
 
@@ -3126,6 +3200,7 @@ def play_analysis_lab_sound():
         # loop analysis ambience until stopped
         play_analysis_lab_sound.sound = pygame.mixer.Sound("assets/analysis_lab.wav")
         play_analysis_lab_sound.channel = play_analysis_lab_sound.sound.play(loops=-1)
+        SOUND_STATE['analysis_lab'] = True
     except Exception as e:
         print("Error playing analysis lab sound:", e)
 
@@ -3134,6 +3209,10 @@ def stop_analysis_lab_sound():
         if hasattr(play_analysis_lab_sound, "channel") and play_analysis_lab_sound.channel is not None:
             play_analysis_lab_sound.channel.stop()
             play_analysis_lab_sound.channel = None
+        try:
+            SOUND_STATE.pop('analysis_lab', None)
+        except Exception:
+            pass
     except Exception as e:
         print("Error stopping analysis lab sound:", e)
 
