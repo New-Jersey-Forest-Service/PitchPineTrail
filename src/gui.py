@@ -949,8 +949,8 @@ def main():
         df_frame.place(relx=0.15, rely=0.13, anchor="nw")
         df_text_widget = tk.Text(
             df_frame,
-            width=62,
-            height=15,
+            width=scale_x(62),
+            height=scale_y(15),
             wrap="none",
             font=("Courier New", max(8, scale_font(15))),
             bg="#2c404b",
@@ -989,8 +989,8 @@ def main():
         
         ach_text = tk.Text(
             ach_frame,
-            width=30,
-            height=13,
+            width=scale_x(30),
+            height=scale_y(13),
             wrap="word",
             font=("Courier New", max(8, scale_font(13)), "bold"),
             bg="#1b2336",
@@ -1234,7 +1234,7 @@ def main():
                 current_graph["frame"] = graph_frame
 
                 # Figure/axis styling to match the app theme
-                fig = Figure(figsize=(7, 4.5), dpi=100, facecolor='#2c404b')
+                fig = Figure(figsize=(scale_x(7), scale_y(4.5)), dpi=100, facecolor='#2c404b')
                 ax = fig.add_subplot(111)
                 ax.set_facecolor('#1b2336')
                 # For categorical risk variables show colored bars; otherwise plot line+markers
