@@ -947,10 +947,15 @@ def main():
 
         df_frame = tk.Frame(analysis_frame, bg="#2c404b", bd=0)
         df_frame.place(relx=0.15, rely=0.13, anchor="nw")
+        # Text widget sizes are in characters/lines, not pixels. Convert
+        # desired character/line counts using screen scaling so they remain
+        # usable on small displays.
+        df_width_chars = max(20, int(62 * SCREEN_W / BASE_W))
+        df_height_lines = max(6, int(15 * SCREEN_H / BASE_H))
         df_text_widget = tk.Text(
             df_frame,
-            width=scale_x(62),
-            height=scale_y(15),
+            width=df_width_chars,
+            height=df_height_lines,
             wrap="none",
             font=("Courier New", max(8, scale_font(15))),
             bg="#2c404b",
@@ -987,10 +992,12 @@ def main():
         ach_frame = tk.Frame(analysis_frame, bg="#1b2336", bd=0)
         ach_frame.place(relx=0.81, rely=0.44, anchor="nw")
         
+        ach_width_chars = max(12, int(30 * SCREEN_W / BASE_W))
+        ach_height_lines = max(6, int(13 * SCREEN_H / BASE_H))
         ach_text = tk.Text(
             ach_frame,
-            width=scale_x(30),
-            height=scale_y(13),
+            width=ach_width_chars,
+            height=ach_height_lines,
             wrap="word",
             font=("Courier New", max(8, scale_font(13)), "bold"),
             bg="#1b2336",
@@ -1228,13 +1235,19 @@ def main():
                 except Exception:
                     pass
 
-                # Overlay frame placed to cover the data frame area
+                # Overlay frame placed to cover the data frame area. Use a
+                # pixel-sized frame so the Matplotlib canvas has a predictable
+                # size on different displays.
+                graph_px_w = max(300, scale_x(700))
+                graph_px_h = max(200, scale_y(450))
                 graph_frame = tk.Frame(analysis_frame, bg="#FFFFFF", bd=0)
-                graph_frame.place(relx=0.15, rely=0.13, anchor="nw")
+                graph_frame.place(relx=0.15, rely=0.13, anchor="nw", width=graph_px_w, height=graph_px_h)
                 current_graph["frame"] = graph_frame
 
-                # Figure/axis styling to match the app theme
-                fig = Figure(figsize=(scale_x(7), scale_y(4.5)), dpi=100, facecolor='#2c404b')
+                # Figure/axis styling to match the app theme. Convert pixel
+                # dimensions to inches for figsize (inches = pixels / dpi).
+                dpi = 100
+                fig = Figure(figsize=(graph_px_w / dpi, graph_px_h / dpi), dpi=dpi, facecolor='#2c404b')
                 ax = fig.add_subplot(111)
                 ax.set_facecolor('#1b2336')
                 # For categorical risk variables show colored bars; otherwise plot line+markers
