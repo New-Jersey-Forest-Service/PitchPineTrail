@@ -951,8 +951,8 @@ def main():
         # desired character/line counts using screen scaling so they remain
         # usable on small displays.
         # Prevent the text area from becoming too small on very small displays
-        w_scale = max(0.85, SCREEN_W / BASE_W)
-        h_scale = max(0.7, SCREEN_H / BASE_H)
+        w_scale = max(1, SCREEN_W / BASE_W)
+        h_scale = max(1, SCREEN_H / BASE_H)
         df_width_chars = max(30, int(62 * w_scale))
         df_height_lines = max(8, int(15 * h_scale))
         df_text_widget = tk.Text(
@@ -995,7 +995,7 @@ def main():
         ach_frame = tk.Frame(analysis_frame, bg="#1b2336", bd=0)
         ach_frame.place(relx=0.81, rely=0.44, anchor="nw")
         
-        ach_width_chars = max(12, int(30 * SCREEN_W / BASE_W))
+        ach_width_chars = max(12, int(40 * SCREEN_W / BASE_W))
         ach_height_lines = max(6, int(13 * SCREEN_H / BASE_H))
         ach_text = tk.Text(
             ach_frame,
