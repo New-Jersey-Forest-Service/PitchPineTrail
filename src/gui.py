@@ -950,8 +950,11 @@ def main():
         # Text widget sizes are in characters/lines, not pixels. Convert
         # desired character/line counts using screen scaling so they remain
         # usable on small displays.
-        df_width_chars = max(20, int(62 * SCREEN_W / BASE_W))
-        df_height_lines = max(6, int(15 * SCREEN_H / BASE_H))
+        # Prevent the text area from becoming too small on very small displays
+        w_scale = max(0.85, SCREEN_W / BASE_W)
+        h_scale = max(0.7, SCREEN_H / BASE_H)
+        df_width_chars = max(30, int(62 * w_scale))
+        df_height_lines = max(8, int(15 * h_scale))
         df_text_widget = tk.Text(
             df_frame,
             width=df_width_chars,
@@ -1238,8 +1241,12 @@ def main():
                 # Overlay frame placed to cover the data frame area. Use a
                 # pixel-sized frame so the Matplotlib canvas has a predictable
                 # size on different displays.
-                graph_px_w = max(300, scale_x(700))
-                graph_px_h = max(200, scale_y(450))
+                # Constrain graph size to a fraction of the available window
+                # so it doesn't overflow on small displays.
+                graph_px_w = min(scale_x(700), int(SCREEN_W * 0.7))
+                graph_px_w = max(240, graph_px_w)
+                graph_px_h = min(scale_y(450), int(SCREEN_H * 0.6))
+                graph_px_h = max(160, graph_px_h)
                 graph_frame = tk.Frame(analysis_frame, bg="#FFFFFF", bd=0)
                 graph_frame.place(relx=0.15, rely=0.13, anchor="nw", width=graph_px_w, height=graph_px_h)
                 current_graph["frame"] = graph_frame
@@ -1250,20 +1257,28 @@ def main():
                 fig = Figure(figsize=(graph_px_w / dpi, graph_px_h / dpi), dpi=dpi, facecolor='#2c404b')
                 ax = fig.add_subplot(111)
                 ax.set_facecolor('#1b2336')
+                # Matplotlib font sizing scaled to screen so labels don't get
+                # cut off on small displays.
+                title_fs = max(8, scale_font(12))
+                label_fs = max(7, scale_font(10))
+                tick_fs = max(6, scale_font(9))
+                marker_sz = max(3, int(scale_x(6) / (SCREEN_W / BASE_W)))
                 # For categorical risk variables show colored bars; otherwise plot line+markers
                 if var in ('fire_risk', 'SPB_risk'):
                     # Map risk labels to colors and draw bars at x positions
                     color_map = {'Low': '#228B22', 'Moderate': '#FFA600', 'High': '#B22222'}
                     bar_colors = [color_map.get(v, '#b5c3d8') for v in vals]
                     # Use a modest width so bars are visible across decadal spacing
-                    bar_width = 6 if max(x_positions or [0]) - min(x_positions or [0]) > 20 else 0.6
+                    span = max(x_positions or [0]) - min(x_positions or [0]) if x_positions else 0
+                    bar_width = (6 if span > 20 else 0.6) * max(0.6, SCREEN_W / BASE_W)
                     ax.bar(x_positions, y_vals, width=bar_width, color=bar_colors, edgecolor='#1b2336')
                 else:
                     ax.plot(x_positions, y_vals, marker='o', linestyle='-', color='#05dd4c',
-                            markerfacecolor='#05dd4c', markeredgecolor='#1b2336')
-                ax.set_xlabel('Year', color='#b5c3d8')
-                ax.set_title(graph_titles.get(var, var), color='#b5c3d8')
-                ax.tick_params(colors='#b5c3d8')
+                            markerfacecolor='#05dd4c', markeredgecolor='#1b2336', markersize=marker_sz)
+                ax.set_xlabel('Year', color='#b5c3d8', fontsize=label_fs)
+                ax.set_title(graph_titles.get(var, var), color='#b5c3d8', fontsize=title_fs)
+                ax.tick_params(colors='#b5c3d8', labelsize=tick_fs)
+                fig.subplots_adjust(left=0.12, right=0.98, top=0.9, bottom=0.12)
                 # Force x-axis to always span Years 1-100 with ticks every 10 years
                 try:
                     # Expand x-axis to include the starting snapshot at Year -1
@@ -1328,17 +1343,20 @@ def main():
                 except Exception:
                     pass
 
+        # Button sizing: width is in characters. Scale down on smaller screens
+        btn_width = max(8, int(18 * SCREEN_W / BASE_W))
+        btn_font_size = max(8, scale_font(11))
         for var in vars_list:
-                tk.Button(
+            tk.Button(
                 buttons_frame,
                 text=graph_button_labels.get(var, var),
-                width=18,
-                font=("Courier", scale_font(12), "bold"),
+                width=btn_width,
+                font=("Courier", btn_font_size, "bold"),
                 bg="#05dd4c",
                 fg="#1b2336",
                 activebackground="#228a44",
                 command=lambda v=var: show_variable_plot(v)
-            ).pack(pady=4)
+            ).pack(pady=2)
 
         # --- Definitions Button Frame (same placement as main screen) ---
         definitions_frame = tk.Frame(analysis_frame, bg="#FFFFFF")
