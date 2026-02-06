@@ -884,6 +884,8 @@ def main():
         # Snapshot which ambient/looping sounds are currently active so we can
         # resume them when the player returns to the previous screen.
         prev_sounds = SOUND_STATE.copy()
+        # persist the snapshot so nested navigation (definitions -> back)
+        SOUND_STATE['analysis_prev_sounds'] = prev_sounds
 
         # Stop any losing/foreground forest sounds so analysis audio can play cleanly
         try:
@@ -905,6 +907,11 @@ def main():
 
         analysis_frame = tk.Frame(root, bg=BG_COLOR)
         analysis_frame.pack(fill="both", expand=True)
+        # keep a reference so other screens (definitions) can restore this frame
+        try:
+            game.analysis_frame = analysis_frame
+        except Exception:
+            pass
 
         # Background image
         try:
@@ -1019,17 +1026,17 @@ def main():
                 stop_analysis_lab_sound()
             except Exception:
                 pass
-            # Restore previously-active ambient sounds
+            # Restore previously-active ambient sounds (use persisted snapshot)
             try:
-                # music channel: possible values 'forest', 'fire', 'trombone'
-                music = prev_sounds.get('music')
+                saved = SOUND_STATE.pop('analysis_prev_sounds', prev_sounds if 'prev_sounds' in locals() else {})
+                music = saved.get('music')
                 if music == 'forest':
                     play_forest_sound()
-                elif music == 'fire':
+                if music == 'fire':
                     play_fire_sound()
-                if prev_sounds.get('wind'):
+                if saved.get('wind'):
                     play_wind_sound()
-                if prev_sounds.get('spb'):
+                if saved.get('spb'):
                     play_spb_eating_sound()
             except Exception:
                 pass
@@ -2109,11 +2116,34 @@ def main():
             wraplength=scale_x(400), justify="left"
         ).pack()
 
-        # Return button: go back to the Analysis Lab screen
+        # Return button: go back to the Analysis Lab screen. Prefer to
+        # repack the existing analysis frame (avoid restarting analysis sounds)
+        def return_to_analysis():
+            try:
+                play_page_close_sound()
+            except Exception:
+                pass
+            try:
+                def_frame.pack_forget()
+            except Exception:
+                pass
+            # If the original analysis frame still exists, just show it.
+            try:
+                if getattr(game, 'analysis_frame', None) and game.analysis_frame.winfo_exists():
+                    game.analysis_frame.pack(fill="both", expand=True)
+                    return
+            except Exception:
+                pass
+            # Fallback: recreate the analysis lab
+            try:
+                show_analysis_lab(prev_frame)
+            except Exception:
+                pass
+
         tk.Button(
             def_frame, text="Return to Analysis", font=("Courier", scale_font(18), "bold"), width=19,
             bg="#e21fae", fg="#000000", activebackground="#FFFFFF",
-            command=lambda: [play_page_close_sound(), def_frame.pack_forget(), show_analysis_lab(prev_frame)]
+            command=return_to_analysis
         ).place(relx=0.225, rely=0.915, anchor="center")
 
     def show_game_screen():
