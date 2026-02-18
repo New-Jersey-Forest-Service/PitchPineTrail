@@ -6,7 +6,6 @@ William Zipse
 Andrea Brown
 Cara Escalona
 Justin Gimmillaro
-Andrea Brown
 
 ---------------------------------------------------
 Core game logic for simulating a pitch pine forest stand over time
@@ -87,6 +86,10 @@ class Game:
         self.gentian_screen_shown = False
         self.indigo_bunting_screen_shown = False
         self.short_screen_shown = False
+        # Track whether a hurricane has occurred in this game (only allow once)
+        self.hurricane_occurred = False
+        # Track whether the hurricane screen has already been shown this game
+        self.hurricane_screen_shown = False
 
         # History: snapshot of stand state after each update_stand call
         # Each entry: dict with keys 'year','QMD','TPA','BA','carbon','CI','fire_risk','SPB_risk','events'
@@ -147,6 +150,10 @@ class Game:
 
         # Clear runtime history
         self.history = []
+        # Reset one-time hurricane flag
+        self.hurricane_occurred = False
+        # Reset hurricane-screen-shown flag
+        self.hurricane_screen_shown = False
 
     def update_stand(self, action):
         """
@@ -408,7 +415,135 @@ class Game:
                             pass
 
         # After updating the stand/year, record the action:
+        # Step 18: Hurricane event (5% chance, non-losing)
+        # If a hurricane occurs, record its metric impacts as occurring 1 year after
+        # the action (e.g., year 50 -> effects recorded at year 51) while still
+        # applying the changes to the live stand so the UI can display them.
+        hurricane_occurred = False
+        try:
+            events = self.stand.get('events', [])
+            curr_year = self.stand.get('year', 0)
+            already_this_year = any(
+                (isinstance(e, (list, tuple)) and len(e) > 1 and e[0] == curr_year and e[1] == 'Hurricane passed through')
+                or (isinstance(e, str) and e == 'Hurricane passed through')
+                for e in events
+            )
+        except Exception:
+            already_this_year = False
+
+        # Only allow a single hurricane per game. Check the game-level flag
+        # (`hurricane_occurred`) and also ensure no prior hurricane event exists
+        # in the stand event list. Use a 5% chance.
+        try:
+            prior_hurricane_exists = any(
+                (isinstance(e, (list, tuple)) and len(e) > 1 and e[1] == 'Hurricane passed through')
+                or (isinstance(e, str) and e == 'Hurricane passed through')
+                for e in self.stand.get('events', [])
+            )
+        except Exception:
+            prior_hurricane_exists = False
+
+        if (not getattr(self, 'hurricane_occurred', False)) and (not prior_hurricane_exists) and random.random() < 0.05:
+            # Build a pre-hurricane snapshot reflecting the stand immediately after
+            # management but before the hurricane (events list before hurricane)
+            pre_snapshot = {
+                'year': int(curr_year),
+                'QMD': float(self.stand.get('QMD', 0.0)),
+                'TPA': int(round(self.stand.get('TPA', 0))),
+                'BA': float(self.stand.get('BA', 0.0)),
+                'carbon': float(self.stand.get('carbon', 0.0)),
+                'CI': float(self.stand.get('CI', 0.0)),
+                'fire_risk': self.stand.get('fire_risk'),
+                'SPB_risk': self.stand.get('SPB_risk'),
+                'events': deepcopy(self.stand.get('events', []))
+            }
+
+            # Apply hurricane metric changes immediately so UI displays them
+            new_tpa = int(max(1, round(self.stand.get('TPA', 0) * 0.8)))
+            new_carbon = round(max(0.0, float(self.stand.get('carbon', 0.0)) * 0.9), 1)
+            self.stand['TPA'] = new_tpa
+            self.stand['carbon'] = round(new_carbon, 1)
+            # Recalculate BA based on updated TPA and current QMD
+            try:
+                ba_after = calculate_ba(self.stand.get('QMD', 0.0), new_tpa)
+            except Exception:
+                ba_after = 0.0
+            self.stand['BA'] = round(ba_after, 1)
+            # Update SPB risk based on new BA
+            spb_after = (
+                "High" if ba_after > 100 else
+                "Moderate" if ba_after > 60 else
+                "Low"
+            )
+            self.stand['SPB_risk'] = spb_after
+            # Increase CI by 1 due to hurricane impact and update fire risk
+            try:
+                ci_after = int(round(self.stand.get('CI', 0))) + 1
+                # enforce upper bound consistent with CI logic elsewhere
+                ci_after = min(60, ci_after)
+            except Exception:
+                ci_after = self.stand.get('CI', 0)
+            self.stand['CI'] = ci_after
+            fire_risk_after = (
+                "High" if ci_after <= 20 else
+                "Moderate" if ci_after < 25 else
+                "Low"
+            )
+            self.stand['fire_risk'] = fire_risk_after
+            evt = 'Hurricane passed through'
+            # Append event only if not already present to avoid duplicates
+            try:
+                events = self.stand.setdefault('events', [])
+                if not any((isinstance(e, (list, tuple)) and len(e) > 1 and e[0] == curr_year and e[1] == evt) or (isinstance(e, str) and e == evt) for e in events):
+                    events.append((curr_year, evt))
+            except Exception:
+                try:
+                    self.stand.setdefault('events', []).append((curr_year, evt))
+                except Exception:
+                    pass
+
+            try:
+                if not hasattr(self, 'hurricane_years'):
+                    self.hurricane_years = set()
+                self.hurricane_years.add(curr_year)
+                # mark that a hurricane has occurred so it cannot happen again this game
+                self.hurricane_occurred = True
+            except Exception:
+                pass
+
+            # Post-hurricane snapshot recorded as year+1
+            post_snapshot = {
+                'year': int(curr_year) + 1,
+                'QMD': float(self.stand.get('QMD', 0.0)),
+                'TPA': int(round(self.stand.get('TPA', 0))),
+                'BA': float(self.stand.get('BA', 0.0)),
+                'carbon': float(self.stand.get('carbon', 0.0)),
+                'CI': float(self.stand.get('CI', 0.0)),
+                'fire_risk': self.stand.get('fire_risk'),
+                'SPB_risk': self.stand.get('SPB_risk'),
+                'events': deepcopy(self.stand.get('events', []))
+            }
+
+            # Append both snapshots so the hurricane effect is visible at year+1
+            self.history.append(pre_snapshot)
+            self.history.append(post_snapshot)
+            hurricane_occurred = True
+
+        # Record the action in history
         self.action_history.append((self.stand['year'], action))
+
+        # If hurricane already appended detailed snapshots above, record a HURRICANE
+        # action for the post-year snapshot so exports include it, then skip default snapshot
+        if hurricane_occurred:
+            try:
+                post_action_year = int(curr_year) + 1
+            except Exception:
+                post_action_year = int(self.stand.get('year', 0)) + 1
+            # avoid duplicate entries for the same year/action
+            exists = any((y == post_action_year and a == 'HURRICANE') for (y, a) in self.action_history)
+            if not exists:
+                self.action_history.append((post_action_year, 'HURRICANE'))
+            return
 
         # --- Snapshot current stand into history for later analysis/plotting ---
         snapshot = {
@@ -608,8 +743,21 @@ class Game:
         year_map = {}
         for s in snaps:
             year_map[int(s['year'])] = s
-        # Always include the initial snapshot at Year -1; otherwise include decadal years
-        years = sorted(y for y in year_map.keys() if (y == -1) or (interval == 1) or (y % interval == 0))
+
+        # Select years to include in the decadal dataframe.
+        # Always include Year -1. Include standard decadal years (y % interval == 0).
+        # Additionally include any off-decade snapshot that immediately follows a decadal year
+        # (e.g., hurricane post-snapshot at year 51 following year 50) so the effect is visible.
+        base_years = set(y for y in year_map.keys() if (y == -1) or (interval == 1) or (y % interval == 0))
+        # Include +1 snapshots that follow a decadal year
+        extra_years = set()
+        for y in year_map.keys():
+            if y in base_years:
+                continue
+            if (y - 1) in base_years:
+                extra_years.add(y)
+
+        years = sorted(base_years.union(extra_years))
 
         # If no decadal years found, return empty dataframe with expected columns
         columns = ['Year', 'QMD', 'TPA', 'BA', 'Carbon', 'CI', 'Fire risk', 'SPB risk']
