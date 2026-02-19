@@ -57,6 +57,9 @@ def main():
     game.gentian_screen_shown = False
     game.indigo_bunting_screen_shown = False
     game.turkey_beard_screen_shown = False
+    # Hurricane event pending flag (shows after any achievements this turn)
+    game.hurricane_pending = False
+    game.hurricane_last_shown_year = None
 
     # Set up the main window
     root = tk.Tk()
@@ -107,6 +110,11 @@ def main():
     def restart_game(frame_to_remove):
         # Reset game model (stats, colonization, achievements, popups)
         game.reset_game()
+        # Ensure hurricane flag is cleared when restarting via Try Again
+        try:
+            game.hurricane_occurred = False
+        except Exception:
+            pass
 
         # Stop any looping/active sounds
         stop_spb_eating_sound()
@@ -415,7 +423,7 @@ def main():
 
         # --- Metrics Frame (same as main game screen) ---
         metrics_frame = tk.Frame(closing_frame, bg="#FFFFFF", bd=0)
-        metrics_frame.place(relx=0.841, rely=0.72, anchor="center")
+        metrics_frame.place(relx=0.841, rely=0.57, anchor="n")
         game_status = tk.StringVar()
         summary = game.get_status_dict()
         game_status.set(
@@ -458,11 +466,11 @@ def main():
 
         # --- Text Frame ---
         text_frame = tk.Frame(closing_frame, bg="#1b2336", bd=0)
-        text_frame.place(relx=0.88, rely=0.23, anchor="center")
+        text_frame.place(relx=0.88, rely=0.1, anchor="n")
         tk.Label(
             text_frame,
             text=game.get_action_summary(),
-            bg="#1b2336", fg="#05dd4c", font=("Courier New", scale_font(17), "bold"),
+            bg="#1b2336", fg="#05dd4c", font=("Courier New", scale_font(15), "bold"),
             wraplength=scale_x(400), justify="left"
         ).pack()
 
@@ -609,7 +617,7 @@ def main():
 
         # --- Metrics Frame ---
         metrics_frame = tk.Frame(low_tpa_frame, bg="#FFFFFF", bd=0)
-        metrics_frame.place(relx=0.841, rely=0.73, anchor="center")
+        metrics_frame.place(relx=0.841, rely=0.57, anchor="n")
         game_status = tk.StringVar()
         status_dict = game.get_status_dict()
         game_status.set(
@@ -705,7 +713,7 @@ def main():
 
         # --- Metrics Frame (copied from main game screen) ---
         metrics_frame = tk.Frame(fire_frame, bg="#FFFFFF", bd=0)
-        metrics_frame.place(relx=0.841, rely=0.73, anchor="center")
+        metrics_frame.place(relx=0.841, rely=0.57, anchor="n")
         game_status = tk.StringVar()
         status_dict = game.get_status_dict()
         game_status.set(
@@ -801,7 +809,7 @@ def main():
 
         # --- Metrics Frame (copied from main game screen) ---
         metrics_frame = tk.Frame(spb_frame, bg="#FFFFFF", bd=0)
-        metrics_frame.place(relx=0.841, rely=0.73, anchor="center")
+        metrics_frame.place(relx=0.841, rely=0.57, anchor="n")
         game_status = tk.StringVar()
         status_dict = game.get_status_dict()
         game_status.set(
@@ -954,7 +962,7 @@ def main():
         w_scale = max(1, SCREEN_W / BASE_W)
         h_scale = max(1, SCREEN_H / BASE_H)
         df_width_chars = max(30, int(62 * w_scale))
-        df_height_lines = max(8, int(15 * h_scale))
+        df_height_lines = max(8, int(20 * h_scale))
         df_text_widget = tk.Text(
             df_frame,
             width=df_width_chars,
@@ -978,11 +986,11 @@ def main():
 
         # --- action summary ---
         text_frame = tk.Frame(analysis_frame, bg="#1b2336", bd=0)
-        text_frame.place(relx=0.88, rely=0.223, anchor="center")
+        text_frame.place(relx=0.88, rely=0.1, anchor="n")
         tk.Label(
             text_frame,
             text=game.get_action_summary(),
-            bg="#1b2336", fg="#05dd4c", font=("Courier New", scale_font(17), "bold"),
+            bg="#1b2336", fg="#05dd4c", font=("Courier New", scale_font(15), "bold"),
             wraplength=scale_x(400), justify="left"
         ).pack()
 
@@ -994,13 +1002,33 @@ def main():
 
         ach_frame = tk.Frame(analysis_frame, bg="#1b2336", bd=0)
         ach_frame.place(relx=0.81, rely=0.44, anchor="nw")
-        
+
         ach_width_chars = max(12, int(40 * SCREEN_W / BASE_W))
         ach_height_lines = max(6, int(13 * SCREEN_H / BASE_H))
+        # Prepare achievement text and compute required number of lines so the widget
+        # can size to the content rather than a fixed height.
+        if achievements:
+            grouped = {}
+            for year, name in achievements:
+                grouped.setdefault(year, []).append(name)
+            # build content lines and count
+            ach_lines = []
+            for year in sorted(grouped.keys()):
+                ach_lines.append(f"Year {year}:")
+                for name in grouped[year]:
+                    ach_lines.append(f"   {name}")
+        else:
+            ach_lines = ["No achievements."]
+
+        # Determine widget height: match number of lines, constrained to reasonable limits
+        lines_count = len(ach_lines)
+        max_lines_cap = max(ach_height_lines, 40)
+        widget_height = max(3, min(lines_count, max_lines_cap))
+
         ach_text = tk.Text(
             ach_frame,
             width=ach_width_chars,
-            height=ach_height_lines,
+            height=widget_height,
             wrap="word",
             font=("Courier New", max(8, scale_font(13)), "bold"),
             bg="#1b2336",
@@ -1010,17 +1038,8 @@ def main():
             relief="flat"
         )
         ach_text.pack()
-        if achievements:
-            # group achievements by year so the year label appears once
-            grouped = {}
-            for year, name in achievements:
-                grouped.setdefault(year, []).append(name)
-            for year in sorted(grouped.keys()):
-                ach_text.insert("end", f"Year {year}:\n")
-                for name in grouped[year]:
-                    ach_text.insert("end", f"   {name}\n")
-        else:
-            ach_text.insert("end", "No achievements.\n")
+        for line in ach_lines:
+            ach_text.insert("end", line + "\n")
         ach_text.config(state="disabled")
 
         # Return button (restore previous ambient sounds on return)
@@ -1062,7 +1081,7 @@ def main():
 
         # --- Save Data button (own frame) ---
         save_frame = tk.Frame(analysis_frame, bg="#2c404b", bd=0)
-        save_frame.place(relx=0.35, rely=0.47, anchor="center")
+        save_frame.place(relx=0.35, rely=0.57, anchor="center")
 
         def do_save_dataframe():
             try:
@@ -1092,7 +1111,19 @@ def main():
                                 name = ACTIONS.get(str(a), str(a))
                             except Exception:
                                 name = str(a)
-                            actions_map.setdefault(int(y), []).append(name)
+                            try:
+                                actions_map.setdefault(int(y), []).append(name)
+                            except Exception:
+                                # fallback if year isn't int-convertible
+                                actions_map.setdefault(y, []).append(name)
+
+                        # build mapping year -> list of achievements
+                        achievements_map = {}
+                        for y, n in getattr(game, 'achievements_history', []):
+                            try:
+                                achievements_map.setdefault(int(y), []).append(n)
+                            except Exception:
+                                achievements_map.setdefault(y, []).append(n)
 
                         def _index_to_year(idx):
                             # df index may contain 'Start' or integers
@@ -1107,12 +1138,18 @@ def main():
                                 return idx
 
                         actions_col = []
+                        achievements_col = []
                         for idx in save_df.index:
                             yr = _index_to_year(idx)
                             acts = actions_map.get(yr, [])
+                            # actions separated by semicolon (existing behavior)
                             actions_col.append('; '.join(acts) if acts else '')
+                            achs = achievements_map.get(yr, [])
+                            # achievements separated by dash for CSV (user request)
+                            achievements_col.append(' - '.join(achs) if achs else '')
 
                         save_df['Actions'] = actions_col
+                        save_df['Achievements'] = achievements_col
                         save_df.to_csv(file_path, index=True)
                     except Exception:
                         # fallback: try saving original df
@@ -1394,7 +1431,7 @@ def main():
 
         # --- Metrics Frame (copied from main game screen) ---
         metrics_frame = tk.Frame(snake_frame, bg="#FFFFFF", bd=0)
-        metrics_frame.place(relx=0.841, rely=0.73, anchor="center")
+        metrics_frame.place(relx=0.841, rely=0.57, anchor="n")
         game_status = tk.StringVar()
         status_dict = game.get_status_dict()
         game_status.set(
@@ -1475,7 +1512,7 @@ def main():
     
         # --- Metrics Frame (copied from main game screen) ---
         metrics_frame = tk.Frame(gentian_frame, bg="#FFFFFF", bd=0)
-        metrics_frame.place(relx=0.841, rely=0.73, anchor="center")
+        metrics_frame.place(relx=0.841, rely=0.57, anchor="n")
         game_status = tk.StringVar()
         status_dict = game.get_status_dict()
         game_status.set(
@@ -1556,7 +1593,7 @@ def main():
 
         # Metrics (copied pattern)
         metrics_frame = tk.Frame(short_frame, bg="#FFFFFF", bd=0)
-        metrics_frame.place(relx=0.841, rely=0.73, anchor="center")
+        metrics_frame.place(relx=0.841, rely=0.57, anchor="n")
         game_status = tk.StringVar()
         status_dict = game.get_status_dict()
         game_status.set(
@@ -1630,7 +1667,7 @@ def main():
 
         # Metrics (copied pattern)
         metrics_frame = tk.Frame(turkey_frame, bg="#FFFFFF", bd=0)
-        metrics_frame.place(relx=0.841, rely=0.73, anchor="center")
+        metrics_frame.place(relx=0.841, rely=0.57, anchor="n")
         game_status = tk.StringVar()
         status_dict = game.get_status_dict()
         game_status.set(
@@ -1704,7 +1741,7 @@ def main():
 
         # Metrics (copied pattern)
         metrics_frame = tk.Frame(tanager_frame, bg="#FFFFFF", bd=0)
-        metrics_frame.place(relx=0.841, rely=0.73, anchor="center")
+        metrics_frame.place(relx=0.841, rely=0.57, anchor="n")
         game_status = tk.StringVar()
         status_dict = game.get_status_dict()
         game_status.set(
@@ -1787,7 +1824,7 @@ def main():
 
         # Metrics (copied pattern)
         metrics_frame = tk.Frame(bunting_frame, bg="#FFFFFF", bd=0)
-        metrics_frame.place(relx=0.841, rely=0.73, anchor="center")
+        metrics_frame.place(relx=0.841, rely=0.57, anchor="n")
         game_status = tk.StringVar()
         status_dict = game.get_status_dict()
         game_status.set(
@@ -1903,7 +1940,7 @@ def main():
 
         # --- Metrics (unchanged) ---
         metrics_frame = tk.Frame(frog_frame, bg="#FFFFFF", bd=0)
-        metrics_frame.place(relx=0.841, rely=0.73, anchor="center")
+        metrics_frame.place(relx=0.841, rely=0.57, anchor="n")
         game_status = tk.StringVar()
         status_dict = game.get_status_dict()
         game_status.set(
@@ -1980,6 +2017,186 @@ def main():
             command=on_continue
         ).pack(pady=0)
 
+    # --- Hurricane Screen ---
+    def show_hurricane_screen():
+        """Show hurricane sequence: lightning -> rain -> lightning -> rain -> after (wait for Continue)."""
+        # Skip if we've already shown the hurricane screen this game
+        try:
+            if getattr(game, 'hurricane_screen_shown', False):
+                return
+        except Exception:
+            pass
+        # Mark screen shown immediately to prevent re-entry from other code paths
+        try:
+            game.hurricane_screen_shown = True
+        except Exception:
+            pass
+        try:
+            play_hurricane_sound()
+        except Exception:
+            pass
+        # mark modal active so animations defer applying their final frame
+        game.hurricane_active = True
+        # Mark the hurricane as shown for its event year so it won't be re-displayed
+        try:
+            events = game.stand.get('events', [])
+            if events:
+                last = events[-1]
+                evt_year = last[0] if (isinstance(last, (list, tuple)) and len(last) > 0) else None
+                if evt_year is not None:
+                    game.hurricane_last_shown_year = int(evt_year)
+        except Exception:
+            pass
+        # clear pending flag
+        try:
+            game.hurricane_pending = False
+        except Exception:
+            pass
+        # show_hurricane_screen started
+        for widget in root.winfo_children():
+            widget.pack_forget()
+        h_frame = tk.Frame(root, bg=BG_COLOR)
+        h_frame.pack(fill="both", expand=True)
+
+        # Load images (resize to screen)
+        img_light = Image.open("assets/hurricane_lightning.png").resize((SCREEN_W, SCREEN_H))
+        img_rain = Image.open("assets/hurricane_rain.png").resize((SCREEN_W, SCREEN_H))
+        img_after = Image.open("assets/hurricane_after.png").resize((SCREEN_W, SCREEN_H))
+        photo_light = ImageTk.PhotoImage(img_light)
+        photo_rain = ImageTk.PhotoImage(img_rain)
+        photo_after = ImageTk.PhotoImage(img_after)
+
+        bg_label = tk.Label(h_frame, image=photo_light)
+        bg_label.image = photo_light
+        bg_label.place(relx=0, rely=0, relwidth=1, relheight=1)
+
+        # Sequence: (image, duration_ms) - None duration means final static
+        seq = [ (photo_light, 200), (photo_rain, 2900), (photo_light, 200), (photo_rain, 5100), (photo_after, None) ]
+        state = {"running": True, "index": 0, "after_id": None}
+
+        def show_step(idx=0):
+            if not state["running"] or not h_frame.winfo_exists() or not bg_label.winfo_exists():
+                return
+            if idx >= len(seq):
+                return
+            photo, dur = seq[idx]
+            bg_label.config(image=photo)
+            bg_label.image = photo
+            state["index"] = idx
+            if dur is None:
+                return
+            # schedule next step
+            try:
+                state["after_id"] = root.after(dur, lambda: show_step(idx + 1))
+            except Exception:
+                pass
+
+        # Start sequence
+        show_step(0)
+
+        # Metrics (same layout as other achievement screens)
+        metrics_frame = tk.Frame(h_frame, bg="#FFFFFF", bd=0)
+        metrics_frame.place(relx=0.841, rely=0.57, anchor="n")
+        game_status = tk.StringVar()
+        status_dict = game.get_status_dict()
+        game_status.set(
+            f"Year: {status_dict['year']}\n"
+            f"\nBasal Area (BA): {status_dict['BA']:.1f} sqft/acre\n"
+            f"\nTrees Per Acre (TPA): {status_dict['TPA']}\n"
+            f"\nQuadratic Mean Diameter (QMD): {status_dict['QMD']:.1f} inches\n"
+            f"\nCarbon per Acre: {status_dict['carbon']:.1f} Metric Tons/acre\n"
+            f"\nCrowning Index: {status_dict['CI']:.1f}"
+        )
+        game_status_message = tk.Message(
+            metrics_frame,
+            textvariable=game_status,
+            width=450,
+            justify="center",
+            bg="#FFFFFF",
+            fg=FG_COLOR,
+            font=FONT
+        )
+        game_status_message.pack()
+        fire_risk_label = tk.Label(metrics_frame, wraplength=scale_x(400), justify="left",
+                                   padx=10, pady=0, bg="#FFFFFF", font=("Courier", scale_font(14), "bold"))
+        fire_risk_label.pack()
+        spb_risk_label = tk.Label(metrics_frame, wraplength=scale_x(400), justify="left",
+                                  padx=10, pady=0, bg="#FFFFFF", font=("Courier", scale_font(14), "bold"))
+        spb_risk_label.pack()
+        fire_risk_label.config(
+            text=f"\n\nFire Risk: {status_dict['fire_risk']}",
+            fg=get_risk_color(status_dict['fire_risk'])
+        )
+        spb_risk_label.config(
+            text=f"Southern Pine Beetle Risk: {status_dict['SPB_risk']}",
+            fg=get_risk_color(status_dict['SPB_risk'])
+        )
+        narration = tk.StringVar()
+        narration.set("")
+        tk.Label(
+            metrics_frame, textvariable=narration, wraplength=scale_x(400), justify="left",
+            padx=10, pady=5, bg="#FFFFFF", fg=FG_COLOR, font=FONT
+        ).pack()
+
+        # Text
+        text_frame = tk.Frame(h_frame, bg="#1b2336", bd=0)
+        text_frame.place(relx=0.88, rely=0.2, anchor="center")
+        tk.Label(
+            text_frame,
+            text="Oh no! A hurricane passed through your forest. \n\n Your forest is still living but this may have significantly changes your forest metrics.",
+            bg="#1b2336", fg="#05dd4c", font=("Courier New", scale_font(18), "bold"),
+            pady=10, wraplength=scale_x(370), justify="center"
+        ).pack()
+
+        def on_continue():
+            state["running"] = False
+            if state.get("after_id"):
+                try:
+                    root.after_cancel(state.get("after_id"))
+                except Exception:
+                    pass
+                state["after_id"] = None
+            try:
+                stop_hurricane_sound()
+            except Exception:
+                pass
+            # unset modal flag so pending animations can apply
+            game.hurricane_active = False
+            # leave final image on screen
+            if h_frame.winfo_exists() and bg_label.winfo_exists():
+                bg_label.config(image=photo_after)
+                bg_label.image = photo_after
+            h_frame.pack_forget()
+            # If the hurricane event occurred in year 100 (or later), go to the closing/winning
+            # screen like achievements do; otherwise return to the main game screen.
+            try:
+                events = game.stand.get('events', [])
+                if events:
+                    last = events[-1]
+                    evt_str = last[1] if (isinstance(last, (list, tuple)) and len(last) > 1) else last
+                    evt_year = last[0] if (isinstance(last, (list, tuple)) and len(last) > 0) else None
+                    if evt_str == 'Hurricane passed through' and evt_year is not None and int(evt_year) >= 90:
+                        show_closing_screen()
+                        return
+            except Exception:
+                pass
+
+            # show the main game screen and clear any temp animation marker shortly after
+            show_game_screen()
+            try:
+                if getattr(game, 'animation_temp_bg', None):
+                    root.after(100, lambda: setattr(game, 'animation_temp_bg', None))
+            except Exception:
+                pass
+
+        button_frame = tk.Frame(h_frame, bg="#000000", bd=0)
+        button_frame.place(relx=0.88, rely=0.33, anchor="center")
+        tk.Button(
+            button_frame, text="Continue", font=("Courier", scale_font(16), "bold"), width=16,
+            bg="#05dd4c", fg="#1b2336", activebackground="#069134",
+            command=on_continue
+        ).pack(pady=0)
+
     # GAME ASSITANCE SCREENS
     # --- Field Guide Screen ---
     def show_field_guide_screen():
@@ -1999,7 +2216,7 @@ def main():
 
         # Metrics (same as definitions)
         metrics_frame = tk.Frame(fg_frame, bg="#FFFFFF", bd=0)
-        metrics_frame.place(relx=0.841, rely=0.73, anchor="center")
+        metrics_frame.place(relx=0.841, rely=0.57, anchor="n")
         game_status = tk.StringVar()
         status_dict = game.get_status_dict()
         game_status.set(
@@ -2065,7 +2282,7 @@ def main():
 
         # --- Metrics Frame (copied from show_game_screen) ---
         metrics_frame = tk.Frame(def_frame, bg="#FFFFFF", bd=0)
-        metrics_frame.place(relx=0.841, rely=0.73, anchor="center")
+        metrics_frame.place(relx=0.841, rely=0.57, anchor="n")
         game_status = tk.StringVar()
         status_dict = game.get_status_dict()
         game_status.set(
@@ -2139,11 +2356,11 @@ def main():
 
         # --- action summary (same as Analysis Lab) ---
         text_frame = tk.Frame(def_frame, bg="#1b2336", bd=0)
-        text_frame.place(relx=0.88, rely=0.223, anchor="center")
+        text_frame.place(relx=0.88, rely=0.1, anchor="n")
         tk.Label(
             text_frame,
             text=game.get_action_summary(),
-            bg="#1b2336", fg="#05dd4c", font=("Courier New", scale_font(17), "bold"),
+            bg="#1b2336", fg="#05dd4c", font=("Courier New", scale_font(15), "bold"),
             wraplength=scale_x(400), justify="left"
         ).pack()
 
@@ -2183,6 +2400,21 @@ def main():
         for widget in root.winfo_children():
             widget.pack_forget()
 
+        # If a hurricane event was just recorded and hasn't been shown yet, show it now
+        try:
+            events = game.stand.get('events', [])
+            if events:
+                last = events[-1]
+                evt_str = last[1] if (isinstance(last, (list, tuple)) and len(last) > 1) else last
+                evt_year = last[0] if (isinstance(last, (list, tuple)) and len(last) > 0) else None
+                if evt_str == 'Hurricane passed through' and getattr(game, 'hurricane_last_shown_year', None) != evt_year:
+                    # detected hurricane event; show once
+                    game.hurricane_last_shown_year = evt_year
+                    show_hurricane_screen()
+                    return
+        except Exception:
+            pass
+
         game_frame = tk.Frame(root, bg=BG_COLOR)
         game_frame.pack(fill="both", expand=True)
 
@@ -2208,6 +2440,13 @@ def main():
             root.after(duration_ms, lambda: finish_animation(final_path))
 
         def finish_animation(final_path):
+            # If a hurricane (or other modal) screen is active, defer replacing the UI
+            if getattr(game, 'hurricane_active', False):
+                # Persist final scene so it will be visible after modal closes
+                game.animation_temp_bg = final_path
+                game.current_bg_img = final_path
+                return
+
             game.animation_temp_bg = final_path
             game.current_bg_img = final_path  # persist final scene
             show_game_screen()
@@ -2216,7 +2455,7 @@ def main():
         
         # --- Metrics Frame ---
         metrics_frame = tk.Frame(game_frame, bg="#FFFFFF", bd=0)
-        metrics_frame.place(relx=0.841, rely=0.73, anchor="center")
+        metrics_frame.place(relx=0.841, rely=0.57, anchor="n")
         game_status = tk.StringVar()
         game_status_message = tk.Message(
             metrics_frame,
@@ -2346,6 +2585,25 @@ def main():
                 if queue:
                     game.current_bg_img = final_bg_img       # persist this turn’s final scene
                     game.achievement_final_bg = final_bg_img  # keep if needed later
+                    # If the simulation recorded a hurricane event this turn, show it after achievements
+                    try:
+                        events = game.stand.get('events', [])
+                        if events:
+                            last = events[-1]
+                            # events are stored as (year, description) tuples
+                            evt_str = last[1] if (isinstance(last, (list, tuple)) and len(last) > 1) else last
+                            if evt_str == 'Hurricane passed through':
+                                try:
+                                    if not getattr(game, 'hurricane_screen_shown', False):
+                                        game.hurricane_pending = True
+                                        # queued hurricane pending
+                                    else:
+                                        # already shown this game; nothing to do
+                                        pass
+                                except Exception:
+                                    game.hurricane_pending = True
+                    except Exception:
+                        pass
                     game.achievement_queue = queue
                     show_next_queued_achievement_or_game()
                     return True
@@ -2994,13 +3252,19 @@ def main():
                 return
             
         # No more queued achievements
+        # If a hurricane occurred this turn, show that screen next (after achievements)
+        if getattr(game, 'hurricane_pending', False):
+            game.hurricane_pending = False
+            show_hurricane_screen()
+            return
+
         if game.stand['year'] >= 100:
             show_closing_screen()
         else:
             show_game_screen()
 
     # Start the main event loop
-    #show_shortleaf_screen()  # <-- TEMP: Jump directly to screen for testing
+    #show_hurricane_screen()  # <-- TEMP: Jump directly to screen for testing
     root.mainloop()
 
 #DEFINING SOUND FUNCTIONS
@@ -3234,6 +3498,27 @@ def stop_tree_frog_sound():
             pass
     except Exception as e:
         print("Error stopping tree frog sound:", e)
+
+def play_hurricane_sound():
+    try:
+        sound = pygame.mixer.Sound("assets/hurricane.wav")
+        play_hurricane_sound.sound = sound
+        play_hurricane_sound.channel = sound.play(loops=-1)
+        SOUND_STATE['hurricane'] = True
+    except Exception as e:
+        print("Error playing hurricane sound:", e)
+
+def stop_hurricane_sound():
+    try:
+        if hasattr(play_hurricane_sound, "channel") and play_hurricane_sound.channel is not None:
+            play_hurricane_sound.channel.stop()
+            play_hurricane_sound.channel = None
+        try:
+            SOUND_STATE.pop('hurricane', None)
+        except Exception:
+            pass
+    except Exception as e:
+        print("Error stopping hurricane sound:", e)
 
 def play_save_sound():
     try:
