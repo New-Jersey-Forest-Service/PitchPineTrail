@@ -921,9 +921,11 @@ def main():
         except Exception:
             pass
 
-        # Background image
+        # Background image: show a short loading screen first, then swap
+        # to the full analysis background after 1000ms. The decadal data
+        # frame will be created only after the final background is shown.
         try:
-            img = Image.open("assets/analyze.png")
+            img = Image.open("assets/analyze_load.png")
             try:
                 img = img.resize((SCREEN_W, SCREEN_H), Image.Resampling.LANCZOS)
             except Exception:
@@ -933,56 +935,150 @@ def main():
             bg_label.image = photo
             bg_label.place(relx=0, rely=0, relwidth=1, relheight=1)
         except Exception:
-            pass
+            # If loading the loading-screen fails, fall back to blank frame
+            bg_label = tk.Label(analysis_frame, bg=BG_COLOR)
+            bg_label.place(relx=0, rely=0, relwidth=1, relheight=1)
 
-        # Start analysis lab ambient sound
-        try:
-            play_analysis_lab_sound()
-        except Exception:
-            pass
+        # Prepare df placeholder that will be filled once the full
+        # analysis background is displayed.
+        df = None
 
-        # Show action summary similarly to closing screen
-        # --- Decadal DataFrame display (top of analysis screen) ---
-        try:
-            df = game.get_decadal_dataframe(10)
+        def finish_analysis_setup():
+            nonlocal df
+            # Swap to the full analysis background image
             try:
-                df_text = df.to_string()
+                img2 = Image.open("assets/analyze.png")
+                try:
+                    img2 = img2.resize((SCREEN_W, SCREEN_H), Image.Resampling.LANCZOS)
+                except Exception:
+                    img2 = img2.resize((SCREEN_W, SCREEN_H), Image.LANCZOS)
+                photo2 = ImageTk.PhotoImage(img2)
+                try:
+                    bg_label.config(image=photo2)
+                    bg_label.image = photo2
+                except Exception:
+                    # If bg_label was a simple frame, recreate a label
+                    bg_label2 = tk.Label(analysis_frame, image=photo2)
+                    bg_label2.image = photo2
+                    bg_label2.place(relx=0, rely=0, relwidth=1, relheight=1)
             except Exception:
-                # fallback if DataFrame formatting fails
-                df_text = str(df)
-        except Exception as e:
-            df_text = f"Decadal data unavailable: {e}"
+                pass
 
-        df_frame = tk.Frame(analysis_frame, bg="#2c404b", bd=0)
-        df_frame.place(relx=0.15, rely=0.13, anchor="nw")
-        # Text widget sizes are in characters/lines, not pixels. Convert
-        # desired character/line counts using screen scaling so they remain
-        # usable on small displays.
-        # Prevent the text area from becoming too small on very small displays
-        w_scale = max(1, SCREEN_W / BASE_W)
-        h_scale = max(1, SCREEN_H / BASE_H)
-        df_width_chars = max(30, int(62 * w_scale))
-        df_height_lines = max(8, int(20 * h_scale))
-        df_text_widget = tk.Text(
-            df_frame,
-            width=df_width_chars,
-            height=df_height_lines,
-            wrap="none",
-            font=("Courier New", max(8, scale_font(15))),
-            bg="#2c404b",
-            fg="#05dd4c",
-            insertbackground="#05dd4c",
-            selectbackground="#30515a",
-            bd=0,
-            relief="flat"
-        )
-        df_text_widget.grid(row=0, column=0, sticky="nsew")
-        df_frame.grid_rowconfigure(0, weight=1)
-        df_frame.grid_columnconfigure(0, weight=1)
-        df_text_widget.insert("1.0", df_text)
-        # Ensure text stays the desired color when widget is disabled on all Tk builds
-        df_text_widget.tag_add("df_color", "1.0", "end")
-        df_text_widget.tag_config("df_color", foreground="#05dd4c")
+            # Start analysis lab ambient sound after the transition
+            try:
+                play_analysis_lab_sound()
+            except Exception:
+                pass
+
+            # Create and populate the decadal DataFrame display now
+            try:
+                df = game.get_decadal_dataframe(10)
+                try:
+                    df_text = df.to_string()
+                except Exception:
+                    df_text = str(df)
+            except Exception as e:
+                df_text = f"Decadal data unavailable: {e}"
+
+            df_frame = tk.Frame(analysis_frame, bg="#1f3339", bd=0)
+            df_frame.place(relx=0.135, rely=0.21, anchor="nw")
+            w_scale = max(1, SCREEN_W / BASE_W)
+            h_scale = max(1, SCREEN_H / BASE_H)
+            df_width_chars = max(30, int(60 * w_scale))
+            df_height_lines = max(8, int(16 * h_scale))
+            df_text_widget = tk.Text(
+                df_frame,
+                width=df_width_chars,
+                height=df_height_lines,
+                wrap="none",
+                font=("Courier New", max(8, scale_font(15))),
+                bg="#1f3339",
+                fg="#05dd4c",
+                insertbackground="#05dd4c",
+                selectbackground="#30515a",
+                bd=0,
+                relief="flat"
+            )
+            df_text_widget.grid(row=0, column=0, sticky="nsew")
+            df_frame.grid_rowconfigure(0, weight=1)
+            df_frame.grid_columnconfigure(0, weight=1)
+            df_text_widget.insert("1.0", df_text)
+            df_text_widget.tag_add("df_color", "1.0", "end")
+            df_text_widget.tag_config("df_color", foreground="#05dd4c")
+
+            # Create Save Data button on top of the DataFrame so it appears after loading
+            try:
+                save_frame = tk.Frame(analysis_frame, bg="#2c404b", bd=0)
+                save_frame.place(relx=0.575, rely=0.557, anchor="center")
+                save_btn = tk.Button(
+                    save_frame,
+                    text="Save Data",
+                    font=("Courier", scale_font(12), "bold"),
+                    width=10,
+                    bg="#bb0b09",
+                    fg="#320001",
+                    activebackground="#f0ebda",
+                    command=do_save_dataframe
+                )
+                save_btn.pack()
+                try:
+                    save_frame.lift()
+                except Exception:
+                    pass
+            except Exception:
+                pass
+
+            # Load blink image and start continuous background cycling
+            try:
+                img_blink = Image.open("assets/analyze_blink.png")
+                try:
+                    img_blink = img_blink.resize((SCREEN_W, SCREEN_H), Image.Resampling.LANCZOS)
+                except Exception:
+                    img_blink = img_blink.resize((SCREEN_W, SCREEN_H), Image.LANCZOS)
+                photo_blink = ImageTk.PhotoImage(img_blink)
+            except Exception:
+                photo_blink = None
+
+            # Continuous cycle: analyze.png for 1000ms, analyze_blink.png for 500ms
+            try:
+                state = {"show_blink": False, "after_id": None}
+
+                def cycle_step():
+                    # stop if frame or label gone
+                    if not analysis_frame.winfo_exists() or not bg_label.winfo_exists():
+                        return
+                    try:
+                        if not state["show_blink"]:
+                            # show steady image
+                            bg_label.config(image=photo2)
+                            bg_label.image = photo2
+                            delay = 1000
+                        else:
+                            # show blink image (if available)
+                            if photo_blink is not None:
+                                bg_label.config(image=photo_blink)
+                                bg_label.image = photo_blink
+                            delay = 500
+                        state["show_blink"] = not state["show_blink"]
+                        # schedule next
+                        try:
+                            state["after_id"] = root.after(delay, cycle_step)
+                            analysis_frame.analysis_cycle_after = state["after_id"]
+                        except Exception:
+                            state["after_id"] = None
+                    except Exception:
+                        pass
+
+                # start cycling
+                cycle_step()
+            except Exception:
+                pass
+
+        # Schedule the transition from loading -> analysis (1000ms)
+        try:
+            root.after(1000, finish_analysis_setup)
+        except Exception:
+            finish_analysis_setup()
 
         # --- action summary ---
         text_frame = tk.Frame(analysis_frame, bg="#1b2336", bd=0)
@@ -1044,7 +1140,7 @@ def main():
 
         # Return button (restore previous ambient sounds on return)
         button_frame = tk.Frame(analysis_frame, bg="#fff3dd", bd=0)
-        button_frame.place(relx=0.48, rely=0.68, anchor="center")
+        button_frame.place(relx=0.2, rely=0.75, anchor="center")
 
         def return_to_prev():
             try:
@@ -1070,25 +1166,64 @@ def main():
             except Exception:
                 pass
 
+            # Cancel background cycling if active
+            try:
+                aid = getattr(analysis_frame, 'analysis_cycle_after', None)
+                if aid:
+                    try:
+                        root.after_cancel(aid)
+                    except Exception:
+                        pass
+                    analysis_frame.analysis_cycle_after = None
+            except Exception:
+                pass
+
             analysis_frame.pack_forget()
             prev_frame.pack(fill="both", expand=True)
 
         tk.Button(
             button_frame, text="Return to Game", font=("Courier", scale_font(13), "bold"), width=16,
-            bg="#fff3dd", fg="#37384e", activebackground="#9b917f",
+            bg="#f0ebda", fg="#736e58", activebackground="#9b917f",
             command=return_to_prev
         ).pack()
 
-        # --- Save Data button (own frame) ---
-        save_frame = tk.Frame(analysis_frame, bg="#2c404b", bd=0)
-        save_frame.place(relx=0.35, rely=0.57, anchor="center")
+        # --- Save Data button will be created after loading completes ---
 
         def do_save_dataframe():
             try:
                 play_save_sound()
             except Exception:
                 pass
+
+            # Show a floppy overlay while saving (scales with screen)
+            overlay = None
             try:
+                overlay = tk.Frame(analysis_frame, bg="#c6d1d8", bd=0)
+                overlay.place(relx=0.575, rely=0.57, anchor="center")
+                try:
+                    floppy_img = Image.open("assets/floppy.png")
+                    try:
+                        fw = max(24, scale_x(135))
+                        fh = max(16, scale_y(108))
+                        floppy_img = floppy_img.resize((fw, fh), Image.Resampling.LANCZOS)
+                    except Exception:
+                        floppy_img = floppy_img.resize((scale_x(135), scale_y(108)), Image.LANCZOS)
+                    floppy_photo = ImageTk.PhotoImage(floppy_img)
+                    floppy_label = tk.Label(overlay, image=floppy_photo, bg="#c6d1d8")
+                    floppy_label.image = floppy_photo
+                    floppy_label.pack()
+                except Exception:
+                    # fallback: simple text label if floppy image can't be shown
+                    tk.Label(overlay, text="Saving...", bg="#c6d1d8", fg="#000000").pack(padx=10, pady=10)
+                try:
+                    overlay.lift()
+                except Exception:
+                    pass
+                try:
+                    root.update_idletasks()
+                except Exception:
+                    pass
+
                 from datetime import datetime
                 default_name = datetime.now().strftime("PitchPineTrail_data_%Y%m%d_%H%M%S.csv")
                 file_path = filedialog.asksaveasfilename(
@@ -1165,18 +1300,12 @@ def main():
                         print("Save error:", e)
             except Exception as e:
                 print("Unexpected error during save:", e)
-
-        save_btn = tk.Button(
-            save_frame,
-            text="Save Data",
-            font=("Courier", scale_font(13), "bold"),
-            width=12,
-            bg="#2c404b",  # navy
-            fg="#05dd4c",  # lime green
-            activebackground="#152a35",
-            command=do_save_dataframe
-        )
-        save_btn.pack()
+            finally:
+                try:
+                    if overlay and overlay.winfo_exists():
+                        overlay.destroy()
+                except Exception:
+                    pass
 
         # --- Variable buttons (stacked) to plot each metric vs Year ---
         try:
@@ -3264,7 +3393,7 @@ def main():
             show_game_screen()
 
     # Start the main event loop
-    #show_hurricane_screen()  # <-- TEMP: Jump directly to screen for testing
+    #show_analysis_lab()  # <-- TEMP: Jump directly to screen for testing
     root.mainloop()
 
 #DEFINING SOUND FUNCTIONS
