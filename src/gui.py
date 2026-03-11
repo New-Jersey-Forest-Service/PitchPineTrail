@@ -981,7 +981,7 @@ def main():
                 df_text = f"Decadal data unavailable: {e}"
 
             df_frame = tk.Frame(analysis_frame, bg="#1f3339", bd=0)
-            df_frame.place(relx=0.135, rely=0.21, anchor="nw")
+            df_frame.place(relx=0.135, rely=0.235, anchor="nw")
             w_scale = max(1, SCREEN_W / BASE_W)
             h_scale = max(1, SCREEN_H / BASE_H)
             df_width_chars = max(30, int(60 * w_scale))
@@ -1140,7 +1140,7 @@ def main():
 
         # Return button (restore previous ambient sounds on return)
         button_frame = tk.Frame(analysis_frame, bg="#fff3dd", bd=0)
-        button_frame.place(relx=0.2, rely=0.75, anchor="center")
+        button_frame.place(relx=0.18, rely=0.75, anchor="center")
 
         def return_to_prev():
             try:
