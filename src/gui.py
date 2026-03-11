@@ -1411,18 +1411,18 @@ def main():
                 # so it doesn't overflow on small displays.
                 graph_px_w = min(scale_x(700), int(SCREEN_W * 0.7))
                 graph_px_w = max(240, graph_px_w)
-                graph_px_h = min(scale_y(450), int(SCREEN_H * 0.6))
+                graph_px_h = min(scale_y(430), int(SCREEN_H * 0.6))
                 graph_px_h = max(160, graph_px_h)
                 graph_frame = tk.Frame(analysis_frame, bg="#FFFFFF", bd=0)
-                graph_frame.place(relx=0.15, rely=0.13, anchor="nw", width=graph_px_w, height=graph_px_h)
+                graph_frame.place(relx=0.135, rely=0.235, anchor="nw", width=graph_px_w, height=graph_px_h)
                 current_graph["frame"] = graph_frame
 
                 # Figure/axis styling to match the app theme. Convert pixel
                 # dimensions to inches for figsize (inches = pixels / dpi).
                 dpi = 100
-                fig = Figure(figsize=(graph_px_w / dpi, graph_px_h / dpi), dpi=dpi, facecolor='#2c404b')
+                fig = Figure(figsize=(graph_px_w / dpi, graph_px_h / dpi), dpi=dpi, facecolor='#1f3339')
                 ax = fig.add_subplot(111)
-                ax.set_facecolor('#1b2336')
+                ax.set_facecolor('#121e22')
                 # Matplotlib font sizing scaled to screen so labels don't get
                 # cut off on small displays.
                 title_fs = max(8, scale_font(12))
@@ -1440,7 +1440,7 @@ def main():
                     ax.bar(x_positions, y_vals, width=bar_width, color=bar_colors, edgecolor='#1b2336')
                 else:
                     ax.plot(x_positions, y_vals, marker='o', linestyle='-', color='#05dd4c',
-                            markerfacecolor='#05dd4c', markeredgecolor='#1b2336', markersize=marker_sz)
+                            markerfacecolor='#05dd4c', markeredgecolor='#121e22', markersize=marker_sz)
                 ax.set_xlabel('Year', color='#b5c3d8', fontsize=label_fs)
                 ax.set_title(graph_titles.get(var, var), color='#b5c3d8', fontsize=title_fs)
                 ax.tick_params(colors='#b5c3d8', labelsize=tick_fs)
@@ -1501,7 +1501,7 @@ def main():
                         current_graph["frame"] = None
 
                 tk.Button(graph_frame, text="Close Graph", font=("Courier", scale_font(11), "bold"),
-                          bg="#1b2336", fg="#b5c3d8", command=close_graph).place(relx=0.02, rely=0.02)
+                          bg="#121e22", fg="#b5c3d8", command=close_graph).place(relx=0.02, rely=0.0)
                 graph_frame.lift()
             except Exception as e:
                 try:
