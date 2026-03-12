@@ -458,6 +458,12 @@ class Game:
                 'events': deepcopy(self.stand.get('events', []))
             }
 
+            # Choose a random post-decade year offset (2–9 years after the
+            # triggering decadal year) so hurricane effects are recorded within
+            # the same decade rather than always +1.
+            offset = random.randint(2, 9)
+            post_year = int(curr_year) + offset
+
             # Apply hurricane metric changes immediately so UI displays them
             new_tpa = int(max(1, round(self.stand.get('TPA', 0) * 0.8)))
             new_carbon = round(max(0.0, float(self.stand.get('carbon', 0.0)) * 0.9), 1)
@@ -494,18 +500,18 @@ class Game:
             # Append event only if not already present to avoid duplicates
             try:
                 events = self.stand.setdefault('events', [])
-                if not any((isinstance(e, (list, tuple)) and len(e) > 1 and e[0] == curr_year and e[1] == evt) or (isinstance(e, str) and e == evt) for e in events):
-                    events.append((curr_year, evt))
+                if not any((isinstance(e, (list, tuple)) and len(e) > 1 and e[0] == post_year and e[1] == evt) or (isinstance(e, str) and e == evt) for e in events):
+                    events.append((post_year, evt))
             except Exception:
                 try:
-                    self.stand.setdefault('events', []).append((curr_year, evt))
+                    self.stand.setdefault('events', []).append((post_year, evt))
                 except Exception:
                     pass
 
             try:
                 if not hasattr(self, 'hurricane_years'):
                     self.hurricane_years = set()
-                self.hurricane_years.add(curr_year)
+                self.hurricane_years.add(post_year)
                 # mark that a hurricane has occurred so it cannot happen again this game
                 self.hurricane_occurred = True
             except Exception:
@@ -513,7 +519,7 @@ class Game:
 
             # Post-hurricane snapshot recorded as year+1
             post_snapshot = {
-                'year': int(curr_year) + 1,
+                'year': int(post_year),
                 'QMD': float(self.stand.get('QMD', 0.0)),
                 'TPA': int(round(self.stand.get('TPA', 0))),
                 'BA': float(self.stand.get('BA', 0.0)),
@@ -536,9 +542,11 @@ class Game:
         # action for the post-year snapshot so exports include it, then skip default snapshot
         if hurricane_occurred:
             try:
-                post_action_year = int(curr_year) + 1
+                base = int(curr_year)
             except Exception:
-                post_action_year = int(self.stand.get('year', 0)) + 1
+                base = int(self.stand.get('year', 0))
+            offset_val = offset if 'offset' in locals() else 1
+            post_action_year = base + offset_val
             # avoid duplicate entries for the same year/action
             exists = any((y == post_action_year and a == 'HURRICANE') for (y, a) in self.action_history)
             if not exists:
@@ -749,13 +757,17 @@ class Game:
         # Additionally include any off-decade snapshot that immediately follows a decadal year
         # (e.g., hurricane post-snapshot at year 51 following year 50) so the effect is visible.
         base_years = set(y for y in year_map.keys() if (y == -1) or (interval == 1) or (y % interval == 0))
-        # Include +1 snapshots that follow a decadal year
+        # Include off-decade snapshots that fall within the same decade after a
+        # decadal base year (e.g., a hurricane recorded at year 42 after base 40).
         extra_years = set()
+        decadal_bases = set(y for y in year_map.keys() if (y != -1) and (interval != 1) and (y % interval == 0))
         for y in year_map.keys():
             if y in base_years:
                 continue
-            if (y - 1) in base_years:
-                extra_years.add(y)
+            for d in decadal_bases:
+                if d < y <= d + (interval - 1):
+                    extra_years.add(y)
+                    break
 
         years = sorted(base_years.union(extra_years))
 
