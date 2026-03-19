@@ -194,6 +194,9 @@ class Game:
         tpa_next = apply_management_tpa(self.stand['TPA'], action)
         qmd_next = grow_qmd(self.stand['QMD'], action)
 
+        # Record the fire risk prior to applying this management (used for certain event triggers)
+        prev_fire_risk = self.stand.get('fire_risk', None)
+
         # --- Apply any pending recruitment scheduled last cycle ---
         # Track carbon added by recruitment (TPA increases should raise carbon)
         recruited_carbon_increase = 0.0
@@ -535,6 +538,97 @@ class Game:
             self.history.append(post_snapshot)
             hurricane_occurred = True
 
+        # --- Non-losing wildfire event (scheduled at year+1 when triggered) ---
+        wildfire_occurred = False
+        try:
+            # Trigger: prescribed burn (action '4') while PRE-ACTION Fire Risk was High -> 50% chance
+            # Use the prior fire risk (`prev_fire_risk`) because CI/fire_risk is updated by the management action.
+            curr_year = self.stand.get('year', 0)
+            if action == '4' and prev_fire_risk == 'High' and random.random() < 0.5:
+                # Pre-snapshot (immediately after management, before wildfire effects)
+                pre_snapshot = {
+                    'year': int(curr_year),
+                    'QMD': float(self.stand.get('QMD', 0.0)),
+                    'TPA': int(round(self.stand.get('TPA', 0))),
+                    'BA': float(self.stand.get('BA', 0.0)),
+                    'carbon': float(self.stand.get('carbon', 0.0)),
+                    'CI': float(self.stand.get('CI', 0.0)),
+                    'fire_risk': self.stand.get('fire_risk'),
+                    'SPB_risk': self.stand.get('SPB_risk'),
+                    'events': deepcopy(self.stand.get('events', []))
+                }
+
+                post_year = int(curr_year) + 1
+
+                # Apply immediate metric changes for the wildfire event
+                new_tpa = int(max(1, round(self.stand.get('TPA', 0) * 0.5)))  # decrease by 50%
+                new_carbon = round(max(0.0, float(self.stand.get('carbon', 0.0)) * 0.6), 1)  # decrease by 40%
+                self.stand['TPA'] = new_tpa
+                self.stand['carbon'] = new_carbon
+
+                # Recalculate BA based on updated TPA and current QMD
+                try:
+                    ba_after = calculate_ba(self.stand.get('QMD', 0.0), new_tpa)
+                except Exception:
+                    ba_after = 0.0
+                self.stand['BA'] = round(ba_after, 1)
+
+                # Update SPB risk based on new BA
+                spb_after = (
+                    "High" if ba_after > 100 else
+                    "Moderate" if ba_after > 60 else
+                    "Low"
+                )
+                self.stand['SPB_risk'] = spb_after
+
+                # Increase CI by 3
+                try:
+                    ci_after = int(round(self.stand.get('CI', 0))) + 3
+                    ci_after = min(60, ci_after)
+                except Exception:
+                    ci_after = self.stand.get('CI', 0)
+                self.stand['CI'] = ci_after
+
+                # Update fire risk based on new CI
+                fire_risk_after = (
+                    "High" if ci_after <= 20 else
+                    "Moderate" if ci_after < 25 else
+                    "Low"
+                )
+                self.stand['fire_risk'] = fire_risk_after
+
+                evt = 'WILDFIRE'
+                # Append event for the post_year snapshot (avoid duplicates)
+                try:
+                    events = self.stand.setdefault('events', [])
+                    if not any((isinstance(e, (list, tuple)) and len(e) > 1 and e[0] == post_year and e[1] == evt) or (isinstance(e, str) and e == evt) for e in events):
+                        events.append((post_year, evt))
+                except Exception:
+                    try:
+                        self.stand.setdefault('events', []).append((post_year, evt))
+                    except Exception:
+                        pass
+
+                # Post-snapshot (reflecting stand immediately after wildfire effects)
+                post_snapshot = {
+                    'year': int(post_year),
+                    'QMD': float(self.stand.get('QMD', 0.0)),
+                    'TPA': int(round(self.stand.get('TPA', 0))),
+                    'BA': float(self.stand.get('BA', 0.0)),
+                    'carbon': float(self.stand.get('carbon', 0.0)),
+                    'CI': float(self.stand.get('CI', 0.0)),
+                    'fire_risk': self.stand.get('fire_risk'),
+                    'SPB_risk': self.stand.get('SPB_risk'),
+                    'events': deepcopy(self.stand.get('events', []))
+                }
+
+                # Append both snapshots so the wildfire effect is visible at year+1
+                self.history.append(pre_snapshot)
+                self.history.append(post_snapshot)
+                wildfire_occurred = True
+        except Exception:
+            wildfire_occurred = False
+
         # Record the action in history
         self.action_history.append((self.stand['year'], action))
 
@@ -551,6 +645,20 @@ class Game:
             exists = any((y == post_action_year and a == 'HURRICANE') for (y, a) in self.action_history)
             if not exists:
                 self.action_history.append((post_action_year, 'HURRICANE'))
+            return
+
+        # If a scheduled non-losing wildfire was just applied above, record a WILDFIRE
+        # action for the post-year snapshot (year+1) so exports include it, then skip default snapshot
+        if wildfire_occurred:
+            try:
+                base = int(curr_year)
+            except Exception:
+                base = int(self.stand.get('year', 0))
+            post_action_year = base + 1
+            # avoid duplicate entries for the same year/action
+            exists = any((y == post_action_year and a == 'WILDFIRE') for (y, a) in self.action_history)
+            if not exists:
+                self.action_history.append((post_action_year, 'WILDFIRE'))
             return
 
         # --- Snapshot current stand into history for later analysis/plotting ---

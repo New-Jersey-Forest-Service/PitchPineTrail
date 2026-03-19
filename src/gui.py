@@ -116,6 +116,24 @@ def main():
         except Exception:
             pass
 
+        # Ensure wildfire modal flags are cleared when restarting via Try Again
+        try:
+            game.wildfire_screen_shown = False
+        except Exception:
+            pass
+        try:
+            game.wildfire_active = False
+        except Exception:
+            pass
+        try:
+            game.wildfire_pending = False
+        except Exception:
+            pass
+        try:
+            game.wildfire_last_shown_year = None
+        except Exception:
+            pass
+
         # Stop any looping/active sounds
         stop_spb_eating_sound()
         stop_fire_sound()
@@ -2326,6 +2344,115 @@ def main():
             command=on_continue
         ).pack(pady=0)
 
+    # --- Non-losing Wildfire Screen ---
+    def show_wildfire_screen():
+        """Display the non-losing wildfire screen triggered by the scheduled WILDFIRE event."""
+        # Skip if we've already shown the wildfire screen this game
+        try:
+            if getattr(game, 'wildfire_screen_shown', False):
+                return
+        except Exception:
+            pass
+        # Mark screen shown immediately to prevent re-entry from other code paths
+        try:
+            game.wildfire_screen_shown = True
+        except Exception:
+            pass
+        try:
+            play_fire_sound()
+        except Exception:
+            pass
+        # modal active so other UI updates defer
+        game.wildfire_active = True
+        # clear pending flag
+        try:
+            game.wildfire_pending = False
+        except Exception:
+            pass
+
+        for widget in root.winfo_children():
+            widget.pack_forget()
+        w_frame = tk.Frame(root, bg=BG_COLOR)
+        w_frame.pack(fill="both", expand=True)
+
+        # Static background image for non-losing wildfire
+        try:
+            img_after = Image.open("assets/nonlosing_fire.png").resize((SCREEN_W, SCREEN_H))
+            photo_after = ImageTk.PhotoImage(img_after)
+            bg_label = tk.Label(w_frame, image=photo_after)
+            bg_label.image = photo_after
+            bg_label.place(relx=0, rely=0, relwidth=1, relheight=1)
+        except Exception:
+            bg_label = tk.Label(w_frame, bg=BG_COLOR)
+            bg_label.place(relx=0, rely=0, relwidth=1, relheight=1)
+
+        # Metrics (same layout as hurricane)
+        metrics_frame = tk.Frame(w_frame, bg="#FFFFFF", bd=0)
+        metrics_frame.place(relx=0.841, rely=0.57, anchor="n")
+        game_status = tk.StringVar()
+        status_dict = game.get_status_dict()
+        game_status.set(
+            f"Year: {status_dict['year']}\n"
+            f"\nBasal Area (BA): {status_dict['BA']:.1f} sqft/acre\n"
+            f"\nTrees Per Acre (TPA): {status_dict['TPA']}\n"
+            f"\nQuadratic Mean Diameter (QMD): {status_dict['QMD']:.1f} inches\n"
+            f"\nCarbon per Acre: {status_dict['carbon']:.1f} Metric Tons/acre\n"
+            f"\nCrowning Index: {status_dict['CI']:.1f}"
+        )
+        game_status_message = tk.Message(
+            metrics_frame,
+            textvariable=game_status,
+            width=450,
+            justify="center",
+            bg="#FFFFFF",
+            fg=FG_COLOR,
+            font=FONT
+        )
+        game_status_message.pack()
+        fire_risk_label = tk.Label(metrics_frame, wraplength=scale_x(400), justify="left", padx=10, pady=0, bg="#FFFFFF", font=("Courier", scale_font(14), "bold"))
+        fire_risk_label.pack()
+        spb_risk_label = tk.Label(metrics_frame, wraplength=scale_x(400), justify="left", padx=10, pady=0, bg="#FFFFFF", font=("Courier", scale_font(14), "bold"))
+        spb_risk_label.pack()
+        fire_risk_label.config(
+            text=f"\n\nFire Risk: {status_dict['fire_risk']}",
+            fg=get_risk_color(status_dict['fire_risk'])
+        )
+        spb_risk_label.config(
+            text=f"Southern Pine Beetle Risk: {status_dict['SPB_risk']}",
+            fg=get_risk_color(status_dict['SPB_risk'])
+        )
+
+        # Text
+        text_frame = tk.Frame(w_frame, bg="#1b2336", bd=0)
+        text_frame.place(relx=0.88, rely=0.2, anchor="center")
+        tk.Label(
+            text_frame,
+            text="Oh no! Your prescribed burn got out of control because your forest was already at high risk for fire. \n\n Your forest is still living but this may have significantly changes your forest metrics.",
+            bg="#1b2336", fg="#05dd4c", font=("Courier New", scale_font(16), "bold"),
+            pady=10, wraplength=scale_x(370), justify="center"
+        ).pack()
+
+        def on_continue():
+            try:
+                stop_fire_sound()
+            except Exception:
+                pass
+            # unset modal flag
+            try:
+                game.wildfire_active = False
+            except Exception:
+                pass
+            w_frame.pack_forget()
+            show_next_queued_achievement_or_game()
+
+        button_frame = tk.Frame(w_frame, bg="#000000", bd=0)
+        button_frame.place(relx=0.88, rely=0.33, anchor="center")
+        tk.Button(
+            button_frame, text="Continue", font=("Courier", scale_font(16), "bold"), width=16,
+            bg="#05dd4c", fg="#1b2336", activebackground="#069134",
+            command=on_continue
+        ).pack(pady=0)
+
     # GAME ASSITANCE SCREENS
     # --- Field Guide Screen ---
     def show_field_guide_screen():
@@ -2541,6 +2668,11 @@ def main():
                     game.hurricane_last_shown_year = evt_year
                     show_hurricane_screen()
                     return
+                if evt_str == 'WILDFIRE' and getattr(game, 'wildfire_last_shown_year', None) != evt_year:
+                    # detected non-losing wildfire event; show once
+                    game.wildfire_last_shown_year = evt_year
+                    show_wildfire_screen()
+                    return
         except Exception:
             pass
 
@@ -2569,8 +2701,8 @@ def main():
             root.after(duration_ms, lambda: finish_animation(final_path))
 
         def finish_animation(final_path):
-            # If a hurricane (or other modal) screen is active, defer replacing the UI
-            if getattr(game, 'hurricane_active', False):
+            # If a hurricane or wildfire (or other modal) screen is active, defer replacing the UI
+            if getattr(game, 'hurricane_active', False) or getattr(game, 'wildfire_active', False):
                 # Persist final scene so it will be visible after modal closes
                 game.animation_temp_bg = final_path
                 game.current_bg_img = final_path
@@ -3147,6 +3279,20 @@ def main():
                 return
 
             if event:
+                try:
+                    last = events[-1]
+                    evt_str = last[1] if (isinstance(last, (list, tuple)) and len(last) > 1) else last
+                    evt_year = last[0] if (isinstance(last, (list, tuple)) and len(last) > 0) else None
+                    # If hurricane event pending display
+                    if evt_str == 'Hurricane passed through' and not getattr(game, 'hurricane_screen_shown', False):
+                        show_hurricane_screen()
+                        return
+                    # If non-losing wildfire event pending display
+                    if evt_str == 'WILDFIRE' and not getattr(game, 'wildfire_screen_shown', False):
+                        show_wildfire_screen()
+                        return
+                except Exception:
+                    pass
                 narration.set(event)
             else:
                 narration.set("")
