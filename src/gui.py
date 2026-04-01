@@ -15,6 +15,8 @@ Provides interactive screens for gameplay, status display, and decision making.
 import tkinter as tk
 from tkinter import messagebox
 from game_logic import Game, ACTIONS
+import os
+import logging
 from PIL import Image, ImageTk, ImageGrab
 import pygame
 import random
@@ -33,8 +35,13 @@ def main():
 
     # Initialize game and UI constants
     game = Game()  # Model handles its own colonization & achievement flags
+    # GUI debug logger (enabled by PITCH_DEBUG=1)
+    GUI_DEBUG = os.getenv('PITCH_DEBUG', '0') == '1'
+    gui_logger = logging.getLogger('pitchpine.gui')
+    if GUI_DEBUG:
+        logging.basicConfig(level=logging.DEBUG)
     # GUI-only state
-    game.current_bg_img = "assets/Evenagestand.png"
+    game.current_bg_img = "assets/Evenagestand.jpg"
     game.animation_temp_bg = None
     game.achievement_queue = []
     game.achievement_final_bg = None
@@ -143,7 +150,7 @@ def main():
             pass
 
         # Reset GUI-only state
-        game.current_bg_img = "assets/Evenagestand.png"
+        game.current_bg_img = "assets/Evenagestand.jpg"
         game.animation_temp_bg = None
         game.achievement_queue = []
         game.achievement_final_bg = None
@@ -230,7 +237,7 @@ def main():
 
         # Load survey image
         try:
-            img = Image.open("assets/exitsurvey.png")
+            img = Image.open("assets/exitsurvey.jpg")
             try:
                 img = img.resize((scale_x(900), scale_y(494)), Image.Resampling.LANCZOS)
             except Exception:
@@ -286,15 +293,15 @@ def main():
         img_label.pack(fill="both", expand=True)
 
         zoom_images = [
-            "assets/zoom_1.png",
-            "assets/zoom_2.png",
-            "assets/zoom_3.png",
-            "assets/zoom_4.png",
-            "assets/zoom_5.png",
-            "assets/zoom_6.png",
-            "assets/zoom_7.png",
-            "assets/zoom_8.png",
-            "assets/zoom_9.png"
+            "assets/zoom_1.jpg",
+            "assets/zoom_2.jpg",
+            "assets/zoom_3.jpg",
+            "assets/zoom_4.jpg",
+            "assets/zoom_5.jpg",
+            "assets/zoom_6.jpg",
+            "assets/zoom_7.jpg",
+            "assets/zoom_8.jpg",
+            "assets/zoom_9.jpg"
         ]
 
         def show_next_zoom(index=0):
@@ -305,8 +312,8 @@ def main():
                 img_label.image = photo  # Prevent garbage collection
                 root.after(10, lambda: show_next_zoom(index + 1))
             else:
-                # Show zoom_10.png and overlay the button
-                img = Image.open("assets/zoom_10.png").resize((SCREEN_W, SCREEN_H))
+                # Show zoom_10.jpg and overlay the button
+                img = Image.open("assets/zoom_10.jpg").resize((SCREEN_W, SCREEN_H))
                 photo = ImageTk.PhotoImage(img)
                 img_label.config(image=photo)
                 img_label.image = photo
@@ -347,7 +354,7 @@ def main():
     intro_frame.pack(fill="both", expand=True)
 
     # Load and display the background image in a label
-    bg_img = Image.open("assets/introscreen.png")
+    bg_img = Image.open("assets/introscreen.jpg")
     bg_img = bg_img.resize((SCREEN_W, SCREEN_H))  # Or use root.winfo_screenwidth(), etc.
     bg_photo = ImageTk.PhotoImage(bg_img)
     bg_label = tk.Label(intro_frame, image=bg_photo)
@@ -427,9 +434,9 @@ def main():
         ]
         medals = "-".join(name for name, present in ordered if present)
         if medals:
-            bg_img_path = f"assets/{base}_{medals}medal.png"
+            bg_img_path = f"assets/{base}_{medals}medal.jpg"
         else:
-            bg_img_path = f"assets/{base}_nomedal.png"
+            bg_img_path = f"assets/{base}_nomedal.jpg"
         
         # Load and display the background image in a label
         bg_img = Image.open(bg_img_path)
@@ -523,7 +530,7 @@ def main():
 
             # Load nameplate image
             try:
-                img = Image.open("assets/nameplate.png")
+                img = Image.open("assets/nameplate.jpg")
                 try:
                     img = img.resize((scale_x(550), scale_y(194)), Image.Resampling.LANCZOS)
                 except Exception:
@@ -576,12 +583,12 @@ def main():
 
                 # Prompt for save location
                 from datetime import datetime
-                default_name = datetime.now().strftime("PitchPineTrail_certificate_%Y%m%d_%H%M%S.png")
+                default_name = datetime.now().strftime("PitchPineTrail_certificate_%Y%m%d_%H%M%S.jpg")
                 file_path = filedialog.asksaveasfilename(
                     title="Save Screenshot",
-                    defaultextension=".png",
+                    defaultextension=".jpg",
                     initialfile=default_name,
-                    filetypes=[("PNG Image", "*.png"), ("JPEG Image", "*.jpg;*.jpeg"), ("All Files", "*.*")]
+                    filetypes=[("PNG Image", "*.jpg"), ("JPEG Image", "*.jpg;*.jpeg"), ("All Files", "*.*")]
                 )
                 if not file_path:
                     return  # user canceled
@@ -626,7 +633,7 @@ def main():
         low_tpa_frame.pack(fill="both", expand=True)
 
         # Load and display the background image in a label
-        bg_img = Image.open("assets/LowStocking.png")
+        bg_img = Image.open("assets/LowStocking.jpg")
         bg_img = bg_img.resize((SCREEN_W, SCREEN_H))
         bg_photo = ImageTk.PhotoImage(bg_img)
         bg_label = tk.Label(low_tpa_frame, image=bg_photo)
@@ -722,7 +729,7 @@ def main():
         fire_frame.pack(fill="both", expand=True)
 
         # Load and display the background image in a label
-        bg_img = Image.open("assets/LossByFire.png")
+        bg_img = Image.open("assets/LossByFire.jpg")
         bg_img = bg_img.resize((SCREEN_W, SCREEN_H))
         bg_photo = ImageTk.PhotoImage(bg_img)
         bg_label = tk.Label(fire_frame, image=bg_photo)
@@ -818,7 +825,7 @@ def main():
         spb_frame.pack(fill="both", expand=True)
 
         # Load and display the background image in a label
-        bg_img = Image.open("assets/LossBySPB.png")
+        bg_img = Image.open("assets/LossBySPB.jpg")
         bg_img = bg_img.resize((SCREEN_W, SCREEN_H))
         bg_photo = ImageTk.PhotoImage(bg_img)
         bg_label = tk.Label(spb_frame, image=bg_photo)
@@ -899,7 +906,7 @@ def main():
 
     # --- Analysis Lab Screen ---
     def show_analysis_lab(prev_frame):
-        """Show the analysis_lab screen using analyze.png and the game's action summary.
+        """Show the analysis_lab screen using analyze.jpg and the game's action summary.
 
         prev_frame: the frame to return to when the player clicks 'Return to Game'.
         """
@@ -943,7 +950,7 @@ def main():
         # to the full analysis background after 1000ms. The decadal data
         # frame will be created only after the final background is shown.
         try:
-            img = Image.open("assets/analyze_load.png")
+            img = Image.open("assets/analyze_load.jpg")
             try:
                 img = img.resize((SCREEN_W, SCREEN_H), Image.Resampling.LANCZOS)
             except Exception:
@@ -965,7 +972,7 @@ def main():
             nonlocal df
             # Swap to the full analysis background image
             try:
-                img2 = Image.open("assets/analyze.png")
+                img2 = Image.open("assets/analyze.jpg")
                 try:
                     img2 = img2.resize((SCREEN_W, SCREEN_H), Image.Resampling.LANCZOS)
                 except Exception:
@@ -1048,7 +1055,7 @@ def main():
 
             # Load blink image and start continuous background cycling
             try:
-                img_blink = Image.open("assets/analyze_blink.png")
+                img_blink = Image.open("assets/analyze_blink.jpg")
                 try:
                     img_blink = img_blink.resize((SCREEN_W, SCREEN_H), Image.Resampling.LANCZOS)
                 except Exception:
@@ -1057,7 +1064,7 @@ def main():
             except Exception:
                 photo_blink = None
 
-            # Continuous cycle: analyze.png for 1000ms, analyze_blink.png for 500ms
+            # Continuous cycle: analyze.jpg for 1000ms, analyze_blink.jpg for 500ms
             try:
                 state = {"show_blink": False, "after_id": None}
 
@@ -1219,7 +1226,7 @@ def main():
                 overlay = tk.Frame(analysis_frame, bg="#c6d1d8", bd=0)
                 overlay.place(relx=0.575, rely=0.57, anchor="center")
                 try:
-                    floppy_img = Image.open("assets/floppy.png")
+                    floppy_img = Image.open("assets/floppy.jpg")
                     try:
                         fw = max(24, scale_x(135))
                         fh = max(16, scale_y(108))
@@ -1569,7 +1576,7 @@ def main():
         snake_frame.pack(fill="both", expand=True)
 
         # Load and display the background image in a label
-        bg_img = Image.open("assets/pinesnake.png")
+        bg_img = Image.open("assets/pinesnake.jpg")
         bg_img = bg_img.resize((SCREEN_W, SCREEN_H))
         bg_photo = ImageTk.PhotoImage(bg_img)
         bg_label = tk.Label(snake_frame, image=bg_photo)
@@ -1650,7 +1657,7 @@ def main():
         gentian_frame.pack(fill="both", expand=True)
     
         # Load and display the background image in a label
-        bg_img = Image.open("assets/gentian.png")
+        bg_img = Image.open("assets/gentian.jpg")
         bg_img = bg_img.resize((SCREEN_W, SCREEN_H))
         bg_photo = ImageTk.PhotoImage(bg_img)
         bg_label = tk.Label(gentian_frame, image=bg_photo)
@@ -1731,7 +1738,7 @@ def main():
         short_frame.pack(fill="both", expand=True)
 
         # Background image
-        bg_img = Image.open("assets/shortleaf.png")
+        bg_img = Image.open("assets/shortleaf.jpg")
         bg_img = bg_img.resize((SCREEN_W, SCREEN_H))
         bg_photo = ImageTk.PhotoImage(bg_img)
         bg_label = tk.Label(short_frame, image=bg_photo)
@@ -1805,7 +1812,7 @@ def main():
         turkey_frame.pack(fill="both", expand=True)
 
         # Background image
-        bg_img = Image.open("assets/turkeybeard.png")
+        bg_img = Image.open("assets/turkeybeard.jpg")
         bg_img = bg_img.resize((SCREEN_W, SCREEN_H))
         bg_photo = ImageTk.PhotoImage(bg_img)
         bg_label = tk.Label(turkey_frame, image=bg_photo)
@@ -1879,7 +1886,7 @@ def main():
         tanager_frame.pack(fill="both", expand=True)
 
         # Background image
-        bg_img = Image.open("assets/Tanager.png")
+        bg_img = Image.open("assets/Tanager.jpg")
         bg_img = bg_img.resize((SCREEN_W, SCREEN_H))
         bg_photo = ImageTk.PhotoImage(bg_img)
         bg_label = tk.Label(tanager_frame, image=bg_photo)
@@ -1962,7 +1969,7 @@ def main():
         bunting_frame.pack(fill="both", expand=True)
 
         # Background image
-        bg_img = Image.open("assets/bunting.png")
+        bg_img = Image.open("assets/bunting.jpg")
         bg_img = bg_img.resize((SCREEN_W, SCREEN_H))
         bg_photo = ImageTk.PhotoImage(bg_img)
         bg_label = tk.Label(bunting_frame, image=bg_photo)
@@ -2041,8 +2048,8 @@ def main():
         frog_frame = tk.Frame(root, bg=BG_COLOR)
         frog_frame.pack(fill="both", expand=True)
 
-        img_a = Image.open("assets/treefrog.png").resize((SCREEN_W, SCREEN_H))
-        img_b = Image.open("assets/treefrog_1.png").resize((SCREEN_W, SCREEN_H))
+        img_a = Image.open("assets/treefrog.jpg").resize((SCREEN_W, SCREEN_H))
+        img_b = Image.open("assets/treefrog_1.jpg").resize((SCREEN_W, SCREEN_H))
         photo_a = ImageTk.PhotoImage(img_a)
         photo_b = ImageTk.PhotoImage(img_b)
 
@@ -2149,7 +2156,7 @@ def main():
                     pass
                 state["after_id"] = None
             stop_tree_frog_sound()
-            # leave final image on treefrog.png if still present
+            # leave final image on treefrog.jpg if still present
             if frog_frame.winfo_exists() and bg_label.winfo_exists():
                 bg_label.config(image=photo_a)
                 bg_label.image = photo_a
@@ -2206,9 +2213,9 @@ def main():
         h_frame.pack(fill="both", expand=True)
 
         # Load images (resize to screen)
-        img_light = Image.open("assets/hurricane_lightning.png").resize((SCREEN_W, SCREEN_H))
-        img_rain = Image.open("assets/hurricane_rain.png").resize((SCREEN_W, SCREEN_H))
-        img_after = Image.open("assets/hurricane_after.png").resize((SCREEN_W, SCREEN_H))
+        img_light = Image.open("assets/hurricane_lightning.jpg").resize((SCREEN_W, SCREEN_H))
+        img_rain = Image.open("assets/hurricane_rain.jpg").resize((SCREEN_W, SCREEN_H))
+        img_after = Image.open("assets/hurricane_after.jpg").resize((SCREEN_W, SCREEN_H))
         photo_light = ImageTk.PhotoImage(img_light)
         photo_rain = ImageTk.PhotoImage(img_rain)
         photo_after = ImageTk.PhotoImage(img_after)
@@ -2377,7 +2384,7 @@ def main():
 
         # Static background image for non-losing wildfire
         try:
-            img_after = Image.open("assets/nonlosing_fire.png").resize((SCREEN_W, SCREEN_H))
+            img_after = Image.open("assets/nonlosing_fire.jpg").resize((SCREEN_W, SCREEN_H))
             photo_after = ImageTk.PhotoImage(img_after)
             bg_label = tk.Label(w_frame, image=photo_after)
             bg_label.image = photo_after
@@ -2463,7 +2470,7 @@ def main():
         fg_frame.pack(fill="both", expand=True)
 
         # Background image (field guide)
-        bg_img = Image.open("assets/fieldguide.png")
+        bg_img = Image.open("assets/fieldguide.jpg")
         bg_img = bg_img.resize((SCREEN_W, SCREEN_H))
         bg_photo = ImageTk.PhotoImage(bg_img)
         bg_label = tk.Label(fg_frame, image=bg_photo)
@@ -2529,7 +2536,7 @@ def main():
         def_frame = tk.Frame(root, bg=BG_COLOR)
         def_frame.pack(fill="both", expand=True)
         # Load and display the definitions background image in a label
-        bg_img = Image.open("assets/definitions.png")
+        bg_img = Image.open("assets/definitions.jpg")
         bg_img = bg_img.resize((SCREEN_W, SCREEN_H))
         bg_photo = ImageTk.PhotoImage(bg_img)
         bg_label = tk.Label(def_frame, image=bg_photo)
@@ -2590,7 +2597,7 @@ def main():
     def show_analysis_definitions(prev_frame):
         """Definitions screen variant for the Analysis Lab.
 
-        Uses `assets/analyze_definitions.png` as background and does not show
+        Uses `assets/analyze_definitions.jpg` as background and does not show
         any game metrics. `prev_frame` is packed back when the user returns.
         """
         play_page_turn_sound()
@@ -2601,7 +2608,7 @@ def main():
 
         # Load and display the definitions background image in a label
         try:
-            bg_img = Image.open("assets/analyze_definitions.png")
+            bg_img = Image.open("assets/analyze_definitions.jpg")
             bg_img = bg_img.resize((SCREEN_W, SCREEN_H))
             bg_photo = ImageTk.PhotoImage(bg_img)
             bg_label = tk.Label(def_frame, image=bg_photo)
@@ -2659,6 +2666,8 @@ def main():
         # If a hurricane event was just recorded and hasn't been shown yet, show it now
         try:
             events = game.stand.get('events', [])
+            if GUI_DEBUG:
+                gui_logger.debug("show_game_screen: inspecting events=%s stand_year=%s", events, game.stand.get('year'))
             if events:
                 last = events[-1]
                 evt_str = last[1] if (isinstance(last, (list, tuple)) and len(last) > 1) else last
@@ -2666,11 +2675,15 @@ def main():
                 if evt_str == 'Hurricane passed through' and getattr(game, 'hurricane_last_shown_year', None) != evt_year:
                     # detected hurricane event; show once
                     game.hurricane_last_shown_year = evt_year
+                    if GUI_DEBUG:
+                        gui_logger.debug("show_game_screen: triggering hurricane screen for year=%s", evt_year)
                     show_hurricane_screen()
                     return
                 if evt_str == 'WILDFIRE' and getattr(game, 'wildfire_last_shown_year', None) != evt_year:
                     # detected non-losing wildfire event; show once
                     game.wildfire_last_shown_year = evt_year
+                    if GUI_DEBUG:
+                        gui_logger.debug("show_game_screen: triggering wildfire screen for year=%s", evt_year)
                     show_wildfire_screen()
                     return
         except Exception:
@@ -2685,7 +2698,7 @@ def main():
         elif getattr(game, 'current_bg_img', None):
             bg_img_path = game.current_bg_img
         else:
-            bg_img_path = "assets/Evenagestand.png"
+            bg_img_path = "assets/Evenagestand.jpg"
 
         bg_img = Image.open(bg_img_path)
         bg_img = bg_img.resize((SCREEN_W, SCREEN_H))
@@ -2890,7 +2903,7 @@ def main():
                     return
 
                 # Achievements before win so they show first at year 100
-                final_img = getattr(game, 'current_bg_img', "assets/Evenagestand.png")
+                final_img = getattr(game, 'current_bg_img', "assets/Evenagestand.jpg")
                 if queue_achievements_and_show(final_img):
                     return
 
@@ -2913,11 +2926,11 @@ def main():
                 game.stand['year'] += 10
 
                 # Achievement check
-                if queue_achievements_and_show('assets/afterburn_treedown.png'):
+                if queue_achievements_and_show('assets/afterburn_treedown.jpg'):
                     return
 
-                # Animation: prescribedburn_treedown.png for 2s, then afterburn_treedown.png
-                start_animation('assets/prescribedburn_treedown.png', 2000, 'assets/afterburn_treedown.png')
+                # Animation: prescribedburn_treedown.jpg for 2s, then afterburn_treedown.jpg
+                start_animation('assets/prescribedburn_treedown.jpg', 2000, 'assets/afterburn_treedown.jpg')
                 return
 
             # --- Thin lightly after prescribed burn but not thin heavily ---
@@ -2933,11 +2946,11 @@ def main():
                 game.stand['year'] += 10
 
                 # Achievement check (skip animation but persist final)
-                if queue_achievements_and_show('assets/afterburn_treedown.png'):
+                if queue_achievements_and_show('assets/afterburn_treedown.jpg'):
                     return
 
-                # Animation: chainsaw_afterburn.png for 1.5s, then afterburn_treedown.png
-                start_animation('assets/chainsaw_afterburn.png', 1500, 'assets/afterburn_treedown.png')
+                # Animation: chainsaw_afterburn.jpg for 1.5s, then afterburn_treedown.jpg
+                start_animation('assets/chainsaw_afterburn.jpg', 1500, 'assets/afterburn_treedown.jpg')
                 return
             
             # --- Prescribed burn event logic ---
@@ -2951,11 +2964,11 @@ def main():
                 game.stand['year'] += 10
 
                 # Achievement check
-                if queue_achievements_and_show('assets/afterburn.png'):
+                if queue_achievements_and_show('assets/afterburn.jpg'):
                     return
 
-                # Animation: prescribedburn.png for 2s, then afterburn.png
-                start_animation('assets/prescribedburn.png', 2000, 'assets/afterburn.png')
+                # Animation: prescribedburn.jpg for 2s, then afterburn.jpg
+                start_animation('assets/prescribedburn.jpg', 2000, 'assets/afterburn.jpg')
                 return
 
             # --- Thin lightly event logic ---
@@ -2969,11 +2982,11 @@ def main():
                 game.stand['year'] += 10
 
                 # Achievement check
-                if queue_achievements_and_show('assets/treedown.png'):
+                if queue_achievements_and_show('assets/treedown.jpg'):
                     return
 
-                # Animation: chainsaw.png for 1.5, then treedown.png
-                start_animation('assets/chainsaw.png', 1500, 'assets/treedown.png')
+                # Animation: chainsaw.jpg for 1.5, then treedown.jpg
+                start_animation('assets/chainsaw.jpg', 1500, 'assets/treedown.jpg')
                 return
             
             # --- Thin lightly after thin heavily but not prescribed burn (first thin-lightly only) ---
@@ -2990,11 +3003,11 @@ def main():
                 game.stand['year'] += 10
 
                 # Achievement checks (skip animation but persist final)
-                if queue_achievements_and_show('assets/heavythin_treedown.png'):
+                if queue_achievements_and_show('assets/heavythin_treedown.jpg'):
                     return
 
-                # Animation: chainsaw_heavythin.png for 1.5s, then heavythin_treedown.png
-                start_animation('assets/chainsaw_heavythin.png', 1500, 'assets/heavythin_treedown.png')
+                # Animation: chainsaw_heavythin.jpg for 1.5s, then heavythin_treedown.jpg
+                start_animation('assets/chainsaw_heavythin.jpg', 1500, 'assets/heavythin_treedown.jpg')
                 return
 
             # --- Thin heavily after prescribed burn but not thin lightly (first heavy-thin only) ---
@@ -3009,11 +3022,11 @@ def main():
                 game.stand['year'] += 10
 
                 # Achievement checks (persist final)
-                if queue_achievements_and_show('assets/heavythin_afterburn.png'):
+                if queue_achievements_and_show('assets/heavythin_afterburn.jpg'):
                     return
 
-                # Animation: mower_afterburn.png for 2s, then heavythin_afterburn.png
-                start_animation('assets/mower_afterburn.png', 2000, 'assets/heavythin_afterburn.png')
+                # Animation: mower_afterburn.jpg for 2s, then heavythin_afterburn.jpg
+                start_animation('assets/mower_afterburn.jpg', 2000, 'assets/heavythin_afterburn.jpg')
                 return
 
             # --- Thin heavily after thin lightly but not prescribed burn (first heavy-thin only) ---
@@ -3028,11 +3041,11 @@ def main():
                 game.stand['year'] += 10
 
                 # Achievement checks (persist final)
-                if queue_achievements_and_show('assets/heavythin_treedown.png'):
+                if queue_achievements_and_show('assets/heavythin_treedown.jpg'):
                     return
 
-                # Animation: mower_treedown.png for 2s, then heavythin_treedown.png
-                start_animation('assets/mower_treedown.png', 2000, 'assets/heavythin_treedown.png')
+                # Animation: mower_treedown.jpg for 2s, then heavythin_treedown.jpg
+                start_animation('assets/mower_treedown.jpg', 2000, 'assets/heavythin_treedown.jpg')
                 return
 
             # One-time heavy thin animation (only if TL and PB not yet chosen)
@@ -3047,11 +3060,11 @@ def main():
                 game.stand['year'] += 10
 
                 # Achievement checks (persist final)
-                if queue_achievements_and_show('assets/heavythin.png'):
+                if queue_achievements_and_show('assets/heavythin.jpg'):
                     return
 
-                # Animation: mower.png for 2s, then heavythin.png
-                start_animation('assets/mower.png', 2000, 'assets/heavythin.png')
+                # Animation: mower.jpg for 2s, then heavythin.jpg
+                start_animation('assets/mower.jpg', 2000, 'assets/heavythin.jpg')
                 return
 
             # --- Thin heavily after thin lightly AND prescribed burn (first heavy-thin only) ---
@@ -3066,11 +3079,11 @@ def main():
                 game.stand['year'] += 10
 
                 # Achievement checks (persist final)
-                if queue_achievements_and_show('assets/heavythin_afterburn_treedown.png'):
+                if queue_achievements_and_show('assets/heavythin_afterburn_treedown.jpg'):
                     return
 
-                # Animation: mower_afterburn_treedown.png for 2s, then heavythin_afterburn_treedown.png
-                start_animation('assets/mower_afterburn_treedown.png', 2000, 'assets/heavythin_afterburn_treedown.png')
+                # Animation: mower_afterburn_treedown.jpg for 2s, then heavythin_afterburn_treedown.jpg
+                start_animation('assets/mower_afterburn_treedown.jpg', 2000, 'assets/heavythin_afterburn_treedown.jpg')
                 return
 
             # NEW: Prescribed burn after thin heavily but not thin lightly (first PB only)
@@ -3087,11 +3100,11 @@ def main():
                 game.stand['year'] += 10
 
                 # Achievement check (persist final)
-                if queue_achievements_and_show('assets/afterburn_heavythin.png'):
+                if queue_achievements_and_show('assets/afterburn_heavythin.jpg'):
                     return
 
-                # Animation: prescribedburn_heavythin.png for 2s, then afterburn_heavythin.png
-                start_animation('assets/prescribedburn_heavythin.png', 2000, 'assets/afterburn_heavythin.png')
+                # Animation: prescribedburn_heavythin.jpg for 2s, then afterburn_heavythin.jpg
+                start_animation('assets/prescribedburn_heavythin.jpg', 2000, 'assets/afterburn_heavythin.jpg')
                 return
 
             # --- Thin lightly after heavy-thin that occurred after prescribed burn (first thin-lightly only) ---
@@ -3110,11 +3123,11 @@ def main():
                 game.stand['year'] += 10
 
                 # Achievement checks (persist final)
-                if queue_achievements_and_show('assets/heavythin_afterburn_treedown.png'):
+                if queue_achievements_and_show('assets/heavythin_afterburn_treedown.jpg'):
                     return
 
-                # Animation: chainsaw_heavythin_afterburn.png for 1.5s, then heavythin_afterburn_treedown.png
-                start_animation('assets/chainsaw_heavythin_afterburn.png', 1500, 'assets/heavythin_afterburn_treedown.png')
+                # Animation: chainsaw_heavythin_afterburn.jpg for 1.5s, then heavythin_afterburn_treedown.jpg
+                start_animation('assets/chainsaw_heavythin_afterburn.jpg', 1500, 'assets/heavythin_afterburn_treedown.jpg')
                 return
 
             # --- Thin lightly after heavy-thin that occurred before prescribed burn (first thin-lightly only) ---
@@ -3134,11 +3147,11 @@ def main():
                     game.stand['year'] += 10
 
                     # Achievement checks (persist final)
-                    if queue_achievements_and_show('assets/afterburn_heavythin_treedown.png'):
+                    if queue_achievements_and_show('assets/afterburn_heavythin_treedown.jpg'):
                         return
 
-                    # Animation: chainsaw_afterburn_heavythin.png for 1.5s, then afterburn_heavythin_treedown.png
-                    start_animation('assets/chainsaw_afterburn_heavythin.png', 1500, 'assets/afterburn_heavythin_treedown.png')
+                    # Animation: chainsaw_afterburn_heavythin.jpg for 1.5s, then afterburn_heavythin_treedown.jpg
+                    start_animation('assets/chainsaw_afterburn_heavythin.jpg', 1500, 'assets/afterburn_heavythin_treedown.jpg')
                     return
 
             # --- Prescribed burn after BOTH thin lightly and thin heavily (first PB only) ---
@@ -3155,11 +3168,11 @@ def main():
                 game.stand['year'] += 10
 
                 # Achievement checks (persist final)
-                if queue_achievements_and_show('assets/afterburn_heavythin_treedown.png'):
+                if queue_achievements_and_show('assets/afterburn_heavythin_treedown.jpg'):
                     return
 
-                # Animation: prescribedburn_treedown_heavythin.png for 2s, then afterburn_heavythin_treedown.png
-                start_animation('assets/prescribedburn_treedown_heavythin.png', 2000, 'assets/afterburn_heavythin_treedown.png')
+                # Animation: prescribedburn_treedown_heavythin.jpg for 2s, then afterburn_heavythin_treedown.jpg
+                start_animation('assets/prescribedburn_treedown_heavythin.jpg', 2000, 'assets/afterburn_heavythin_treedown.jpg')
                 return
 
             # Prescribed burn chosen (again) for the first time AFTER first heavy-thin, with no thin lightly ever
@@ -3178,11 +3191,11 @@ def main():
                 game.stand['year'] += 10
 
                 # Achievement check (persist final)
-                if queue_achievements_and_show('assets/afterburn_heavythin.png'):
+                if queue_achievements_and_show('assets/afterburn_heavythin.jpg'):
                     return
 
-                # Animation: prescribedburn2_heavythin.png for 2s, then afterburn_heavythin.png
-                start_animation('assets/prescribedburn2_heavythin.png', 2000, 'assets/afterburn_heavythin.png')
+                # Animation: prescribedburn2_heavythin.jpg for 2s, then afterburn_heavythin.jpg
+                start_animation('assets/prescribedburn2_heavythin.jpg', 2000, 'assets/afterburn_heavythin.jpg')
                 return
 
             # Prescribed burn chosen again after heavy-thin WHEN thin lightly has been chosen (animate once)
@@ -3201,11 +3214,11 @@ def main():
                 game.stand['year'] += 10
 
                 # Achievement checks (persist final)
-                if queue_achievements_and_show('assets/afterburn_heavythin_treedown.png'):
+                if queue_achievements_and_show('assets/afterburn_heavythin_treedown.jpg'):
                     return
 
-                # Animation: prescribedburn2_heavythin_treedown.png for 2s, then afterburn_heavythin_treedown.png
-                start_animation('assets/prescribedburn2_heavythin_treedown.png', 2000, 'assets/afterburn_heavythin_treedown.png')
+                # Animation: prescribedburn2_heavythin_treedown.jpg for 2s, then afterburn_heavythin_treedown.jpg
+                start_animation('assets/prescribedburn2_heavythin_treedown.jpg', 2000, 'assets/afterburn_heavythin_treedown.jpg')
                 return
 
             # --- Thin lightly (first time) when PB occurred both BEFORE and AFTER first heavy-thin ---
@@ -3221,11 +3234,11 @@ def main():
                 game.stand['year'] += 10
 
                 # Achievement checks (persist final)
-                if queue_achievements_and_show('assets/afterburn_heavythin_treedown.png'):
+                if queue_achievements_and_show('assets/afterburn_heavythin_treedown.jpg'):
                     return
 
-                # Animation: chainsaw_afterburn_heavythin.png for 1.5s, then afterburn_heavythin_treedown.png
-                start_animation('assets/chainsaw_afterburn_heavythin.png', 1500, 'assets/afterburn_heavythin_treedown.png')
+                # Animation: chainsaw_afterburn_heavythin.jpg for 1.5s, then afterburn_heavythin_treedown.jpg
+                start_animation('assets/chainsaw_afterburn_heavythin.jpg', 1500, 'assets/afterburn_heavythin_treedown.jpg')
                 return
 
             # --- Thin lightly after FIRST heavy-thin and BEFORE FIRST prescribed burn (first TL only) ---
@@ -3244,11 +3257,11 @@ def main():
                 game.stand['year'] += 10
 
                 # Achievement checks (persist final)
-                if queue_achievements_and_show('assets/afterburn_heavythin_treedown.png'):
+                if queue_achievements_and_show('assets/afterburn_heavythin_treedown.jpg'):
                     return
 
-                # Animation: chainsaw_afterburn_heavythin.png for 1.5s, then afterburn_heavythin_treedown.png
-                start_animation('assets/chainsaw_afterburn_heavythin.png', 1500, 'assets/afterburn_heavythin_treedown.png')
+                # Animation: chainsaw_afterburn_heavythin.jpg for 1.5s, then afterburn_heavythin_treedown.jpg
+                start_animation('assets/chainsaw_afterburn_heavythin.jpg', 1500, 'assets/afterburn_heavythin_treedown.jpg')
                 return
 
             pine_snakes_before = game.pine_snakes_colonized
@@ -3269,7 +3282,7 @@ def main():
                 return
 
             # --- Achievements (use queue; no animation in default path) ---
-            final_img = getattr(game, 'current_bg_img', "assets/Evenagestand.png")
+            final_img = getattr(game, 'current_bg_img', "assets/Evenagestand.jpg")
             if queue_achievements_and_show(final_img):
                 return
 
@@ -3362,18 +3375,18 @@ def main():
         ).pack()
 
         # --- Hint button (top center) ---
-        hint_images = ["assets/hint1.png", 
-                       "assets/hint2.png", 
-                       "assets/hint3.png", 
-                       "assets/hint4.png",
-                       "assets/hint5.png",
-                       "assets/hint6.png",
-                       "assets/hint7.png",
-                       "assets/hint8.png",
-                       "assets/hint9.png",
-                       "assets/hint10.png",
-                       "assets/hint11.png",
-                       "assets/hint12.png"]
+        hint_images = ["assets/hint1.jpg", 
+                       "assets/hint2.jpg", 
+                       "assets/hint3.jpg", 
+                       "assets/hint4.jpg",
+                       "assets/hint5.jpg",
+                       "assets/hint6.jpg",
+                       "assets/hint7.jpg",
+                       "assets/hint8.jpg",
+                       "assets/hint9.jpg",
+                       "assets/hint10.jpg",
+                       "assets/hint11.jpg",
+                       "assets/hint12.jpg"]
         if not hasattr(game, "hint_index"):
             game.hint_index = 0
         if not hasattr(game, "hint_overlay"):
