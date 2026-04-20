@@ -598,18 +598,25 @@ class Game:
                 self.stand['fire_risk'] = fire_risk_after
 
                 evt = 'WILDFIRE'
-                # Append event for the post_year snapshot (avoid duplicates)
+                # Append event for both the current (pre_snapshot) and post_year snapshot
+                # (avoid duplicates). Recording an immediate/current-year event ensures the
+                # UI can present the non-losing wildfire screen the turn it was triggered.
                 try:
                     events = self.stand.setdefault('events', [])
+                    # add post-year event if not present
                     if not any((isinstance(e, (list, tuple)) and len(e) > 1 and e[0] == post_year and e[1] == evt) or (isinstance(e, str) and e == evt) for e in events):
                         events.append((post_year, evt))
+                    # also add an immediate/current-year event so pre_snapshot reflects the trigger
+                    if not any((isinstance(e, (list, tuple)) and len(e) > 1 and e[0] == curr_year and e[1] == evt) or (isinstance(e, str) and e == evt) for e in events):
+                        events.append((curr_year, evt))
                 except Exception:
                     try:
                         self.stand.setdefault('events', []).append((post_year, evt))
+                        self.stand.setdefault('events', []).append((curr_year, evt))
                     except Exception:
                         pass
 
-                # Post-snapshot (reflecting stand immediately after wildfire effects)
+                # Ensure both snapshots include the updated events list
                 post_snapshot = {
                     'year': int(post_year),
                     'QMD': float(self.stand.get('QMD', 0.0)),
@@ -622,7 +629,14 @@ class Game:
                     'events': deepcopy(self.stand.get('events', []))
                 }
 
-                # Append both snapshots so the wildfire effect is visible at year+1
+                # Update pre_snapshot events so the immediate trigger is visible now
+                try:
+                    pre_snapshot['events'] = deepcopy(self.stand.get('events', []))
+                except Exception:
+                    pass
+
+                # Append both snapshots so the wildfire effect is visible at year+1 and
+                # the trigger is visible immediately in the pre-snapshot
                 self.history.append(pre_snapshot)
                 self.history.append(post_snapshot)
                 wildfire_occurred = True

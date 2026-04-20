@@ -1520,13 +1520,93 @@ def main():
                 # Close button for the graph overlay
                 def close_graph():
                     try:
+                        # Destroy any FAQ overlay/widgets first
+                        try:
+                            faq_btn = current_graph.get('faq_btn')
+                            if faq_btn and faq_btn.winfo_exists():
+                                faq_btn.destroy()
+                        except Exception:
+                            pass
+                        try:
+                            close_faq_btn = current_graph.get('close_faq_btn')
+                            if close_faq_btn and close_faq_btn.winfo_exists():
+                                close_faq_btn.destroy()
+                        except Exception:
+                            pass
+                        try:
+                            faq_overlay = current_graph.get('faq_overlay')
+                            if faq_overlay and faq_overlay.winfo_exists():
+                                faq_overlay.destroy()
+                        except Exception:
+                            pass
                         if current_graph.get("frame") and current_graph["frame"].winfo_exists():
                             current_graph["frame"].destroy()
                     finally:
                         current_graph["frame"] = None
 
+                # Close Graph button
                 tk.Button(graph_frame, text="Close Graph", font=("Courier", scale_font(11), "bold"),
                           bg="#121e22", fg="#b5c3d8", command=close_graph).place(relx=0.02, rely=0.0)
+
+                # FAQ overlay support: button shown under the Close Graph button
+                def show_faq():
+                    # If already showing, do nothing
+                    if current_graph.get('faq_overlay') and current_graph['faq_overlay'].winfo_exists():
+                        return
+
+                    img_path = os.path.join('assets', 'FAQs.jpg') if os.path.exists(os.path.join('assets', 'FAQs.jpg')) else 'FAQs.jpg'
+
+                    # Wait until graph_frame has non-zero size, else try again shortly
+                    w = graph_frame.winfo_width()
+                    h = graph_frame.winfo_height()
+                    if w < 10 or h < 10:
+                        graph_frame.after(100, show_faq)
+                        return
+
+                    try:
+                        img = Image.open(img_path)
+                        try:
+                            img = img.resize((w, h), Image.Resampling.LANCZOS)
+                        except Exception:
+                            img = img.resize((w, h), Image.LANCZOS)
+                        photo = ImageTk.PhotoImage(img)
+
+                        # Overlay label covering the graph
+                        overlay = tk.Label(graph_frame, image=photo, bd=0)
+                        overlay.image = photo
+                        overlay.place(x=0, y=0, relwidth=1, relheight=1)
+                        current_graph['faq_overlay'] = overlay
+
+                        # Close FAQs button (only visible while FAQ is shown)
+                        def hide_faq():
+                            try:
+                                if current_graph.get('faq_overlay') and current_graph['faq_overlay'].winfo_exists():
+                                    current_graph['faq_overlay'].destroy()
+                            except Exception:
+                                pass
+                            try:
+                                if current_graph.get('close_faq_btn') and current_graph['close_faq_btn'].winfo_exists():
+                                    current_graph['close_faq_btn'].destroy()
+                            except Exception:
+                                pass
+
+                        close_btn = tk.Button(graph_frame, text="Close FAQs", font=("Courier", scale_font(11), "bold"),
+                                              bg="#20333a", fg="#00e43a", command=hide_faq)
+                        # place slightly lower than the FAQ trigger button
+                        close_btn.place(relx=0.77, rely=0.93)
+                        current_graph['close_faq_btn'] = close_btn
+                    except Exception:
+                        try:
+                            messagebox.showinfo("FAQ", "Could not load FAQs image.")
+                        except Exception:
+                            pass
+
+                # FAQ trigger button (appears alongside Close Graph)
+                faq_btn = tk.Button(graph_frame, text="Why does my graph look like that?", font=("Courier", scale_font(10), "bold"),
+                                    bg="#20333a", fg="#b5c3d8", command=show_faq)
+                # place lower than the Close Graph button
+                faq_btn.place(relx=0.02, rely=0.94)
+                current_graph['faq_btn'] = faq_btn
                 graph_frame.lift()
             except Exception as e:
                 try:
