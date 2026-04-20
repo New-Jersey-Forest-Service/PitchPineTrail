@@ -35,11 +35,6 @@ def main():
 
     # Initialize game and UI constants
     game = Game()  # Model handles its own colonization & achievement flags
-    # GUI debug logger (enabled by PITCH_DEBUG=1)
-    GUI_DEBUG = os.getenv('PITCH_DEBUG', '0') == '1'
-    gui_logger = logging.getLogger('pitchpine.gui')
-    if GUI_DEBUG:
-        logging.basicConfig(level=logging.DEBUG)
     # GUI-only state
     game.current_bg_img = "assets/Evenagestand.jpg"
     game.animation_temp_bg = None
@@ -2746,8 +2741,7 @@ def main():
         # If a hurricane event was just recorded and hasn't been shown yet, show it now
         try:
             events = game.stand.get('events', [])
-            if GUI_DEBUG:
-                gui_logger.debug("show_game_screen: inspecting events=%s stand_year=%s", events, game.stand.get('year'))
+            # debug logging removed to avoid noisy output from external libs
             if events:
                 last = events[-1]
                 evt_str = last[1] if (isinstance(last, (list, tuple)) and len(last) > 1) else last
@@ -2755,15 +2749,12 @@ def main():
                 if evt_str == 'Hurricane passed through' and getattr(game, 'hurricane_last_shown_year', None) != evt_year:
                     # detected hurricane event; show once
                     game.hurricane_last_shown_year = evt_year
-                    if GUI_DEBUG:
-                        gui_logger.debug("show_game_screen: triggering hurricane screen for year=%s", evt_year)
+                    # Do not emit GUI debug here to avoid noisy logs from external libs
                     show_hurricane_screen()
                     return
                 if evt_str == 'WILDFIRE' and getattr(game, 'wildfire_last_shown_year', None) != evt_year:
                     # detected non-losing wildfire event; show once
                     game.wildfire_last_shown_year = evt_year
-                    if GUI_DEBUG:
-                        gui_logger.debug("show_game_screen: triggering wildfire screen for year=%s", evt_year)
                     show_wildfire_screen()
                     return
         except Exception:
