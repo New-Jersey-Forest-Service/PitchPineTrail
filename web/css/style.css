@@ -1,0 +1,429 @@
+:root {
+  --navy: #1b2336;
+  --green: #05dd4c;
+  --muted: #b5c3d8;
+  --button: #404d6d;
+  --graph-bg: #1f3339;
+  --graph-dark: #121e22;
+  --line: #2c404b;
+  --danger: #b22222;
+  --warning: #ffa600;
+  --good: #228b22;
+  --paper: #ffffff;
+  --ink: #000000;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#game-root {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  overflow: hidden;
+  background: var(--navy);
+  color: var(--ink);
+  font-family: "Courier New", Courier, monospace;
+  font-weight: 700;
+}
+
+#game-root {
+  position: relative;
+  min-width: 1024px;
+  min-height: 600px;
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+button {
+  border: 0;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+button:focus-visible,
+input:focus-visible {
+  outline: 3px solid var(--green);
+  outline-offset: 2px;
+}
+
+.screen-fill {
+  position: absolute;
+  inset: 0;
+}
+
+.metrics-panel {
+  position: absolute;
+  top: 57%;
+  right: 5.5%;
+  width: min(27vw, 460px);
+  min-width: 330px;
+  padding: clamp(10px, 1vw, 18px);
+  background: var(--paper);
+  color: var(--ink);
+  text-align: center;
+  line-height: 1.24;
+  font-size: clamp(13px, 0.9vw, 18px);
+}
+
+.metric-risk {
+  display: block;
+  margin-top: 14px;
+  font-size: clamp(14px, 1vw, 20px);
+}
+
+.risk-low {
+  color: var(--good);
+}
+
+.risk-moderate {
+  color: var(--warning);
+}
+
+.risk-high {
+  color: var(--danger);
+}
+
+.action-panel,
+.nav-panel,
+.summary-panel,
+.achievement-list,
+.plot-buttons,
+.analysis-table {
+  position: absolute;
+  background: var(--navy);
+  color: var(--green);
+}
+
+.action-panel {
+  top: 26%;
+  right: 10%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.action-button {
+  width: clamp(210px, 15vw, 300px);
+  padding: 8px 14px;
+  background: var(--button);
+  color: var(--green);
+  font-size: clamp(14px, 1vw, 20px);
+}
+
+.action-button:hover {
+  background: var(--green);
+  color: var(--navy);
+}
+
+.intro-buttons {
+  position: absolute;
+  left: 79.5%;
+  top: 82.8%;
+  display: flex;
+  gap: 10px;
+  transform: translate(-50%, -50%);
+}
+
+.tan-button {
+  min-width: 170px;
+  padding: 8px 16px;
+  background: #f7d79e;
+  color: #663e1d;
+  font-size: clamp(14px, 1vw, 20px);
+}
+
+.tan-button:hover {
+  background: #069134;
+}
+
+.dark-button {
+  min-width: 160px;
+  padding: 8px 14px;
+  background: #000000;
+  color: #ffffff;
+  font-size: clamp(12px, 0.8vw, 17px);
+}
+
+.green-button {
+  padding: 8px 14px;
+  background: var(--green);
+  color: var(--navy);
+}
+
+.blue-button {
+  padding: 8px 14px;
+  background: var(--navy);
+  color: var(--muted);
+}
+
+.red-button {
+  padding: 8px 14px;
+  background: #9c3432;
+  color: #3d0606;
+}
+
+.definitions-link {
+  position: absolute;
+  left: 5%;
+  bottom: 4%;
+}
+
+.field-guide-link {
+  position: absolute;
+  left: 5%;
+  top: 69%;
+}
+
+.exit-link {
+  position: absolute;
+  left: 2%;
+  top: 2%;
+}
+
+.hint-link {
+  position: absolute;
+  top: 3%;
+  left: 67%;
+  transform: translateX(-50%);
+}
+
+.hint-overlay,
+.survey-overlay,
+.certificate-overlay {
+  position: absolute;
+  z-index: 20;
+  background: var(--paper);
+}
+
+.hint-overlay {
+  top: 2%;
+  left: 50%;
+  width: min(900px, 48vw);
+  transform: translateX(-50%);
+}
+
+.hint-overlay img,
+.survey-overlay img,
+.certificate-overlay img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.hint-close {
+  position: absolute;
+  left: 2%;
+  bottom: 4%;
+}
+
+.survey-overlay {
+  top: 2%;
+  left: 2%;
+  width: min(900px, 48vw);
+}
+
+.survey-actions {
+  position: absolute;
+  right: 5%;
+  bottom: 8%;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.summary-panel {
+  top: 10%;
+  right: 4%;
+  width: min(27vw, 430px);
+  max-height: 42vh;
+  overflow: auto;
+  padding: 12px;
+  white-space: pre-wrap;
+  font-size: clamp(12px, 0.95vw, 19px);
+}
+
+.closing-actions,
+.loss-actions,
+.event-actions,
+.achievement-actions {
+  position: absolute;
+  right: 5%;
+  bottom: 7%;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.loss-message,
+.event-message,
+.achievement-message {
+  position: absolute;
+  right: 5%;
+  top: 9%;
+  width: min(31vw, 540px);
+  padding: 14px;
+  background: var(--navy);
+  color: var(--green);
+  font-size: clamp(15px, 1.15vw, 22px);
+  line-height: 1.25;
+}
+
+.analysis-table {
+  left: 13.5%;
+  top: 23.5%;
+  width: min(48vw, 820px);
+  max-height: 46vh;
+  overflow: auto;
+  padding: 12px;
+  background: var(--graph-bg);
+  color: var(--green);
+  font-size: clamp(11px, 0.78vw, 15px);
+  white-space: pre;
+}
+
+.plot-buttons {
+  right: 6%;
+  top: 72%;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px;
+}
+
+.plot-buttons button {
+  width: clamp(100px, 9vw, 170px);
+}
+
+.achievement-list {
+  right: 5.5%;
+  top: 44%;
+  width: min(25vw, 420px);
+  max-height: 24vh;
+  overflow: auto;
+  padding: 10px;
+  white-space: pre-wrap;
+  font-size: clamp(12px, 0.85vw, 16px);
+}
+
+.analysis-return {
+  position: absolute;
+  left: 18%;
+  top: 75%;
+  transform: translate(-50%, -50%);
+}
+
+.analysis-definitions-link {
+  position: absolute;
+  left: 5%;
+  bottom: 4%;
+}
+
+.save-data-button {
+  position: absolute;
+  left: 57.5%;
+  top: 55.7%;
+  transform: translate(-50%, -50%);
+}
+
+.chart-overlay {
+  position: absolute;
+  left: 13.5%;
+  top: 23.5%;
+  width: min(48vw, 820px);
+  height: min(44vh, 460px);
+  background: var(--graph-bg);
+  z-index: 12;
+  padding: 32px 10px 42px;
+}
+
+.chart-overlay canvas {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.chart-close {
+  position: absolute;
+  top: 4px;
+  left: 8px;
+  z-index: 14;
+}
+
+.chart-faq {
+  position: absolute;
+  left: 8px;
+  bottom: 6px;
+  z-index: 14;
+}
+
+.faq-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 15;
+  background: var(--paper);
+}
+
+.faq-overlay img {
+  width: 100%;
+  height: 100%;
+  object-fit: fill;
+}
+
+.faq-close {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  z-index: 16;
+}
+
+.certificate-overlay {
+  top: 8%;
+  left: 6%;
+  width: min(950px, 50vw);
+}
+
+.certificate-name {
+  position: absolute;
+  left: 44%;
+  top: 26%;
+  width: 35%;
+  padding: 7px;
+  border: 2px solid #4a3122;
+  background: rgba(255, 255, 255, 0.82);
+  color: #000000;
+  text-align: center;
+}
+
+.certificate-save {
+  position: absolute;
+  left: 73.4%;
+  top: 23%;
+  transform: translateX(-50%);
+}
+
+.loading-note {
+  position: absolute;
+  left: 13.5%;
+  top: 23.5%;
+  padding: 14px;
+  background: var(--graph-bg);
+  color: var(--green);
+}
+
+.hidden {
+  display: none !important;
+}
